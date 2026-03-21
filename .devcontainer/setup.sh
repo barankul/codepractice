@@ -1,10 +1,12 @@
 #!/bin/bash
 set -e
+export CI=true
+export DEBIAN_FRONTEND=noninteractive
 
 echo "=== CodePractice — Setting up... ==="
 
 # Install dependencies
-npm install
+npm install --yes
 
 # Build extension
 npm run package

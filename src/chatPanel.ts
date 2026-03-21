@@ -1,7 +1,7 @@
 // AIチャット — chat panel manager
 import * as vscode from "vscode";
 import * as crypto from "crypto";
-import { makeAiRequest, getResponseLang, getLangInstruction } from "./aiHelpers";
+import { makeAiRequest, getResponseLang, getLangInstruction, t } from "./aiHelpers";
 import { PracticeData, practiceFilename, PRACTICE_DIR } from "./constants";
 import { parseMeta, normalizeJavaPractice, stripCodeBlocks, escapeHtml } from "./parsers";
 
@@ -277,7 +277,16 @@ Rules:
     this.startNewSession(currentPractice);
 
     const nonce = crypto.randomBytes(16).toString("base64");
-    this.chatPanel.webview.html = getChatPanelHtml(title, task, lang, nonce);
+    const chatT: Record<string, string> = {};
+    for (const k of [
+      "chat.history", "chat.newChat", "chat.noChats", "chat.emptyMsg", "chat.emptyChips",
+      "chat.placeholder", "chat.send", "chat.hint", "chat.explain", "chat.generatePractice",
+      "chat.thinking", "chat.generating", "chat.running", "chat.judging", "chat.thinkingGeneric",
+      "chat.output", "chat.pass", "chat.fail", "chat.run", "chat.judge",
+      "chat.copy", "chat.copied", "chat.noMessages", "chat.msgs",
+      "chat.hintPrompt", "chat.explainPrompt", "chat.generatePrompt"
+    ]) { chatT[k] = t(k); }
+    this.chatPanel.webview.html = getChatPanelHtml(title, task, lang, nonce, chatT);
 
     // Send session list after a tick (webview needs to initialize first)
     if (this.sessionListTimer) { clearTimeout(this.sessionListTimer); }
@@ -428,7 +437,7 @@ Rules:
   }
 }
 
-function getChatPanelHtml(title: string, task: string, lang: string, nonce: string): string {
+function getChatPanelHtml(title: string, task: string, lang: string, nonce: string, chatT: Record<string, string>): string {
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -823,11 +832,11 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
     <!-- History sidebar -->
     <div class="history-panel" id="historyPanel">
       <div class="history-header">
-        <span>Chat History</span>
-        <button id="newChatBtn" title="New Chat">+</button>
+        <span>${escapeHtml(chatT["chat.history"])}</span>
+        <button id="newChatBtn" title="${escapeHtml(chatT["chat.newChat"])}">+</button>
       </div>
       <div class="history-list" id="historyList">
-        <div class="history-empty">No previous chats</div>
+        <div class="history-empty">${escapeHtml(chatT["chat.noChats"])}</div>
       </div>
     </div>
 
@@ -840,22 +849,23 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
         <div class="context-task" id="ctxTask">${escapeHtml(task)}</div>
       </div>
       <div class="messages" id="messages">
-        <div class="empty">Ask anything about this exercise.<br>Explain your code, ask questions, get help.</div>
+        <div class="empty">${escapeHtml(chatT["chat.emptyMsg"]).replace(/\n/g, "<br>")}</div>
       </div>
       <div class="input-area">
-        <input type="text" id="chatInput" placeholder="Ask a question..." />
-        <button id="sendBtn">Send</button>
+        <input type="text" id="chatInput" placeholder="${escapeHtml(chatT["chat.placeholder"])}" />
+        <button id="sendBtn">${escapeHtml(chatT["chat.send"])}</button>
       </div>
       <div class="quick-chips">
-        <button class="quick-chip" data-action="hint">💡 Hint</button>
-        <button class="quick-chip" data-action="explain">🔍 Explain My Code</button>
-        <button class="quick-chip" data-action="generate">📝 Generate Practice</button>
+        <button class="quick-chip" data-action="hint">\u{1f4a1} ${escapeHtml(chatT["chat.hint"])}</button>
+        <button class="quick-chip" data-action="explain">\u{1f50d} ${escapeHtml(chatT["chat.explain"])}</button>
+        <button class="quick-chip" data-action="generate">\u{1f4dd} ${escapeHtml(chatT["chat.generatePractice"])}</button>
       </div>
     </div>
   </div>
 
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
+    const _t = ${JSON.stringify(chatT)};
     const messagesEl = document.getElementById("messages");
     const chatInput = document.getElementById("chatInput");
     const sendBtn = document.getElementById("sendBtn");
@@ -870,8 +880,8 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
     function formatMsg(text) {
       let html = escapeHtml(text);
       // Code blocks (triple backtick) — wrap with copy button
-      html = html.replace(/\\\`\\\`\\\`(\\w*)\\n([\\s\\S]*?)\\\`\\\`\\\`/g, '<div class="code-wrap"><button class="copy-btn">Copy</button><pre>$2</pre></div>');
-      html = html.replace(/\`\`\`(\\w*)\\n?([\\s\\S]*?)\`\`\`/g, '<div class="code-wrap"><button class="copy-btn">Copy</button><pre>$2</pre></div>');
+      html = html.replace(/\\\`\\\`\\\`(\\w*)\\n([\\s\\S]*?)\\\`\\\`\\\`/g, '<div class="code-wrap"><button class="copy-btn">' + _t["chat.copy"] + '</button><pre>$2</pre></div>');
+      html = html.replace(/\`\`\`(\\w*)\\n?([\\s\\S]*?)\`\`\`/g, '<div class="code-wrap"><button class="copy-btn">' + _t["chat.copy"] + '</button><pre>$2</pre></div>');
       // Inline code
       html = html.replace(/\`([^\`]+)\`/g, '<code>$1</code>');
       // Bold (**text**)
@@ -905,8 +915,8 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
         + '<div class="pc-task">' + escapeHtml(data.task) + '</div>'
         + hintHtml
         + '<div class="pc-actions">'
-        + '<button class="pc-btn run" id="chatRunBtn">▶ Run</button>'
-        + '<button class="pc-btn judge" id="chatJudgeBtn">⚖ Judge</button>'
+        + '<button class="pc-btn run" id="chatRunBtn">\u25b6 ' + escapeHtml(_t["chat.run"]) + '</button>'
+        + '<button class="pc-btn judge" id="chatJudgeBtn">\u2696 ' + escapeHtml(_t["chat.judge"]) + '</button>'
         + '</div>';
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -915,7 +925,7 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
     function addRunResult(output) {
       var div = document.createElement("div");
       div.className = "msg ai";
-      div.innerHTML = '<div style="font-size:11px;font-weight:600;margin-bottom:4px;opacity:0.7">▶ Output:</div>'
+      div.innerHTML = '<div style="font-size:11px;font-weight:600;margin-bottom:4px;opacity:0.7">\u25b6 ' + escapeHtml(_t["chat.output"]) + '</div>'
         + '<div class="output-block">' + escapeHtml(output) + '</div>';
       messagesEl.appendChild(div);
       messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -924,8 +934,8 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
     function addJudgeResult(data) {
       var div = document.createElement("div");
       div.className = "judge-card " + (data.pass ? "pass" : "fail");
-      var icon = data.pass ? "✓" : "✗";
-      var label = data.pass ? "PASS" : "FAIL";
+      var icon = data.pass ? "\u2713" : "\u2717";
+      var label = data.pass ? _t["chat.pass"] : _t["chat.fail"];
       div.innerHTML = '<div class="jc-verdict">' + icon + ' ' + label + '</div>'
         + '<div class="output-block">' + escapeHtml(data.output || "") + '</div>';
       messagesEl.appendChild(div);
@@ -974,7 +984,7 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
       var typing = document.createElement("div");
       typing.className = "typing";
       typing.id = "typingIndicator";
-      typing.textContent = "AI is thinking...";
+      typing.textContent = _t["chat.thinking"];
       messagesEl.appendChild(typing);
       messagesEl.scrollTop = messagesEl.scrollHeight;
 
@@ -989,7 +999,7 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
     function renderSessions(sessions, activeId) {
       historyList.innerHTML = "";
       if (!sessions || sessions.length === 0) {
-        historyList.innerHTML = '<div class="history-empty">No previous chats</div>';
+        historyList.innerHTML = '<div class="history-empty">' + escapeHtml(_t["chat.noChats"]) + '</div>';
         return;
       }
       for (var i = 0; i < sessions.length; i++) {
@@ -999,7 +1009,7 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
           var d = new Date(s.createdAt);
           var dateStr = d.toLocaleDateString() + " " + d.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
           div.innerHTML = '<div class="hi-title">' + escapeHtml(s.title) + '</div>'
-            + '<div class="hi-meta">' + escapeHtml(s.lang + " \\u00b7 " + s.messageCount + " msgs \\u00b7 " + dateStr) + '</div>';
+            + '<div class="hi-meta">' + escapeHtml(s.lang + " \\u00b7 " + s.messageCount + " " + _t["chat.msgs"] + " \\u00b7 " + dateStr) + '</div>';
           div.addEventListener("click", function() {
             vscode.postMessage({ type: "loadSession", id: s.id });
             var items = document.querySelectorAll(".history-item");
@@ -1029,9 +1039,9 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
     document.querySelectorAll(".quick-chip").forEach(function(chip) {
       chip.addEventListener("click", function() {
         var action = this.dataset.action;
-        if (action === "generate") chatInput.value = "Give me a practice exercise";
-        else if (action === "hint") chatInput.value = "Give me a hint for the current exercise";
-        else if (action === "explain") chatInput.value = "Explain my current code";
+        if (action === "generate") chatInput.value = _t["chat.generatePrompt"];
+        else if (action === "hint") chatInput.value = _t["chat.hintPrompt"];
+        else if (action === "explain") chatInput.value = _t["chat.explainPrompt"];
         sendBtn.click();
       });
     });
@@ -1041,8 +1051,8 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
         var pre = e.target.parentElement.querySelector("pre");
         if (pre) {
           navigator.clipboard.writeText(pre.textContent).catch(function(){});
-          e.target.textContent = "Copied!";
-          setTimeout(function() { e.target.textContent = "Copy"; }, 1500);
+          e.target.textContent = _t["chat.copied"];
+          setTimeout(function() { e.target.textContent = _t["chat.copy"]; }, 1500);
         }
       }
       // Run / Judge buttons inside practice cards
@@ -1080,8 +1090,8 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
       }
 
       if (msg.type === "chatThinking") {
-        var labels = { generate: "Generating practice...", run: "Running code...", judge: "Judging..." };
-        showThinking(labels[msg.action] || "Thinking...");
+        var labels = { generate: _t["chat.generating"], run: _t["chat.running"], judge: _t["chat.judging"] };
+        showThinking(labels[msg.action] || _t["chat.thinkingGeneric"]);
       }
 
       if (msg.type === "chatError") {
@@ -1114,7 +1124,7 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
             }
           }
         } else {
-          messagesEl.innerHTML = '<div class="empty">No messages in this session.</div>';
+          messagesEl.innerHTML = '<div class="empty">' + escapeHtml(_t["chat.noMessages"]) + '</div>';
         }
         if (msg.title) {
           document.getElementById("ctxTitle").textContent = msg.title;
@@ -1122,7 +1132,7 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
       }
 
       if (msg.type === "clearChat") {
-        messagesEl.innerHTML = '<div class="empty">Ask anything about this exercise.<br>Or use the chips below to get started! 👇</div>';
+        messagesEl.innerHTML = '<div class="empty">' + _t["chat.emptyChips"].replace(/\\n/g, "<br>") + ' \u{1f447}</div>';
       }
     });
 
