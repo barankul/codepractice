@@ -10,7 +10,7 @@ npm install
 npm run package
 
 # Package as VSIX and install
-npx --yes @vscode/vsce package --no-dependencies -o /tmp/codepractice.vsix
+npx --yes @vscode/vsce package --no-dependencies --allow-star-activation -o /tmp/codepractice.vsix
 code --install-extension /tmp/codepractice.vsix --force
 rm -f /tmp/codepractice.vsix
 
