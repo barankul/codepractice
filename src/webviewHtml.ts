@@ -1241,7 +1241,7 @@ export function getWebviewHtml(nonce: string): string {
       max-height: 250px; overflow-y: auto; white-space: pre-wrap; line-height: 1.5;
     }
     .alt-method-current { border-color: var(--good); }
-    .alt-method-current .alt-method-name::after { content: " (yours)"; font-weight: 400; font-size: 10px; color: var(--good); margin-left: 4px; }
+    .alt-method-yours { font-weight: 400; font-size: 10px; color: var(--good); margin-left: 4px; }
 
     /* Cross-language dropdown */
     .cross-lang-dropdown {

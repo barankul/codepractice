@@ -184,11 +184,17 @@ export function initMessageHandler(): void {
           nameEl.className = "alt-method-name";
           nameEl.textContent = m.name || "Method " + (idx + 1);
           header.appendChild(nameEl);
+          if (idx === 0) {
+            const yoursEl = document.createElement("span");
+            yoursEl.className = "alt-method-yours";
+            yoursEl.textContent = " " + t("alt.yours");
+            header.appendChild(yoursEl);
+          }
           if (idx > 0 && m.speedPercent) {
             const sp = m.speedPercent;
             const speedEl = document.createElement("span");
             speedEl.className = "alt-method-speed " + (sp > 110 ? "faster" : sp < 90 ? "slower" : "same");
-            speedEl.textContent = sp > 100 ? "+" + (sp - 100) + "% faster" : sp < 100 ? (100 - sp) + "% slower" : "";
+            speedEl.textContent = sp > 100 ? "+" + (sp - 100) + "% " + t("alt.faster") : sp < 100 ? (100 - sp) + "% " + t("alt.slower") : "";
             if (speedEl.textContent) header.appendChild(speedEl);
           }
           card.appendChild(header);
@@ -450,7 +456,7 @@ function handleJudgeResult(msg: Extract<ExtToWebviewMsg, { type: "judgeResult" }
     }
     const celeb = document.createElement("div");
     celeb.className = "celebrate";
-    celeb.innerHTML = '<div class="celebrate-text">Passed</div>';
+    celeb.innerHTML = '<div class="celebrate-text">' + t("judge.passed") + '</div>';
     dom.outputWrap?.insertBefore(celeb, dom.outputWrap.querySelector(".pass-buttons"));
 
     if (msg.xp && msg.xp.earned > 0) {

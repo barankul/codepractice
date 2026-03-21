@@ -12,9 +12,15 @@ export function getExplainHtml(
 ): string {
   const esc = (s: string) => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  const fmtExplanation = esc(explanation)
-    .replace(/\n/g, "<br>")
-    .replace(/`([^`]+)`/g, '<code>$1</code>');
+  const fmtBlock = (text: string) => {
+    let html = esc(text);
+    html = html.replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre class="code-block" style="margin:8px 0;">$1</pre>');
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    html = html.replace(/\n/g, "<br>");
+    html = html.replace(/<\/pre><br>/g, '</pre>');
+    return html;
+  };
+  const fmtExplanation = fmtBlock(explanation);
 
   return `<!DOCTYPE html>
 <html>
@@ -135,7 +141,7 @@ export function getExplainHtml(
 
   <div class="section">
     <div class="section-label">Your Task</div>
-    <div class="task-text">${esc(task)}</div>
+    <div class="task-text">${fmtBlock(task)}</div>
   </div>
 
   ${code ? `<div class="section">
