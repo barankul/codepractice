@@ -969,6 +969,21 @@ select:focus {
   word-break: break-all;
 }
 .tc-detail-value.fail-val { color: var(--bad); }
+.tc-repair-btn {
+  margin-top: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  border: 1px solid var(--vscode-button-border, #555);
+  border-radius: 4px;
+  background: var(--vscode-button-secondaryBackground, #333);
+  color: var(--vscode-button-secondaryForeground, #ccc);
+  cursor: pointer;
+  opacity: 0.85;
+}
+.tc-repair-btn:hover {
+  opacity: 1;
+  background: var(--vscode-button-secondaryHoverBackground, #444);
+}
 .tc-summary {
   grid-column: 1 / -1;
   font-size: 11px;

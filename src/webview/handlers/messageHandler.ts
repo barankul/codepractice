@@ -353,6 +353,12 @@ function handleJudgeResult(msg: Extract<ExtToWebviewMsg, { type: "judgeResult" }
   dom.outputWrap?.classList.add("show");
   showPerfCard(msg.durationMs);
 
+  // Store test results for repair feature
+  if (msg.testResults) {
+    state.lastTestResults = msg.testResults;
+    state.lastJudgeMsg = msg;
+  }
+
   // Test case cards
   if (msg.testResults && msg.testResults.length > 0 && dom.testCasesList) {
     dom.testCasesList.innerHTML = "";
@@ -381,6 +387,30 @@ function handleJudgeResult(msg: Extract<ExtToWebviewMsg, { type: "judgeResult" }
           const gotLabel = document.createElement("span"); gotLabel.className = "tc-detail-label"; gotLabel.textContent = t("test.got");
           const gotVal = document.createElement("span"); gotVal.className = "tc-detail-value fail-val"; gotVal.textContent = tr.got;
           gotRow.appendChild(gotLabel); gotRow.appendChild(gotVal); body.appendChild(gotRow);
+        }
+        // Repair button — only show when ref output differs from expected (AI mismatch)
+        if (tr.refOutput && tr.refOutput !== tr.expected) {
+          const repairBtn = document.createElement("button");
+          repairBtn.className = "tc-repair-btn";
+          repairBtn.textContent = t("test.repair");
+          repairBtn.title = t("test.repairTip");
+          repairBtn.addEventListener("click", () => {
+            if (!state.lastTestResults) return;
+            const entry = state.lastTestResults[ti];
+            if (!entry || !entry.refOutput) return;
+            entry.expected = entry.refOutput;
+            entry.pass = (entry.got.trim() === entry.refOutput.trim());
+            // Re-render test results with updated data
+            const updatedMsg = {
+              ...state.lastJudgeMsg,
+              pass: state.lastTestResults.every(r => r.pass),
+              testResults: state.lastTestResults,
+            };
+            handleJudgeResult(updatedMsg);
+            // Notify extension to persist the corrected expected value
+            post({ type: "repairTestCase", index: ti } as any);
+          });
+          body.appendChild(repairBtn);
         }
       }
       card.appendChild(body);

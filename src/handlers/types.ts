@@ -81,7 +81,7 @@ export interface HandlerContext {
   runMultiTestCases(
     studentCode: string, starterCode: string,
     testCases: TestCase[], lang: string, solutionCode?: string
-  ): Promise<{ name: string; pass: boolean; expected: string; got: string }[] | null>;
+  ): Promise<{ name: string; pass: boolean; expected: string; got: string; refOutput?: string }[] | null>;
   verifyTestCompiles(workspaceRoot: string, lang: string, testFilename: string): Promise<boolean>;
   checkOutputResult(output: string, currentFileCode?: string): { pass: boolean; testResults?: { name: string; pass: boolean; expected: string; got: string }[] };
 

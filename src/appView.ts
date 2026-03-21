@@ -40,6 +40,7 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
   private currentPractice?: PracticeState;
 
   private crossLangDecorationType?: vscode.TextEditorDecorationType;
+  private _lastRefOutputs: Record<number, string> | null = null;
 
   private async saveDirtyDocuments(): Promise<void> {
     await Promise.all(vscode.workspace.textDocuments.filter(d => d.isDirty).map(d => d.save()));
@@ -248,7 +249,7 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
     testCases: TestCase[],
     lang: string,
     solutionCode?: string
-  ): Promise<{ name: string; pass: boolean; expected: string; got: string }[] | null> {
+  ): Promise<{ name: string; pass: boolean; expected: string; got: string; refOutput?: string }[] | null> {
     if (!testCases || testCases.length === 0 || lang === "SQL") { return null; }
 
     const ws = vscode.workspace.workspaceFolders?.[0];
@@ -354,6 +355,10 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
       if (!studentOutputs) { this.output.appendLine(`[MultiTest] Student run returned null (compile/runtime error)`); return null; }
       this.output.appendLine(`[MultiTest] Student outputs: ${JSON.stringify(studentOutputs)}`);
 
+      // Save original reference outputs before mismatch overrides (for repair feature)
+      const originalRefOutputs = { ...referenceOutputs };
+      this._lastRefOutputs = originalRefOutputs;
+
       // Step 3: Validate reference outputs against expected values & compare
       // If reference output doesn't match the test case's expected output, the solution code
       // has a bug for that edge case — use the expected output from the test case instead
@@ -367,24 +372,25 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
         }
       }
 
-      const results: { name: string; pass: boolean; expected: string; got: string }[] = [];
+      const results: { name: string; pass: boolean; expected: string; got: string; refOutput?: string }[] = [];
       for (let i = 0; i < testCases.length; i++) {
         const tc = testCases[i];
         const tcNum = i + 1;
         const got = studentOutputs[tcNum];
         const expectedVal = referenceOutputs[tcNum];
         const shortInput = tc.input.length > 50 ? tc.input.slice(0, 50) + "..." : tc.input;
+        const refOut = originalRefOutputs[tcNum];
 
         if (expectedVal === undefined) {
           this.output.appendLine(`[MultiTest] TC${tcNum} skipped: reference produced no output`);
-          results.push({ name: `Test ${tcNum}: ${shortInput}`, pass: false, expected: "(reference failed)", got: got ?? "(no output)" });
+          results.push({ name: `Test ${tcNum}: ${shortInput}`, pass: false, expected: "(reference failed)", got: got ?? "(no output)", refOutput: refOut });
           continue;
         }
         if (got === undefined) {
-          results.push({ name: `Test ${tcNum}: ${shortInput}`, pass: false, expected: expectedVal, got: "(no output)" });
+          results.push({ name: `Test ${tcNum}: ${shortInput}`, pass: false, expected: expectedVal, got: "(no output)", refOutput: refOut });
         } else {
           const pass = normalizeOutput(got, lang) === normalizeOutput(expectedVal, lang);
-          results.push({ name: `Test ${tcNum}: ${shortInput}`, pass, expected: expectedVal, got });
+          results.push({ name: `Test ${tcNum}: ${shortInput}`, pass, expected: expectedVal, got, refOutput: refOut });
         }
       }
 
@@ -661,7 +667,8 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
       "showSolution", "alternativeMethods", "openAltMethod", "crossLanguage",
       "openApiPreview", "openCrossLang", "getProgress", "rateDifficulty",
       "setUiLang", "saveSettings", "getCustomPractices", "deleteCustomPractice", "resetProgress",
-      "generateCustom", "loadingProgress", "toggleGhostMode", "setForceOffline"
+      "generateCustom", "loadingProgress", "toggleGhostMode", "setForceOffline",
+      "repairTestCase"
     ]);
 
     view.webview.onDidReceiveMessage(async (msg: WebviewMessage) => {
@@ -710,6 +717,20 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
 
         // Ghost Text teaching mode
         case "toggleGhostMode":     return this.handleToggleGhostMode();
+
+        // Test case repair
+        case "repairTestCase": {
+          const idx = (msg as any).index;
+          if (this.currentPractice?.testCases && typeof idx === "number" && idx >= 0 && idx < this.currentPractice.testCases.length && this._lastRefOutputs) {
+            const tcNum = idx + 1;
+            const refVal = this._lastRefOutputs[tcNum];
+            if (refVal !== undefined) {
+              this.currentPractice.testCases[idx].output = refVal;
+              this.output.appendLine(`[Repair] TC${tcNum} expected updated to ref output: "${refVal}"`);
+            }
+          }
+          return;
+        }
       }
     });
   }

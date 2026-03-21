@@ -1,5 +1,5 @@
 // Webview mutable state — single source of truth
-import type { ProgressStats, Recommendation, TopicStat, CustomPractice, UiLanguage } from "../shared/protocol";
+import type { ProgressStats, Recommendation, TopicStat, CustomPractice, UiLanguage, TestResultEntry } from "../shared/protocol";
 
 export const state = {
   // Topic / language selection
@@ -47,4 +47,8 @@ export const state = {
 
   // Toast
   lastToastAction: null as (() => void) | null,
+
+  // Last test results (for repair feature)
+  lastTestResults: null as TestResultEntry[] | null,
+  lastJudgeMsg: null as any,
 };

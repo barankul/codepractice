@@ -30,7 +30,8 @@ export type WebviewToExtMsg =
   | { type: "deleteCustomPractice"; id: string }
   | { type: "resetProgress" }
   | { type: "setForceOffline"; forceOffline: boolean }
-  | { type: "toggleGhostMode" };
+  | { type: "toggleGhostMode" }
+  | { type: "repairTestCase"; index: number };
 
 // ─── Extension → Webview (17 message types) ───
 
@@ -135,6 +136,7 @@ export interface TestResultEntry {
   pass: boolean;
   expected: string;
   got: string;
+  refOutput?: string;
 }
 
 export interface XpResult {
