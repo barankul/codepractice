@@ -1,0 +1,28 @@
+{
+  "id": "sql-select-l1",
+  "practice": {
+    "lang": "SQL",
+    "topic": "SELECT Basics",
+    "task": "Select all employee names and salaries from the employees table.",
+    "title": "Employee Names and Salaries",
+    "code": "-- TODO: Write a SELECT query\n-- Table: employees (id, name, salary, department)",
+    "expectedOutput": "Alice|50000\nBob|60000\nCharlie|55000"
+  },
+  "solutionCode": "SELECT name, salary FROM employees;",
+  "solutionOutput": "name|salary\nAlice|50000\nBob|60000\nCharlie|55000",
+  "meta": "TITLE: Employee Names and Salaries\nTASK: Select all employee names and salaries from the employees table.\nEXPECTED_OUTPUT: Alice|50000\nBob|60000\nCharlie|55000\nHINT: Use SELECT column1, column2 FROM table.",
+  "variants": [
+    {
+      "label": "correct-with-header",
+      "code": "SELECT name, salary FROM employees;",
+      "output": "name|salary\nAlice|50000\nBob|60000\nCharlie|55000",
+      "expectPass": true
+    },
+    {
+      "label": "correct-no-header",
+      "code": "SELECT name, salary FROM employees;",
+      "output": "Alice|50000\nBob|60000\nCharlie|55000",
+      "expectPass": true
+    }
+  ]
+}

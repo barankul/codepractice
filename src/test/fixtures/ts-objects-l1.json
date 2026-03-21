@@ -1,0 +1,29 @@
+{
+  "id": "ts-objects-l1",
+  "practice": {
+    "lang": "TypeScript",
+    "topic": "Objects",
+    "task": "Create a student object with name, age, and grade properties. Print it as JSON.",
+    "title": "Student Object",
+    "code": "// YOUR CODE HERE\n// Create a student object and print it",
+    "expectedOutput": "{\"name\":\"Alice\",\"age\":20,\"grade\":\"A\"}",
+    "testCases": []
+  },
+  "solutionCode": "const student = { name: \"Alice\", age: 20, grade: \"A\" };\nconsole.log(JSON.stringify(student));",
+  "solutionOutput": "{\"name\":\"Alice\",\"age\":20,\"grade\":\"A\"}",
+  "meta": "TITLE: Student Object\nTASK: Create a student object with name, age, and grade.\nEXPECTED_OUTPUT: {\"name\":\"Alice\",\"age\":20,\"grade\":\"A\"}\nHINT: Use object literal syntax { key: value }.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "const student = { name: \"Alice\", age: 20, grade: \"A\" };\nconsole.log(JSON.stringify(student));",
+      "output": "{\"name\":\"Alice\",\"age\":20,\"grade\":\"A\"}",
+      "expectPass": true
+    },
+    {
+      "label": "different-key-order",
+      "code": "const student = { grade: \"A\", name: \"Alice\", age: 20 };\nconsole.log(JSON.stringify(student));",
+      "output": "{\"grade\":\"A\",\"name\":\"Alice\",\"age\":20}",
+      "expectPass": true
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "id": "java-anticheat",
+  "practice": {
+    "lang": "Java",
+    "topic": "HashMap",
+    "task": "Count word frequencies in the sentence and print the word that appears most often.",
+    "title": "Most Frequent Word",
+    "code": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String sentence = \"the cat sat on the mat the cat\";\n    // YOUR CODE HERE\n    // Print the most frequent word\n  }\n}",
+    "expectedOutput": "the",
+    "testCases": [
+      { "input": "String sentence = \"a b a\"", "output": "a" },
+      { "input": "String sentence = \"x x y y y\"", "output": "y" }
+    ]
+  },
+  "solutionCode": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String sentence = \"the cat sat on the mat the cat\";\n    HashMap<String, Integer> freq = new HashMap<>();\n    for (String word : sentence.split(\" \")) {\n      freq.put(word, freq.getOrDefault(word, 0) + 1);\n    }\n    String maxWord = \"\";\n    int maxCount = 0;\n    for (var entry : freq.entrySet()) {\n      if (entry.getValue() > maxCount) {\n        maxCount = entry.getValue();\n        maxWord = entry.getKey();\n      }\n    }\n    System.out.println(maxWord);\n  }\n}",
+  "solutionOutput": "the",
+  "meta": "TITLE: Most Frequent Word\nTASK: Count word frequencies and print the most frequent word.\nEXPECTED_OUTPUT: the\nHINT: Use a HashMap to count words, then find the max.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String sentence = \"the cat sat on the mat the cat\";\n    HashMap<String, Integer> freq = new HashMap<>();\n    for (String word : sentence.split(\" \")) {\n      freq.put(word, freq.getOrDefault(word, 0) + 1);\n    }\n    String maxWord = \"\";\n    int maxCount = 0;\n    for (var entry : freq.entrySet()) {\n      if (entry.getValue() > maxCount) {\n        maxCount = entry.getValue();\n        maxWord = entry.getKey();\n      }\n    }\n    System.out.println(maxWord);\n  }\n}",
+      "output": "the",
+      "expectPass": true
+    },
+    {
+      "label": "hardcoded-string",
+      "code": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String sentence = \"the cat sat on the mat the cat\";\n    System.out.println(\"the\");\n  }\n}",
+      "output": "the",
+      "expectPass": false,
+      "failReason": "anti-cheat"
+    },
+    {
+      "label": "hardcoded-concat",
+      "code": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String sentence = \"the cat sat on the mat the cat\";\n    System.out.println(\"th\" + \"e\");\n  }\n}",
+      "output": "the",
+      "expectPass": false,
+      "failReason": "anti-cheat"
+    }
+  ]
+}

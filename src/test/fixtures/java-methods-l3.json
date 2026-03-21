@@ -1,0 +1,27 @@
+{
+  "id": "java-methods-l3",
+  "practice": {
+    "lang": "Java",
+    "topic": "Methods",
+    "task": "Write a method isPalindrome that checks if a string reads the same forward and backward. Print true or false.",
+    "title": "Palindrome Check",
+    "code": "public class Practice {\n  // YOUR CODE HERE\n  // Write isPalindrome method\n\n  public static void main(String[] args) {\n    System.out.println(isPalindrome(\"racecar\"));\n    System.out.println(isPalindrome(\"hello\"));\n  }\n}",
+    "expectedOutput": "true\nfalse",
+    "testCases": [
+      { "input": "String s = \"madam\"", "output": "true" },
+      { "input": "String s = \"abc\"", "output": "false" },
+      { "input": "String s = \"a\"", "output": "true" }
+    ]
+  },
+  "solutionCode": "public class Practice {\n  public static boolean isPalindrome(String s) {\n    int left = 0, right = s.length() - 1;\n    while (left < right) {\n      if (s.charAt(left) != s.charAt(right)) {\n        return false;\n      }\n      left++;\n      right--;\n    }\n    return true;\n  }\n\n  public static void main(String[] args) {\n    System.out.println(isPalindrome(\"racecar\"));\n    System.out.println(isPalindrome(\"hello\"));\n  }\n}",
+  "solutionOutput": "true\nfalse",
+  "meta": "TITLE: Palindrome Check\nTASK: Write a method isPalindrome that checks if a string reads the same forward and backward.\nEXPECTED_OUTPUT: true\nfalse\nHINT: Use two pointers, one at the start and one at the end.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "public class Practice {\n  public static boolean isPalindrome(String s) {\n    int left = 0, right = s.length() - 1;\n    while (left < right) {\n      if (s.charAt(left) != s.charAt(right)) return false;\n      left++;\n      right--;\n    }\n    return true;\n  }\n\n  public static void main(String[] args) {\n    System.out.println(isPalindrome(\"racecar\"));\n    System.out.println(isPalindrome(\"hello\"));\n  }\n}",
+      "output": "true\nfalse",
+      "expectPass": true
+    }
+  ]
+}

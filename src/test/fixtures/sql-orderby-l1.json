@@ -1,0 +1,22 @@
+{
+  "id": "sql-orderby-l1",
+  "practice": {
+    "lang": "SQL",
+    "topic": "ORDER BY",
+    "task": "Select all employees ordered by salary from highest to lowest.",
+    "title": "Employees by Salary",
+    "code": "-- TODO: Write a query with ORDER BY\n-- Table: employees (id, name, salary)",
+    "expectedOutput": "Bob|60000\nCharlie|55000\nAlice|50000"
+  },
+  "solutionCode": "SELECT name, salary FROM employees ORDER BY salary DESC;",
+  "solutionOutput": "name|salary\nBob|60000\nCharlie|55000\nAlice|50000",
+  "meta": "TITLE: Employees by Salary\nTASK: Select all employees ordered by salary descending.\nEXPECTED_OUTPUT: Bob|60000\nCharlie|55000\nAlice|50000\nHINT: Use ORDER BY column DESC.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "SELECT name, salary FROM employees ORDER BY salary DESC;",
+      "output": "name|salary\nBob|60000\nCharlie|55000\nAlice|50000",
+      "expectPass": true
+    }
+  ]
+}

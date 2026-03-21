@@ -1,0 +1,39 @@
+{
+  "id": "ts-functions-l1",
+  "practice": {
+    "lang": "TypeScript",
+    "topic": "Functions",
+    "task": "Write a function that calculates the total price with tax (8.4%) and print the result.",
+    "title": "Price With Tax",
+    "code": "// YOUR CODE HERE\n// Write a function calculateTotal(price: number): number\n\nconst price = 180;\nconsole.log(calculateTotal(price));",
+    "expectedOutput": "195.12",
+    "testCases": [
+      { "input": "const price = 100", "output": "108.4" },
+      { "input": "const price = 50", "output": "54.2" }
+    ]
+  },
+  "solutionCode": "function calculateTotal(price: number): number {\n  return price * 1.084;\n}\n\nconst price = 180;\nconsole.log(calculateTotal(price));",
+  "solutionOutput": "195.12",
+  "meta": "TITLE: Price With Tax\nTASK: Write a function that calculates the total price with tax (8.4%).\nEXPECTED_OUTPUT: 195.12\nHINT: Multiply the price by 1.084.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "function calculateTotal(price: number): number {\n  return price * 1.084;\n}\n\nconst price = 180;\nconsole.log(calculateTotal(price));",
+      "output": "195.12",
+      "expectPass": true
+    },
+    {
+      "label": "float-precision",
+      "code": "function calculateTotal(price: number): number {\n  return price * 1.084;\n}\n\nconst price = 180;\nconsole.log(calculateTotal(price));",
+      "output": "195.120000000000001",
+      "expectPass": true
+    },
+    {
+      "label": "hardcoded",
+      "code": "function calculateTotal(price: number): number {\n  return 195.12;\n}\n\nconst price = 180;\nconsole.log(195.12);",
+      "output": "195.12",
+      "expectPass": false,
+      "failReason": "anti-cheat"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "ts-arrays-l2",
+  "practice": {
+    "lang": "TypeScript",
+    "topic": "Arrays",
+    "task": "Filter the array to keep only numbers greater than 10, then map them to their squares. Print the result.",
+    "title": "Filter and Square",
+    "code": "const nums: number[] = [3, 15, 7, 20, 4, 12];\n// YOUR CODE HERE\n// Filter > 10, map to squares, print result",
+    "expectedOutput": "[225, 400, 144]",
+    "testCases": [
+      { "input": "const nums = [1, 11, 5]", "output": "[121]" },
+      { "input": "const nums = [20, 30]", "output": "[400, 900]" }
+    ]
+  },
+  "solutionCode": "const nums: number[] = [3, 15, 7, 20, 4, 12];\nconst result = nums.filter(n => n > 10).map(n => n * n);\nconsole.log(JSON.stringify(result));",
+  "solutionOutput": "[225,400,144]",
+  "meta": "TITLE: Filter and Square\nTASK: Filter the array to keep only numbers greater than 10, then map to squares.\nEXPECTED_OUTPUT: [225, 400, 144]\nHINT: Use .filter() and .map() array methods.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "const nums: number[] = [3, 15, 7, 20, 4, 12];\nconst result = nums.filter(n => n > 10).map(n => n * n);\nconsole.log(JSON.stringify(result));",
+      "output": "[225,400,144]",
+      "expectPass": true
+    },
+    {
+      "label": "correct-with-spaces",
+      "code": "const nums: number[] = [3, 15, 7, 20, 4, 12];\nconst result = nums.filter(n => n > 10).map(n => n * n);\nconsole.log(result);",
+      "output": "[ 225, 400, 144 ]",
+      "expectPass": true
+    }
+  ]
+}

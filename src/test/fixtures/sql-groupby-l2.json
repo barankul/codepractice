@@ -1,0 +1,22 @@
+{
+  "id": "sql-groupby-l2",
+  "practice": {
+    "lang": "SQL",
+    "topic": "GROUP BY",
+    "task": "Count the number of employees in each department.",
+    "title": "Department Counts",
+    "code": "-- TODO: Write a GROUP BY query\n-- Table: employees (id, name, department)",
+    "expectedOutput": "Engineering|2\nMarketing|1"
+  },
+  "solutionCode": "SELECT department, COUNT(*) as cnt FROM employees GROUP BY department;",
+  "solutionOutput": "department|cnt\nEngineering|2\nMarketing|1",
+  "meta": "TITLE: Department Counts\nTASK: Count the number of employees in each department.\nEXPECTED_OUTPUT: Engineering|2\nMarketing|1\nHINT: Use GROUP BY with COUNT(*).",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "SELECT department, COUNT(*) as cnt FROM employees GROUP BY department;",
+      "output": "department|cnt\nEngineering|2\nMarketing|1",
+      "expectPass": true
+    }
+  ]
+}

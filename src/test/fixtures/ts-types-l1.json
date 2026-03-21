@@ -1,0 +1,23 @@
+{
+  "id": "ts-types-l1",
+  "practice": {
+    "lang": "TypeScript",
+    "topic": "Type Basics",
+    "task": "Define an interface Product with name (string) and price (number). Create a product and print its details.",
+    "title": "Product Interface",
+    "code": "// YOUR CODE HERE\n// Define interface Product\n// Create a product and print it",
+    "expectedOutput": "Laptop: $999",
+    "testCases": []
+  },
+  "solutionCode": "interface Product {\n  name: string;\n  price: number;\n}\n\nconst product: Product = { name: \"Laptop\", price: 999 };\nconsole.log(`${product.name}: $${product.price}`);",
+  "solutionOutput": "Laptop: $999",
+  "meta": "TITLE: Product Interface\nTASK: Define an interface Product with name and price.\nEXPECTED_OUTPUT: Laptop: $999\nHINT: Use the interface keyword to define types.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "interface Product {\n  name: string;\n  price: number;\n}\n\nconst product: Product = { name: \"Laptop\", price: 999 };\nconsole.log(`${product.name}: $${product.price}`);",
+      "output": "Laptop: $999",
+      "expectPass": true
+    }
+  ]
+}

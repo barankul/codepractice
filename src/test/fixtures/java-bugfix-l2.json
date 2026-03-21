@@ -1,0 +1,30 @@
+{
+  "id": "java-bugfix-l2",
+  "practice": {
+    "lang": "Java",
+    "topic": "Array",
+    "task": "Fix the bug: the program should find the maximum element in the array but crashes with an ArrayIndexOutOfBoundsException.",
+    "title": "Fix Array Max Bug",
+    "code": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {3, 7, 2, 8, 1};\n    int max = nums[0];\n    for (int i = 0; i <= nums.length; i++) {\n      if (nums[i] > max) {\n        max = nums[i];\n      }\n    }\n    System.out.println(max);\n  }\n}",
+    "expectedOutput": "8",
+    "mode": "bugfix",
+    "bugExplanation": "The loop condition uses <= instead of <, causing an ArrayIndexOutOfBoundsException on the last iteration."
+  },
+  "solutionCode": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {3, 7, 2, 8, 1};\n    int max = nums[0];\n    for (int i = 0; i < nums.length; i++) {\n      if (nums[i] > max) {\n        max = nums[i];\n      }\n    }\n    System.out.println(max);\n  }\n}",
+  "solutionOutput": "8",
+  "meta": "TITLE: Fix Array Max Bug\nTASK: Fix the bug: the program should find the maximum element in the array but crashes.\nEXPECTED_OUTPUT: 8\nBUG_EXPLANATION: The loop condition uses <= instead of <, causing an ArrayIndexOutOfBoundsException.",
+  "variants": [
+    {
+      "label": "fixed",
+      "code": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {3, 7, 2, 8, 1};\n    int max = nums[0];\n    for (int i = 0; i < nums.length; i++) {\n      if (nums[i] > max) {\n        max = nums[i];\n      }\n    }\n    System.out.println(max);\n  }\n}",
+      "output": "8",
+      "expectPass": true
+    },
+    {
+      "label": "still-buggy",
+      "code": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {3, 7, 2, 8, 1};\n    int max = nums[0];\n    for (int i = 0; i <= nums.length; i++) {\n      if (nums[i] > max) {\n        max = nums[i];\n      }\n    }\n    System.out.println(max);\n  }\n}",
+      "output": "java.lang.ArrayIndexOutOfBoundsException: Index 5 out of bounds for length 5",
+      "expectPass": false
+    }
+  ]
+}

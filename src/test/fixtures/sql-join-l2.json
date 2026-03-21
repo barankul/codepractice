@@ -1,0 +1,22 @@
+{
+  "id": "sql-join-l2",
+  "practice": {
+    "lang": "SQL",
+    "topic": "JOIN Basics",
+    "task": "Join employees with departments table to show each employee's department name.",
+    "title": "Employee Departments",
+    "code": "-- TODO: Write a JOIN query\n-- Tables: employees (id, name, dept_id), departments (id, dept_name)",
+    "expectedOutput": "Alice|Engineering\nBob|Marketing\nCharlie|Engineering"
+  },
+  "solutionCode": "SELECT e.name, d.dept_name FROM employees e JOIN departments d ON e.dept_id = d.id;",
+  "solutionOutput": "name|dept_name\nAlice|Engineering\nBob|Marketing\nCharlie|Engineering",
+  "meta": "TITLE: Employee Departments\nTASK: Join employees with departments to show department names.\nEXPECTED_OUTPUT: Alice|Engineering\nBob|Marketing\nCharlie|Engineering\nHINT: Use JOIN ... ON to connect tables.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "SELECT e.name, d.dept_name FROM employees e JOIN departments d ON e.dept_id = d.id;",
+      "output": "name|dept_name\nAlice|Engineering\nBob|Marketing\nCharlie|Engineering",
+      "expectPass": true
+    }
+  ]
+}

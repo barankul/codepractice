@@ -1,0 +1,26 @@
+{
+  "id": "ts-union-l2",
+  "practice": {
+    "lang": "TypeScript",
+    "topic": "Union Types",
+    "task": "Write a function that accepts a string or number and returns its length (for strings) or digit count (for numbers).",
+    "title": "Length or Digit Count",
+    "code": "// YOUR CODE HERE\n// function getSize(val: string | number): number\n\nconsole.log(getSize(\"hello\"));\nconsole.log(getSize(12345));",
+    "expectedOutput": "5\n5",
+    "testCases": [
+      { "input": "const val: string | number = \"ab\"", "output": "2" },
+      { "input": "const val: string | number = 99", "output": "2" }
+    ]
+  },
+  "solutionCode": "function getSize(val: string | number): number {\n  if (typeof val === \"string\") {\n    return val.length;\n  }\n  return String(val).length;\n}\n\nconsole.log(getSize(\"hello\"));\nconsole.log(getSize(12345));",
+  "solutionOutput": "5\n5",
+  "meta": "TITLE: Length or Digit Count\nTASK: Write a function that returns length for strings or digit count for numbers.\nEXPECTED_OUTPUT: 5\n5\nHINT: Use typeof to narrow the union type.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "function getSize(val: string | number): number {\n  if (typeof val === \"string\") {\n    return val.length;\n  }\n  return String(val).length;\n}\n\nconsole.log(getSize(\"hello\"));\nconsole.log(getSize(12345));",
+      "output": "5\n5",
+      "expectPass": true
+    }
+  ]
+}

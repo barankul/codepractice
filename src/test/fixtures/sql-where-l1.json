@@ -1,0 +1,34 @@
+{
+  "id": "sql-where-l1",
+  "practice": {
+    "lang": "SQL",
+    "topic": "WHERE",
+    "task": "Find all employees who earn more than 55000.",
+    "title": "High Earners",
+    "code": "-- TODO: Write a SELECT with WHERE\n-- Table: employees (id, name, salary, department)",
+    "expectedOutput": "Bob|60000"
+  },
+  "solutionCode": "SELECT name, salary FROM employees WHERE salary > 55000;",
+  "solutionOutput": "name|salary\nBob|60000",
+  "meta": "TITLE: High Earners\nTASK: Find all employees who earn more than 55000.\nEXPECTED_OUTPUT: Bob|60000\nHINT: Use WHERE clause with > operator.",
+  "variants": [
+    {
+      "label": "correct-with-header",
+      "code": "SELECT name, salary FROM employees WHERE salary > 55000;",
+      "output": "name|salary\nBob|60000",
+      "expectPass": true
+    },
+    {
+      "label": "correct-no-header",
+      "code": "SELECT name, salary FROM employees WHERE salary > 55000;",
+      "output": "Bob|60000",
+      "expectPass": true
+    },
+    {
+      "label": "wrong-filter",
+      "code": "SELECT name, salary FROM employees;",
+      "output": "name|salary\nAlice|50000\nBob|60000\nCharlie|55000",
+      "expectPass": false
+    }
+  ]
+}

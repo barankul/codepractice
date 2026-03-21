@@ -1,0 +1,40 @@
+{
+  "id": "java-array-l1",
+  "practice": {
+    "lang": "Java",
+    "topic": "Array",
+    "task": "Calculate the sum of all elements in the given integer array.",
+    "title": "Array Sum",
+    "code": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {10, 20, 5, 7};\n    // YOUR CODE HERE\n    // Print the sum of all elements\n  }\n}",
+    "expectedOutput": "42",
+    "testCases": [
+      { "input": "int[] nums = {1, 2, 3}", "output": "6" },
+      { "input": "int[] nums = {10, 20, 30}", "output": "60" },
+      { "input": "int[] nums = {0, 0, 0}", "output": "0" }
+    ]
+  },
+  "solutionCode": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {10, 20, 5, 7};\n    int sum = 0;\n    for (int n : nums) {\n      sum += n;\n    }\n    System.out.println(sum);\n  }\n}",
+  "solutionOutput": "42",
+  "meta": "TITLE: Array Sum\nTASK: Calculate the sum of all elements in the given integer array.\nEXPECTED_OUTPUT: 42\nHINT: Use a for-each loop to iterate over the array.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {10, 20, 5, 7};\n    int sum = 0;\n    for (int n : nums) {\n      sum += n;\n    }\n    System.out.println(sum);\n  }\n}",
+      "output": "42",
+      "expectPass": true
+    },
+    {
+      "label": "hardcoded",
+      "code": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {10, 20, 5, 7};\n    System.out.println(42);\n  }\n}",
+      "output": "42",
+      "expectPass": false,
+      "failReason": "anti-cheat"
+    },
+    {
+      "label": "wrong-output",
+      "code": "public class Practice {\n  public static void main(String[] args) {\n    int[] nums = {10, 20, 5, 7};\n    int sum = 0;\n    for (int i = 0; i < nums.length - 1; i++) {\n      sum += nums[i];\n    }\n    System.out.println(sum);\n  }\n}",
+      "output": "35",
+      "expectPass": false
+    }
+  ]
+}

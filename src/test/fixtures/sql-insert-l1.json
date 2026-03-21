@@ -1,0 +1,22 @@
+{
+  "id": "sql-insert-l1",
+  "practice": {
+    "lang": "SQL",
+    "topic": "INSERT/UPDATE",
+    "task": "Insert a new employee named 'Diana' with salary 65000 into the employees table, then select all employees.",
+    "title": "Insert New Employee",
+    "code": "-- TODO: Write INSERT and SELECT\n-- Table: employees (id, name, salary)",
+    "expectedOutput": "Alice|50000\nBob|60000\nCharlie|55000\nDiana|65000"
+  },
+  "solutionCode": "INSERT INTO employees (name, salary) VALUES ('Diana', 65000);\nSELECT name, salary FROM employees;",
+  "solutionOutput": "name|salary\nAlice|50000\nBob|60000\nCharlie|55000\nDiana|65000",
+  "meta": "TITLE: Insert New Employee\nTASK: Insert a new employee and select all.\nEXPECTED_OUTPUT: Alice|50000\nBob|60000\nCharlie|55000\nDiana|65000\nHINT: Use INSERT INTO table (cols) VALUES (vals).",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "INSERT INTO employees (name, salary) VALUES ('Diana', 65000);\nSELECT name, salary FROM employees;",
+      "output": "name|salary\nAlice|50000\nBob|60000\nCharlie|55000\nDiana|65000",
+      "expectPass": true
+    }
+  ]
+}

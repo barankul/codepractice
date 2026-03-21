@@ -1,0 +1,200 @@
+{
+  "name": "codepractice",
+  "displayName": "CodePractice",
+  "description": "Lightweight AI-powered coding practice generator for VS Code.",
+  "publisher": "codeteacher",
+  "version": "0.0.1",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/barankul/codepractice"
+  },
+  "engines": {
+    "vscode": "^1.108.1"
+  },
+  "main": "dist/extension.js",
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:codepractice.app",
+    "onCommand:codepractice.openApp"
+  ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codepractice",
+          "title": "CodePractice",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "CodePractice",
+      "properties": {
+        "codepractice.aiProvider": {
+          "type": "string",
+          "enum": [
+            "groq",
+            "cerebras",
+            "cerebras-gpt",
+            "together",
+            "openrouter",
+            "gemini",
+            "openai",
+            "claude",
+            "local"
+          ],
+          "enumDescriptions": [
+            "Groq — Free 100K tokens/day",
+            "Cerebras — Free ~1M tokens/day",
+            "Cerebras GPT — GPT-oss 120B reasoning model",
+            "Together AI — $1 free credit on signup",
+            "OpenRouter — Free tier available",
+            "Google Gemini — Free tier (region dependent)",
+            "OpenAI — Pay-as-you-go",
+            "Claude (Anthropic) — Pay-as-you-go",
+            "Local — LM Studio or custom endpoint"
+          ],
+          "default": "groq",
+          "description": "AI Provider for generating practice exercises"
+        },
+        "codepractice.aiEndpoint": {
+          "type": "string",
+          "default": "http://127.0.0.1:1234/v1/chat/completions",
+          "description": "Custom endpoint URL (only used when provider is 'local')"
+        },
+        "codepractice.groqModel": {
+          "type": "string",
+          "default": "llama-3.3-70b-versatile",
+          "description": "Groq model"
+        },
+        "codepractice.cerebrasModel": {
+          "type": "string",
+          "default": "llama-3.3-70b",
+          "description": "Cerebras model"
+        },
+        "codepractice.togetherModel": {
+          "type": "string",
+          "default": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+          "description": "Together AI model"
+        },
+        "codepractice.openrouterModel": {
+          "type": "string",
+          "default": "meta-llama/llama-3.3-70b-instruct:free",
+          "description": "OpenRouter model"
+        },
+        "codepractice.geminiModel": {
+          "type": "string",
+          "default": "gemini-2.0-flash",
+          "description": "Gemini model"
+        },
+        "codepractice.openaiModel": {
+          "type": "string",
+          "default": "gpt-4o-mini",
+          "description": "OpenAI model"
+        },
+        "codepractice.claudeModel": {
+          "type": "string",
+          "default": "claude-sonnet-4-20250514",
+          "description": "Claude model"
+        }
+      }
+    },
+    "views": {
+      "codepractice": [
+        {
+          "id": "codepractice.app",
+          "name": "CodePractice",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "codepractice.openApp",
+        "title": "CodePractice: Open App"
+      },
+      {
+        "command": "codepractice.runSQL",
+        "title": "CodePractice: Run SQL"
+      },
+      {
+        "command": "codepractice.showSchema",
+        "title": "CodePractice: Show SQL Schema"
+      },
+      {
+        "command": "codepractice.explainCode",
+        "title": "CodePractice: Explain Selected Code"
+      },
+      {
+        "command": "codepractice.runTests",
+        "title": "CodePractice: Run Tests"
+      },
+      {
+        "command": "codepractice.smokeTest",
+        "title": "CodePractice: Smoke Test"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "codepractice.runSQL",
+          "when": "resourceExtname == .sql",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "codepractice.explainCode",
+          "when": "editorHasSelection",
+          "group": "codepractice@1"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "codepractice.runSQL",
+        "key": "ctrl+enter",
+        "when": "resourceExtname == .sql"
+      },
+      {
+        "command": "codepractice.explainCode",
+        "key": "ctrl+shift+e",
+        "when": "editorHasSelection"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/sql.js": "^1.4.9",
+    "@types/vscode": "^1.108.1",
+    "@vscode/test-cli": "^0.0.12",
+    "@vscode/test-electron": "^2.5.2",
+    "esbuild": "^0.27.2",
+    "eslint": "^9.39.2",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.52.0"
+  },
+  "dependencies": {
+    "sql.js": "^1.13.0",
+    "typescript": "^5.9.3"
+  }
+}

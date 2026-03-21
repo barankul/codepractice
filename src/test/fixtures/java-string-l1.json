@@ -1,0 +1,32 @@
+{
+  "id": "java-string-l1",
+  "practice": {
+    "lang": "Java",
+    "topic": "String",
+    "task": "Reverse the given string and print it.",
+    "title": "String Reverse",
+    "code": "public class Practice {\n  public static void main(String[] args) {\n    String word = \"hello\";\n    // YOUR CODE HERE\n    // Print the reversed string\n  }\n}",
+    "expectedOutput": "olleh",
+    "testCases": [
+      { "input": "String word = \"abc\"", "output": "cba" },
+      { "input": "String word = \"a\"", "output": "a" }
+    ]
+  },
+  "solutionCode": "public class Practice {\n  public static void main(String[] args) {\n    String word = \"hello\";\n    String reversed = \"\";\n    for (int i = word.length() - 1; i >= 0; i--) {\n      reversed += word.charAt(i);\n    }\n    System.out.println(reversed);\n  }\n}",
+  "solutionOutput": "olleh",
+  "meta": "TITLE: String Reverse\nTASK: Reverse the given string and print it.\nEXPECTED_OUTPUT: olleh\nHINT: Iterate the string from the last index to 0.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "public class Practice {\n  public static void main(String[] args) {\n    String word = \"hello\";\n    String reversed = \"\";\n    for (int i = word.length() - 1; i >= 0; i--) {\n      reversed += word.charAt(i);\n    }\n    System.out.println(reversed);\n  }\n}",
+      "output": "olleh",
+      "expectPass": true
+    },
+    {
+      "label": "wrong-output",
+      "code": "public class Practice {\n  public static void main(String[] args) {\n    String word = \"hello\";\n    System.out.println(word);\n  }\n}",
+      "output": "hello",
+      "expectPass": false
+    }
+  ]
+}

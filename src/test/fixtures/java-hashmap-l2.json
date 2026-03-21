@@ -1,0 +1,33 @@
+{
+  "id": "java-hashmap-l2",
+  "practice": {
+    "lang": "Java",
+    "topic": "HashMap",
+    "task": "Count the frequency of each character in the given string and print them.",
+    "title": "Character Frequency",
+    "code": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String text = \"hello\";\n    // YOUR CODE HERE\n    // Print each character and its count\n  }\n}",
+    "expectedOutput": "h=1\ne=1\nl=2\no=1",
+    "testCases": [
+      { "input": "String text = \"aab\"", "output": "a=2\nb=1" },
+      { "input": "String text = \"xyz\"", "output": "x=1\ny=1\nz=1" }
+    ]
+  },
+  "solutionCode": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String text = \"hello\";\n    HashMap<Character, Integer> freq = new HashMap<>();\n    for (char c : text.toCharArray()) {\n      freq.put(c, freq.getOrDefault(c, 0) + 1);\n    }\n    for (var entry : freq.entrySet()) {\n      System.out.println(entry.getKey() + \"=\" + entry.getValue());\n    }\n  }\n}",
+  "solutionOutput": "h=1\ne=1\nl=2\no=1",
+  "meta": "TITLE: Character Frequency\nTASK: Count the frequency of each character in the given string and print them.\nEXPECTED_OUTPUT: h=1\ne=1\nl=2\no=1\nHINT: Use a HashMap to store character counts.",
+  "variants": [
+    {
+      "label": "correct",
+      "code": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String text = \"hello\";\n    HashMap<Character, Integer> freq = new HashMap<>();\n    for (char c : text.toCharArray()) {\n      freq.put(c, freq.getOrDefault(c, 0) + 1);\n    }\n    for (var entry : freq.entrySet()) {\n      System.out.println(entry.getKey() + \"=\" + entry.getValue());\n    }\n  }\n}",
+      "output": "h=1\ne=1\nl=2\no=1",
+      "expectPass": true
+    },
+    {
+      "label": "hardcoded",
+      "code": "import java.util.HashMap;\n\npublic class Practice {\n  public static void main(String[] args) {\n    String text = \"hello\";\n    System.out.println(\"h=1\");\n    System.out.println(\"e=1\");\n    System.out.println(\"l=2\");\n    System.out.println(\"o=1\");\n  }\n}",
+      "output": "h=1\ne=1\nl=2\no=1",
+      "expectPass": false,
+      "failReason": "anti-cheat"
+    }
+  ]
+}
