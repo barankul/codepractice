@@ -11,7 +11,7 @@
       "settings": {
         "codepractice.aiProvider": "groq",
         "workbench.colorTheme": "Default Dark Modern",
-        "workbench.startupEditor": "none",
+        "workbench.startupEditor": "readme",
         "workbench.activityBar.location": "default"
       },
       "extensions": []

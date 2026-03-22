@@ -3,28 +3,46 @@ set -e
 export CI=true
 export DEBIAN_FRONTEND=noninteractive
 
-echo "=== CodePractice — Setting up... ==="
+# Status file — shown in editor tab during setup
+mkdir -p /workspaces/codepractice-demo
+S="/workspaces/codepractice-demo/README.md"
 
-# Install dependencies
+update_status() {
+  cat > "$S" << EOF
+# CodePractice — Setting Up...
+
+$1
+
+\`\`\`
+$2
+\`\`\`
+
+This tab will update when setup is complete.
+EOF
+}
+
+update_status "## [1/4] Installing dependencies..." "[██░░░░░░░░░░░░░░░░░░] 10%"
+echo "=== [1/4] Installing dependencies... ==="
 npm install --yes
 
-# Build extension
+update_status "## [2/4] Building extension..." "[████████░░░░░░░░░░░░] 40%"
+echo "=== [2/4] Building extension... ==="
 npm run package
 
-# Package as VSIX
-# Temporarily hide README to avoid vsce SVG restriction
+update_status "## [3/4] Packaging VSIX..." "[████████████░░░░░░░░] 60%"
+echo "=== [3/4] Packaging VSIX... ==="
 mv README.md /tmp/_README.md.bak 2>/dev/null || true
 mv README.ja.md /tmp/_README.ja.md.bak 2>/dev/null || true
 yes | npx --yes @vscode/vsce package --no-dependencies --skip-license -o /tmp/codepractice.vsix
 mv /tmp/_README.md.bak README.md 2>/dev/null || true
 mv /tmp/_README.ja.md.bak README.ja.md 2>/dev/null || true
 
-# Install extension — try code CLI first, fall back to manual install
+update_status "## [4/4] Installing extension..." "[████████████████░░░░] 80%"
+echo "=== [4/4] Installing extension... ==="
 if code --install-extension /tmp/codepractice.vsix --force 2>/dev/null; then
   echo "Extension installed via code CLI."
 else
-  echo "code CLI not available — installing extension manually..."
-  # Find the correct extensions directory
+  echo "code CLI not available — installing manually..."
   for DIR in \
     "$HOME/.vscode-remote/extensions" \
     "$HOME/.vscode-server/extensions" \
@@ -41,30 +59,37 @@ else
 fi
 rm -f /tmp/codepractice.vsix
 
-# Create a sample workspace so user has a folder open
-mkdir -p /workspaces/codepractice-demo
-cat > /workspaces/codepractice-demo/README.md << 'EOF'
-# CodePractice Demo
+# Done — show getting started guide
+cat > "$S" << 'DONE'
+# CodePractice — Ready!
 
-Click the **CodePractice** icon in the left sidebar to get started!
+## Setup Complete
 
-## Features
-- Generate coding practices (Java, TypeScript, SQL)
-- AI-powered code judging
-- Multiple test cases validation
-- Alternative solutions & cross-language comparison
-- Works offline with 120+ built-in practices
-- XP system with level progression
+### How to Start
 
-## Quick Start
-1. Click the CodePractice icon (sidebar)
-2. Select a language & topic
-3. Click "Generate"
-4. Write your solution
-5. Click "Judge" to check your code
-EOF
+1. **Click the CodePractice icon** in the left sidebar (activity bar)
+2. **Select a language** — Java, TypeScript, or SQL
+3. **Pick a topic** — Arrays, Loops, Strings, etc.
+4. **Click Generate** — a practice file opens in the editor
+5. **Write your solution** — replace the TODO comments
+6. **Click Judge** — AI checks your code
+
+> **Tip:** Start with **Offline** mode — no API key needed! 120+ built-in practices.
+
+---
+
+### If the sidebar icon doesn't appear:
+Press `Ctrl+Shift+P` → type **Reload Window** → press Enter
+
+### Want AI-generated practices?
+Click the gear icon in the sidebar → configure a free API key:
+- **Groq** — Free 100K tokens/day
+- **Cerebras** — Free ~1M tokens/day
+- **OpenRouter** — Free tier
+- **Gemini** — Free tier
+DONE
 
 echo ""
 echo "=== Setup complete! ==="
-echo "If the icon doesn't appear, press Ctrl+Shift+P → 'Reload Window'"
+echo "Click the CodePractice icon in the left sidebar to start."
 echo ""
