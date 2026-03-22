@@ -3,9 +3,9 @@ set -e
 export CI=true
 export DEBIAN_FRONTEND=noninteractive
 
-# Status file — shown in editor tab during setup
-mkdir -p /workspaces/codepractice-demo
-S="/workspaces/codepractice-demo/README.md"
+# Workspace root — where Codespaces clones the repo
+WS="/workspaces/codepractice"
+S="$WS/GETTING_STARTED.md"
 
 update_status() {
   cat > "$S" << EOF
@@ -17,7 +17,7 @@ $1
 $2
 \`\`\`
 
-This tab will update when setup is complete.
+Please wait... this takes about 1-2 minutes.
 EOF
 }
 
@@ -59,7 +59,7 @@ else
 fi
 rm -f /tmp/codepractice.vsix
 
-# Done — show getting started guide
+# Done — update status to getting started guide
 cat > "$S" << 'DONE'
 # CodePractice — Ready!
 

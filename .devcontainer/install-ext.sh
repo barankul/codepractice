@@ -1,24 +1,16 @@
 #!/bin/bash
-# postAttachCommand — install extension if code CLI is now available
-# This runs after VS Code connects, so code CLI should work
+# postAttachCommand — runs after VS Code connects, code CLI is available
 
 VSIX="/tmp/codepractice.vsix"
-VSIX_BACKUP="/workspaces/codepractice/.codepractice.vsix"
+GS="/workspaces/codepractice/GETTING_STARTED.md"
 
-# Check both locations
+# Install extension if VSIX still exists
 if [ -f "$VSIX" ]; then
-  TARGET="$VSIX"
-elif [ -f "$VSIX_BACKUP" ]; then
-  TARGET="$VSIX_BACKUP"
-else
-  # Extension should already be installed from postCreateCommand
-  exit 0
+  echo "=== Installing CodePractice extension... ==="
+  code --install-extension "$VSIX" --force 2>/dev/null && rm -f "$VSIX" || true
 fi
 
-echo "=== Installing CodePractice extension... ==="
-code --install-extension "$TARGET" --force 2>/dev/null && {
-  rm -f "$VSIX" "$VSIX_BACKUP"
-  echo "=== CodePractice installed! Click the icon in the left sidebar. ==="
-} || {
-  echo "code CLI failed — extension should be pre-installed from setup."
-}
+# Open the getting started file in markdown preview
+if [ -f "$GS" ]; then
+  code "$GS" 2>/dev/null || true
+fi

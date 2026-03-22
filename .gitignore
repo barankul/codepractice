@@ -32,3 +32,6 @@ core-java/core.jar
 
 # Claude Code settings
 .claude/
+
+# Codespaces setup status
+GETTING_STARTED.md
