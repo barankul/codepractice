@@ -18,16 +18,13 @@ mv README.ja.md /tmp/_README.ja.md.bak 2>/dev/null || true
 yes | npx --yes @vscode/vsce package --no-dependencies --skip-license -o /tmp/codepractice.vsix
 mv /tmp/_README.md.bak README.md 2>/dev/null || true
 mv /tmp/_README.ja.md.bak README.ja.md 2>/dev/null || true
-# Install VSIX — code CLI may not be available during postCreateCommand
-if command -v code &>/dev/null; then
-  code --install-extension /tmp/codepractice.vsix --force
-else
-  # Fallback: copy to default extensions dir so VS Code picks it up on start
+# Install VSIX — code CLI may not work during postCreateCommand
+code --install-extension /tmp/codepractice.vsix --force 2>/dev/null || {
+  echo "code CLI not available — installing extension manually..."
   EXT_DIR="$HOME/.vscode-server/extensions/codeteacher.codepractice-0.0.1"
   mkdir -p "$EXT_DIR"
-  cd "$EXT_DIR" && unzip -o /tmp/codepractice.vsix "extension/**" && mv extension/* . && rm -rf extension '[Content_Types].xml' 2>/dev/null || true
-  cd /workspaces/codepractice-lite 2>/dev/null || cd /workspaces/* 2>/dev/null || true
-fi
+  (cd "$EXT_DIR" && unzip -o /tmp/codepractice.vsix "extension/**" && mv extension/* . && rm -rf extension '[Content_Types].xml') 2>/dev/null || true
+}
 rm -f /tmp/codepractice.vsix
 
 # Create a sample workspace so user has a folder open
