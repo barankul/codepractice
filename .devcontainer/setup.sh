@@ -15,7 +15,7 @@ npm run package
 # Temporarily hide README to avoid vsce SVG restriction
 mv README.md /tmp/_README.md.bak 2>/dev/null || true
 mv README.ja.md /tmp/_README.ja.md.bak 2>/dev/null || true
-npx --yes @vscode/vsce package --no-dependencies -o /tmp/codepractice.vsix
+yes | npx --yes @vscode/vsce package --no-dependencies --skip-license -o /tmp/codepractice.vsix
 mv /tmp/_README.md.bak README.md 2>/dev/null || true
 mv /tmp/_README.ja.md.bak README.ja.md 2>/dev/null || true
 code --install-extension /tmp/codepractice.vsix --force

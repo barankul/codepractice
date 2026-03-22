@@ -4,6 +4,7 @@
   "description": "Lightweight AI-powered coding practice generator for VS Code.",
   "publisher": "codeteacher",
   "version": "0.0.1",
+  "license": "MIT",
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
