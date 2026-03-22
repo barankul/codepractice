@@ -3,7 +3,7 @@ set -e
 export CI=true
 export DEBIAN_FRONTEND=noninteractive
 
-echo "=== CodePractice — Building... ==="
+echo "=== CodePractice — Setting up... ==="
 
 # Install dependencies
 npm install --yes
@@ -18,6 +18,28 @@ mv README.ja.md /tmp/_README.ja.md.bak 2>/dev/null || true
 yes | npx --yes @vscode/vsce package --no-dependencies --skip-license -o /tmp/codepractice.vsix
 mv /tmp/_README.md.bak README.md 2>/dev/null || true
 mv /tmp/_README.ja.md.bak README.ja.md 2>/dev/null || true
+
+# Install extension — try code CLI first, fall back to manual install
+if code --install-extension /tmp/codepractice.vsix --force 2>/dev/null; then
+  echo "Extension installed via code CLI."
+else
+  echo "code CLI not available — installing extension manually..."
+  # Find the correct extensions directory
+  for DIR in \
+    "$HOME/.vscode-remote/extensions" \
+    "$HOME/.vscode-server/extensions" \
+    "/home/codespace/.vscode-remote/extensions" \
+  ; do
+    if [ -d "$(dirname "$DIR")" ]; then
+      EXT_DIR="$DIR/codeteacher.codepractice-0.0.1"
+      mkdir -p "$EXT_DIR"
+      (cd "$EXT_DIR" && unzip -oq /tmp/codepractice.vsix "extension/**" 2>/dev/null && mv extension/* . && rm -rf extension '[Content_Types].xml' extension.vsixmanifest) || true
+      echo "Extension extracted to $EXT_DIR"
+      break
+    fi
+  done
+fi
+rm -f /tmp/codepractice.vsix
 
 # Create a sample workspace so user has a folder open
 mkdir -p /workspaces/codepractice-demo
@@ -43,5 +65,6 @@ Click the **CodePractice** icon in the left sidebar to get started!
 EOF
 
 echo ""
-echo "=== Build complete! Extension will be installed when editor connects. ==="
+echo "=== Setup complete! ==="
+echo "If the icon doesn't appear, press Ctrl+Shift+P → 'Reload Window'"
 echo ""
