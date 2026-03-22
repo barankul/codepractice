@@ -62,7 +62,6 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      output.show(true);
       output.appendLine("\n--- SQL Result ---");
       output.appendLine("Columns: " + result.columns.join(" | "));
       output.appendLine("-".repeat(50));
@@ -79,7 +78,6 @@ export async function activate(context: vscode.ExtensionContext) {
   // スキーマ表示 — show schema
   context.subscriptions.push(
     vscode.commands.registerCommand("codepractice.showSchema", () => {
-      output.show(true);
       output.appendLine(getSchema());
     })
   );

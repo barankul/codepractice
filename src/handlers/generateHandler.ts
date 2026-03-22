@@ -233,7 +233,6 @@ export async function handleGenerate(ctx: HandlerContext, msg: GenerateMsg): Pro
 
   if (await checkDemoMode()) {
     try {
-      ctx.output.show(true);
       ctx.output.appendLine(`[OFFLINE] Generate: ${lang} / ${topic} (Level ${ctx.currentLevel})`);
       ctx.post({ type: "loadingProgress", text: "Loading practice..." });
 
@@ -299,7 +298,6 @@ export async function handleGenerate(ctx: HandlerContext, msg: GenerateMsg): Pro
   }
 
   try {
-    ctx.output.show(true);
     ctx.output.appendLine(`Generate: ${lang} / ${topic} (Level ${ctx.currentLevel})${isSimilar ? " [SIMILAR]" : ""}${practiceMode === "bugfix" ? " [BUG FIX]" : ""}`);
 
     if (practiceMode === "bugfix") {
@@ -631,7 +629,6 @@ export async function handleGenerateCustom(ctx: HandlerContext, msg: MsgOf<"gene
   ctx.post({ type: "busy", value: true });
 
   try {
-    ctx.output.show(true);
     ctx.output.appendLine(`Custom Practice: ${lang} / "${prompt.slice(0, 60)}"`);
 
     const level = ctx.currentLevel || 1;
