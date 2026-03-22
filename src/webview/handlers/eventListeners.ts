@@ -38,6 +38,8 @@ export function initEventListeners(): void {
       if (dom.genBtn!.disabled) return;
       dom.genBtn!.disabled = true;
       state.currentLoadingAction = "generate";
+      const wb = document.getElementById("welcomeBanner");
+      if (wb) wb.style.display = "none";
       post({ type: "generate", lang: state.selectedLang, topic: state.selectedTopic, mode: state.selectedMode, codeSize: state.selectedCodeSize });
     });
   }

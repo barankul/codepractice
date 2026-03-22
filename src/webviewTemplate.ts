@@ -44,6 +44,16 @@ ${css}
   <!-- Practice Panel -->
   <div id="practicePanel" class="panel active">
     <div id="practiceForm">
+      <div class="welcome-banner" id="welcomeBanner">
+        <div class="welcome-title" data-i18n="welcome.title">Welcome to CodePractice!</div>
+        <div class="welcome-steps">
+          <div class="welcome-step"><span class="welcome-num">1</span><span data-i18n="welcome.step1">Select a language & topic below</span></div>
+          <div class="welcome-step"><span class="welcome-num">2</span><span data-i18n="welcome.step2">Click Generate to create a practice</span></div>
+          <div class="welcome-step"><span class="welcome-num">3</span><span data-i18n="welcome.step3">Write your solution in the editor</span></div>
+          <div class="welcome-step"><span class="welcome-num">4</span><span data-i18n="welcome.step4">Click Judge to check your code</span></div>
+        </div>
+        <div class="welcome-tip" data-i18n="welcome.tip">Start with Offline mode — no API key needed!</div>
+      </div>
       <div class="subtitle" data-i18n="practice.subtitle">select language + topic, generate practice.</div>
 
       <div class="section">
