@@ -13,6 +13,13 @@ export const TRANSLATIONS: Record<UILang, Record<string, string>> = {
     "tab.practice": "Practice",
     "tab.progress": "Progress",
 
+    "welcome.title": "Welcome to CodePractice!",
+    "welcome.step1": "Select a language & topic below",
+    "welcome.step2": "Click Generate to create a practice",
+    "welcome.step3": "Write your solution in the editor",
+    "welcome.step4": "Click Judge to check your code",
+    "welcome.tip": "Start with Offline mode — no API key needed!",
+
     "practice.subtitle": "pick a language and topic, then generate a practice exercise.",
     "practice.language": "Language",
     "practice.topic": "Topic",
@@ -236,6 +243,13 @@ export const TRANSLATIONS: Record<UILang, Record<string, string>> = {
     "tab.practice": "\u7df4\u7fd2",
     "tab.progress": "\u9032\u6357",
 
+    "welcome.title": "CodePractice\u3078\u3088\u3046\u3053\u305d\uff01",
+    "welcome.step1": "\u4e0b\u304b\u3089\u8a00\u8a9e\u3068\u30c8\u30d4\u30c3\u30af\u3092\u9078\u629e",
+    "welcome.step2": "\u300c\u751f\u6210\u300d\u3092\u30af\u30ea\u30c3\u30af\u3057\u3066\u7df4\u7fd2\u3092\u4f5c\u6210",
+    "welcome.step3": "\u30a8\u30c7\u30a3\u30bf\u3067\u89e3\u7b54\u3092\u66f8\u304f",
+    "welcome.step4": "\u300c\u5224\u5b9a\u300d\u3092\u30af\u30ea\u30c3\u30af\u3057\u3066\u30b3\u30fc\u30c9\u3092\u30c1\u30a7\u30c3\u30af",
+    "welcome.tip": "Offline\u30e2\u30fc\u30c9\u306a\u3089API\u30ad\u30fc\u4e0d\u8981\uff01",
+
     "practice.subtitle": "\u8a00\u8a9e\u3068\u30c8\u30d4\u30c3\u30af\u3092\u9078\u3093\u3067\u3001\u7df4\u7fd2\u554f\u984c\u3092\u751f\u6210\u3057\u307e\u3057\u3087\u3046\u3002",
     "practice.language": "\u8a00\u8a9e",
     "practice.topic": "\u30c8\u30d4\u30c3\u30af",
@@ -458,6 +472,13 @@ export const TRANSLATIONS: Record<UILang, Record<string, string>> = {
 
     "tab.practice": "Al\u0131\u015ft\u0131rma",
     "tab.progress": "\u0130lerleme",
+
+    "welcome.title": "CodePractice'e Ho\u015fgeldiniz!",
+    "welcome.step1": "A\u015fa\u011f\u0131dan dil ve konu se\u00e7in",
+    "welcome.step2": "Al\u0131\u015ft\u0131rma olu\u015fturmak i\u00e7in Olu\u015ftur'a t\u0131klay\u0131n",
+    "welcome.step3": "Edit\u00f6rde \u00e7\u00f6z\u00fcm\u00fcn\u00fcz\u00fc yaz\u0131n",
+    "welcome.step4": "Kodunuzu kontrol etmek i\u00e7in Yarg\u0131la'ya t\u0131klay\u0131n",
+    "welcome.tip": "Offline mod ile API anahtar\u0131na gerek yok!",
 
     "practice.subtitle": "dil ve konu se\u00e7, al\u0131\u015ft\u0131rma olu\u015ftur.",
     "practice.language": "Dil",

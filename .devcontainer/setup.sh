@@ -3,7 +3,7 @@ set -e
 export CI=true
 export DEBIAN_FRONTEND=noninteractive
 
-echo "=== CodePractice — Setting up... ==="
+echo "=== CodePractice — Building... ==="
 
 # Install dependencies
 npm install --yes
@@ -11,21 +11,13 @@ npm install --yes
 # Build extension
 npm run package
 
-# Package as VSIX and install
+# Package as VSIX
 # Temporarily hide README to avoid vsce SVG restriction
 mv README.md /tmp/_README.md.bak 2>/dev/null || true
 mv README.ja.md /tmp/_README.ja.md.bak 2>/dev/null || true
 yes | npx --yes @vscode/vsce package --no-dependencies --skip-license -o /tmp/codepractice.vsix
 mv /tmp/_README.md.bak README.md 2>/dev/null || true
 mv /tmp/_README.ja.md.bak README.ja.md 2>/dev/null || true
-# Install VSIX — code CLI may not work during postCreateCommand
-code --install-extension /tmp/codepractice.vsix --force 2>/dev/null || {
-  echo "code CLI not available — installing extension manually..."
-  EXT_DIR="$HOME/.vscode-server/extensions/codeteacher.codepractice-0.0.1"
-  mkdir -p "$EXT_DIR"
-  (cd "$EXT_DIR" && unzip -o /tmp/codepractice.vsix "extension/**" && mv extension/* . && rm -rf extension '[Content_Types].xml') 2>/dev/null || true
-}
-rm -f /tmp/codepractice.vsix
 
 # Create a sample workspace so user has a folder open
 mkdir -p /workspaces/codepractice-demo
@@ -51,6 +43,5 @@ Click the **CodePractice** icon in the left sidebar to get started!
 EOF
 
 echo ""
-echo "=== Setup complete! ==="
-echo "Click the CodePractice icon in the left sidebar to start."
+echo "=== Build complete! Extension will be installed when editor connects. ==="
 echo ""

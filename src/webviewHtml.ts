@@ -239,6 +239,56 @@ export function getWebviewHtml(nonce: string): string {
       opacity: 0.8;
     }
 
+    /* Welcome banner */
+    .welcome-banner {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin: 12px 0 8px;
+      animation: fadeIn 0.4s var(--transition-med);
+    }
+    .welcome-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+    .welcome-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .welcome-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12.5px;
+      line-height: 1.4;
+    }
+    .welcome-num {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .welcome-tip {
+      margin-top: 12px;
+      padding: 8px 12px;
+      background: var(--good-soft);
+      border-radius: var(--radius-sm);
+      font-size: 11.5px;
+      color: var(--good);
+      font-weight: 500;
+    }
+
     /* Section */
     .section {
       padding: 16px 0 12px;
@@ -2084,6 +2134,16 @@ export function getWebviewHtml(nonce: string): string {
   <!-- Practice Panel -->
   <div id="practicePanel" class="panel active">
     <div id="practiceForm">
+      <div class="welcome-banner" id="welcomeBanner">
+        <div class="welcome-title" data-i18n="welcome.title">Welcome to CodePractice!</div>
+        <div class="welcome-steps">
+          <div class="welcome-step"><span class="welcome-num">1</span><span data-i18n="welcome.step1">Select a language & topic below</span></div>
+          <div class="welcome-step"><span class="welcome-num">2</span><span data-i18n="welcome.step2">Click Generate to create a practice</span></div>
+          <div class="welcome-step"><span class="welcome-num">3</span><span data-i18n="welcome.step3">Write your solution in the editor</span></div>
+          <div class="welcome-step"><span class="welcome-num">4</span><span data-i18n="welcome.step4">Click Judge to check your code</span></div>
+        </div>
+        <div class="welcome-tip" data-i18n="welcome.tip">Start with Offline mode — no API key needed!</div>
+      </div>
       <div class="subtitle" data-i18n="practice.subtitle">select language + topic, generate practice.</div>
 
       <div class="section">
@@ -3854,6 +3914,8 @@ export function getWebviewHtml(nonce: string): string {
       if (genBtn.disabled) return;
       genBtn.disabled = true;
       currentLoadingAction = "generate";
+      var wb = document.getElementById("welcomeBanner");
+      if (wb) wb.style.display = "none";
       vscode.postMessage({ type: "generate", lang: selectedLang, topic: selectedTopic, mode: selectedMode, codeSize: selectedCodeSize });
     });
 

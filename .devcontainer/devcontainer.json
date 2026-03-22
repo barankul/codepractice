@@ -5,6 +5,7 @@
     "ghcr.io/devcontainers/features/java:1": { "version": "21" }
   },
   "postCreateCommand": "bash .devcontainer/setup.sh",
+  "postAttachCommand": "bash .devcontainer/install-ext.sh",
   "customizations": {
     "vscode": {
       "settings": {
