@@ -39,7 +39,6 @@
           "enum": [
             "groq",
             "cerebras",
-            "cerebras-gpt",
             "together",
             "openrouter",
             "gemini",
@@ -50,7 +49,6 @@
           "enumDescriptions": [
             "Groq — Free 100K tokens/day",
             "Cerebras — Free ~1M tokens/day",
-            "Cerebras GPT — GPT-oss 120B reasoning model",
             "Together AI — $1 free credit on signup",
             "OpenRouter — Free tier available",
             "Google Gemini — Free tier (region dependent)",
@@ -68,12 +66,12 @@
         },
         "codepractice.groqModel": {
           "type": "string",
-          "default": "llama-3.3-70b-versatile",
+          "default": "openai/gpt-oss-120b",
           "description": "Groq model"
         },
         "codepractice.cerebrasModel": {
           "type": "string",
-          "default": "llama-3.3-70b",
+          "default": "qwen-3-235b-a22b-instruct-2507",
           "description": "Cerebras model"
         },
         "codepractice.togetherModel": {
@@ -83,23 +81,28 @@
         },
         "codepractice.openrouterModel": {
           "type": "string",
-          "default": "meta-llama/llama-3.3-70b-instruct:free",
+          "default": "nvidia/nemotron-3-super-120b-a12b:free",
           "description": "OpenRouter model"
         },
         "codepractice.geminiModel": {
           "type": "string",
-          "default": "gemini-2.0-flash",
+          "default": "gemini-2.5-flash",
           "description": "Gemini model"
         },
         "codepractice.openaiModel": {
           "type": "string",
-          "default": "gpt-4o-mini",
+          "default": "gpt-4.1-mini",
           "description": "OpenAI model"
         },
         "codepractice.claudeModel": {
           "type": "string",
-          "default": "claude-sonnet-4-20250514",
+          "default": "claude-sonnet-4-6-20250827",
           "description": "Claude model"
+        },
+        "codepractice.endpointModel": {
+          "type": "string",
+          "default": "yi-coder-9b-chat",
+          "description": "Local endpoint model name"
         }
       }
     },

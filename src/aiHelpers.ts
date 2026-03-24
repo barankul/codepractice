@@ -1,5 +1,11 @@
 import * as vscode from "vscode";
 import { TRANSLATIONS } from "./i18n";
+import {
+  DEFAULT_AI_PROVIDER,
+  DEFAULT_LOCAL_ENDPOINT,
+  getDefaultModel,
+  getProviderSecretKey,
+} from "./shared/aiConfigDefaults";
 
 // Response language for AI outputs
 let _responseLang = "en";
@@ -57,6 +63,18 @@ export async function setSecret(key: string, value: string): Promise<void> {
   }
 }
 
+export async function getStoredProviderApiKey(provider: string): Promise<string> {
+  const secretKey = getProviderSecretKey(provider);
+  const providerKey = await getSecret(secretKey);
+  if (providerKey) {
+    return providerKey;
+  }
+  if (provider === "cerebras" || provider === "together" || provider === "openrouter" || provider === "local") {
+    return await getSecret("endpointApiKey");
+  }
+  return "";
+}
+
 // AI Configuration helper - supports local LM Studio, Groq, and Gemini
 let _cachedAiConfig: AiConfig | null = null;
 let _configBuildingPromise: Promise<AiConfig> | null = null;
@@ -64,11 +82,11 @@ let _configListener: vscode.Disposable | null = null;
 
 async function buildAiConfig(): Promise<AiConfig> {
   const cfg = vscode.workspace.getConfiguration("codepractice");
-  const provider = cfg.get<string>("aiProvider") || "local";
+  const provider = cfg.get<string>("aiProvider") || DEFAULT_AI_PROVIDER;
 
   if (provider === "groq") {
-    const apiKey = await getSecret("groqApiKey");
-    const model = cfg.get<string>("groqModel") || "openai/gpt-oss-120b";
+    const apiKey = await getStoredProviderApiKey("groq");
+    const model = cfg.get<string>("groqModel") || getDefaultModel("groq");
 
     if (!apiKey) {
       throw new Error("Groq API key not set. Open CodePractice settings and enter your API key.");
@@ -85,8 +103,8 @@ async function buildAiConfig(): Promise<AiConfig> {
   }
 
   if (provider === "gemini") {
-    const apiKey = await getSecret("geminiApiKey");
-    const model = cfg.get<string>("geminiModel") || "gemini-2.5-flash";
+    const apiKey = await getStoredProviderApiKey("gemini");
+    const model = cfg.get<string>("geminiModel") || getDefaultModel("gemini");
 
     if (!apiKey) {
       throw new Error("Gemini API key not set. Open CodePractice settings and enter your API key.");
@@ -101,11 +119,11 @@ async function buildAiConfig(): Promise<AiConfig> {
   }
 
   if (provider === "cerebras") {
-    const apiKey = await getSecret("endpointApiKey");
+    const apiKey = await getStoredProviderApiKey("cerebras");
     if (!apiKey) {
       throw new Error("Cerebras API key not set. Open CodePractice settings and enter your API key.");
     }
-    const model = cfg.get<string>("cerebrasModel") || "qwen-3-235b-a22b-instruct-2507";
+    const model = cfg.get<string>("cerebrasModel") || getDefaultModel("cerebras");
     return {
       endpoint: "https://api.cerebras.ai/v1/chat/completions",
       headers: {
@@ -117,7 +135,7 @@ async function buildAiConfig(): Promise<AiConfig> {
   }
 
   if (provider === "together") {
-    const apiKey = await getSecret("endpointApiKey");
+    const apiKey = await getStoredProviderApiKey("together");
     if (!apiKey) {
       throw new Error("Together API key not set. Open CodePractice settings and enter your API key.");
     }
@@ -127,12 +145,12 @@ async function buildAiConfig(): Promise<AiConfig> {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
-      model: cfg.get<string>("togetherModel") || "meta-llama/Llama-3.3-70B-Instruct-Turbo"
+      model: cfg.get<string>("togetherModel") || getDefaultModel("together")
     };
   }
 
   if (provider === "openrouter") {
-    const apiKey = await getSecret("endpointApiKey");
+    const apiKey = await getStoredProviderApiKey("openrouter");
     if (!apiKey) {
       throw new Error("OpenRouter API key not set. Open CodePractice settings and enter your API key.");
     }
@@ -142,16 +160,16 @@ async function buildAiConfig(): Promise<AiConfig> {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`
       },
-      model: cfg.get<string>("openrouterModel") || "nvidia/nemotron-3-super-120b-a12b:free"
+      model: cfg.get<string>("openrouterModel") || getDefaultModel("openrouter")
     };
   }
 
   if (provider === "openai") {
-    const apiKey = await getSecret("openaiApiKey");
+    const apiKey = await getStoredProviderApiKey("openai");
     if (!apiKey) {
       throw new Error("OpenAI API key not set. Open CodePractice settings and enter your API key.");
     }
-    const model = cfg.get<string>("openaiModel") || "gpt-4.1-mini";
+    const model = cfg.get<string>("openaiModel") || getDefaultModel("openai");
     return {
       endpoint: "https://api.openai.com/v1/chat/completions",
       headers: {
@@ -163,11 +181,11 @@ async function buildAiConfig(): Promise<AiConfig> {
   }
 
   if (provider === "claude") {
-    const apiKey = await getSecret("claudeApiKey");
+    const apiKey = await getStoredProviderApiKey("claude");
     if (!apiKey) {
       throw new Error("Claude API key not set. Open CodePractice settings and enter your API key.");
     }
-    const model = cfg.get<string>("claudeModel") || "claude-sonnet-4-6-20250827";
+    const model = cfg.get<string>("claudeModel") || getDefaultModel("claude");
     return {
       endpoint: "https://api.anthropic.com/v1/messages",
       headers: {
@@ -181,16 +199,16 @@ async function buildAiConfig(): Promise<AiConfig> {
   }
 
   // Local LM Studio
-  const endpoint = cfg.get<string>("aiEndpoint") || "http://127.0.0.1:1234/v1/chat/completions";
+  const endpoint = cfg.get<string>("aiEndpoint") || DEFAULT_LOCAL_ENDPOINT;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const endpointApiKey = await getSecret("endpointApiKey");
+  const endpointApiKey = await getStoredProviderApiKey("local");
   if (endpointApiKey) {
     headers["Authorization"] = `Bearer ${endpointApiKey}`;
   }
   return {
     endpoint,
     headers,
-    model: cfg.get<string>("endpointModel") || "yi-coder-9b-chat"
+    model: cfg.get<string>("endpointModel") || getDefaultModel("local")
   };
 }
 

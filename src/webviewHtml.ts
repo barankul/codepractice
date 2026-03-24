@@ -3111,7 +3111,7 @@ export function getWebviewHtml(nonce: string): string {
     }
 
     // Settings Panel Logic
-    var currentProvider = "local";
+    var currentProvider = "groq";
     const settingsGearBtn = document.getElementById("settingsGearBtn");
     const settingsPanel = document.getElementById("settingsPanel");
     const providerCards = document.querySelectorAll(".provider-card");
@@ -3259,8 +3259,11 @@ export function getWebviewHtml(nonce: string): string {
         localEndpoint: document.getElementById("settingsLocalEndpoint").value || "http://127.0.0.1:1234/v1/chat/completions",
         groqApiKey: document.getElementById("settingsGroqKey").value || "",
         groqModel: document.getElementById("settingsGroqModel").value || "openai/gpt-oss-120b",
+        cerebrasApiKey: document.getElementById("settingsCerebrasKey").value || "",
         cerebrasModel: document.getElementById("settingsCerebrasModel").value || "qwen-3-235b-a22b-instruct-2507",
+        togetherApiKey: document.getElementById("settingsTogetherKey").value || "",
         togetherModel: document.getElementById("settingsTogetherModel").value || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        openrouterApiKey: document.getElementById("settingsOpenrouterKey").value || "",
         openrouterModel: document.getElementById("settingsOpenrouterModel").value || "nvidia/nemotron-3-super-120b-a12b:free",
         geminiApiKey: document.getElementById("settingsGeminiKey").value || "",
         geminiModel: document.getElementById("settingsGeminiModel").value || "gemini-2.5-flash",
@@ -3268,8 +3271,9 @@ export function getWebviewHtml(nonce: string): string {
         openaiModel: document.getElementById("settingsOpenaiModel").value || "gpt-4.1-mini",
         claudeApiKey: document.getElementById("settingsClaudeKey").value || "",
         claudeModel: document.getElementById("settingsClaudeModel").value || "claude-sonnet-4-6-20250827",
+        localApiKey: document.getElementById("settingsLocalKey").value || "",
         endpointApiKey: epKey,
-        endpointModel: document.getElementById("settingsEndpointModel").value || ""
+        endpointModel: document.getElementById("settingsEndpointModel").value || "yi-coder-9b-chat"
       };
       vscode.postMessage({ type: "saveSettings", settings: settings });
       updateConfigBanner(currentProvider);
@@ -3307,11 +3311,14 @@ export function getWebviewHtml(nonce: string): string {
       var prov = s.provider || "groq";
       showProviderConfig(prov);
       document.getElementById("settingsLocalEndpoint").value = s.localEndpoint || "";
-      document.getElementById("settingsEndpointModel").value = s.endpointModel || "";
+      document.getElementById("settingsEndpointModel").value = s.endpointModel || "yi-coder-9b-chat";
       document.getElementById("settingsGroqKey").value = s.groqApiKey || "";
       document.getElementById("settingsGroqModel").value = s.groqModel || "openai/gpt-oss-120b";
+      document.getElementById("settingsCerebrasKey").value = s.cerebrasApiKey || "";
       document.getElementById("settingsCerebrasModel").value = s.cerebrasModel || "qwen-3-235b-a22b-instruct-2507";
+      document.getElementById("settingsTogetherKey").value = s.togetherApiKey || "";
       document.getElementById("settingsTogetherModel").value = s.togetherModel || "meta-llama/Llama-3.3-70B-Instruct-Turbo";
+      document.getElementById("settingsOpenrouterKey").value = s.openrouterApiKey || "";
       document.getElementById("settingsOpenrouterModel").value = s.openrouterModel || "nvidia/nemotron-3-super-120b-a12b:free";
       document.getElementById("settingsGeminiKey").value = s.geminiApiKey || "";
       document.getElementById("settingsGeminiModel").value = s.geminiModel || "gemini-2.5-flash";
@@ -3319,12 +3326,13 @@ export function getWebviewHtml(nonce: string): string {
       document.getElementById("settingsOpenaiModel").value = s.openaiModel || "gpt-4.1-mini";
       document.getElementById("settingsClaudeKey").value = s.claudeApiKey || "";
       document.getElementById("settingsClaudeModel").value = s.claudeModel || "claude-sonnet-4-6-20250827";
+      document.getElementById("settingsLocalKey").value = s.localApiKey || "";
       var epKey = s.endpointApiKey || "";
       if (epKey) {
-        if (s.provider === "cerebras") document.getElementById("settingsCerebrasKey").value = epKey;
-        else if (s.provider === "together") document.getElementById("settingsTogetherKey").value = epKey;
-        else if (s.provider === "openrouter") document.getElementById("settingsOpenrouterKey").value = epKey;
-        else if (s.provider === "local") document.getElementById("settingsLocalKey").value = epKey;
+        if (!s.cerebrasApiKey && s.provider === "cerebras") document.getElementById("settingsCerebrasKey").value = epKey;
+        else if (!s.togetherApiKey && s.provider === "together") document.getElementById("settingsTogetherKey").value = epKey;
+        else if (!s.openrouterApiKey && s.provider === "openrouter") document.getElementById("settingsOpenrouterKey").value = epKey;
+        else if (!s.localApiKey && s.provider === "local") document.getElementById("settingsLocalKey").value = epKey;
       }
       updateConfigBanner(prov);
     }

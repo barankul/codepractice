@@ -111,8 +111,11 @@ export interface AiSettings {
   localEndpoint?: string;
   groqApiKey?: string;
   groqModel?: string;
+  cerebrasApiKey?: string;
   cerebrasModel?: string;
+  togetherApiKey?: string;
   togetherModel?: string;
+  openrouterApiKey?: string;
   openrouterModel?: string;
   geminiApiKey?: string;
   geminiModel?: string;
@@ -120,6 +123,7 @@ export interface AiSettings {
   openaiModel?: string;
   claudeApiKey?: string;
   claudeModel?: string;
+  localApiKey?: string;
   endpointApiKey?: string;
   endpointModel?: string;
 }

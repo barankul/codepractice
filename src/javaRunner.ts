@@ -2,7 +2,8 @@
 import * as vscode from "vscode";
 import { spawn, execSync } from "child_process";
 import { CoreResult } from "./constants";
-import { getResponseLang, getSecret } from "./aiHelpers";
+import { getResponseLang, getStoredProviderApiKey } from "./aiHelpers";
+import { DEFAULT_AI_PROVIDER, getDefaultModel } from "./shared/aiConfigDefaults";
 
 const MAX_OUTPUT_SIZE = 1_000_000;
 const CORE_TIMEOUT_MS = 120_000;
@@ -141,37 +142,37 @@ async function installJdkInTerminal(): Promise<void> {
 /** AI環境設定取得 — get AI provider env config */
 async function getAiEnvConfig(): Promise<Record<string, string>> {
   const cfg = vscode.workspace.getConfiguration("codepractice");
-  const provider = cfg.get<string>("aiProvider") || "local";
+  const provider = cfg.get<string>("aiProvider") || DEFAULT_AI_PROVIDER;
   const aiEndpoint = cfg.get<string>("aiEndpoint") || "";
-  const groqModel = cfg.get<string>("groqModel") || "openai/gpt-oss-120b";
-  const geminiModel = cfg.get<string>("geminiModel") || "gemini-2.5-flash";
+  const groqModel = cfg.get<string>("groqModel") || getDefaultModel("groq");
+  const geminiModel = cfg.get<string>("geminiModel") || getDefaultModel("gemini");
 
   const env: Record<string, string> = {};
   env.CODETEACHER_AI_PROVIDER = provider;
 
   if (provider === "groq") {
-    env.CODETEACHER_GROQ_API_KEY = await getSecret("groqApiKey");
+    env.CODETEACHER_GROQ_API_KEY = await getStoredProviderApiKey("groq");
     env.CODETEACHER_GROQ_MODEL = groqModel;
   } else if (provider === "gemini") {
-    env.CODETEACHER_GEMINI_API_KEY = await getSecret("geminiApiKey");
+    env.CODETEACHER_GEMINI_API_KEY = await getStoredProviderApiKey("gemini");
     env.CODETEACHER_GEMINI_MODEL = geminiModel;
   } else if (provider === "cerebras") {
-    env.CODETEACHER_ENDPOINT_API_KEY = await getSecret("endpointApiKey");
+    env.CODETEACHER_ENDPOINT_API_KEY = await getStoredProviderApiKey("cerebras");
     env.CODETEACHER_AI_ENDPOINT = "https://api.cerebras.ai/v1/chat/completions";
-    env.CODETEACHER_AI_MODEL = cfg.get<string>("cerebrasModel") || "qwen-3-235b-a22b-instruct-2507";
+    env.CODETEACHER_AI_MODEL = cfg.get<string>("cerebrasModel") || getDefaultModel("cerebras");
   } else if (provider === "together") {
-    env.CODETEACHER_ENDPOINT_API_KEY = await getSecret("endpointApiKey");
+    env.CODETEACHER_ENDPOINT_API_KEY = await getStoredProviderApiKey("together");
     env.CODETEACHER_AI_ENDPOINT = "https://api.together.xyz/v1/chat/completions";
-    env.CODETEACHER_AI_MODEL = cfg.get<string>("togetherModel") || "meta-llama/Llama-3.3-70B-Instruct-Turbo";
+    env.CODETEACHER_AI_MODEL = cfg.get<string>("togetherModel") || getDefaultModel("together");
   } else if (provider === "openrouter") {
-    env.CODETEACHER_ENDPOINT_API_KEY = await getSecret("endpointApiKey");
+    env.CODETEACHER_ENDPOINT_API_KEY = await getStoredProviderApiKey("openrouter");
     env.CODETEACHER_AI_ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
-    env.CODETEACHER_AI_MODEL = cfg.get<string>("openrouterModel") || "nvidia/nemotron-3-super-120b-a12b:free";
+    env.CODETEACHER_AI_MODEL = cfg.get<string>("openrouterModel") || getDefaultModel("openrouter");
   } else {
     if (aiEndpoint.trim().length > 0) {
       env.CODETEACHER_AI_ENDPOINT = aiEndpoint.trim();
     }
-    const endpointApiKey = await getSecret("endpointApiKey");
+    const endpointApiKey = await getStoredProviderApiKey("local");
     if (endpointApiKey) {
       env.CODETEACHER_ENDPOINT_API_KEY = endpointApiKey;
     }

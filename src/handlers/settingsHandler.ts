@@ -2,7 +2,8 @@ import * as vscode from "vscode";
 import type { HandlerContext, MsgOf } from "./types";
 import { TOPICS, LANG_ICONS } from "../constants";
 import { TRANSLATIONS, UI_LANGUAGES } from "../i18n";
-import { setResponseLang, getSecret, setSecret, invalidateAiConfigCache, t } from "../aiHelpers";
+import { setResponseLang, getSecret, setSecret, invalidateAiConfigCache, t, getStoredProviderApiKey } from "../aiHelpers";
+import { DEFAULT_AI_PROVIDER, DEFAULT_LOCAL_ENDPOINT, getDefaultModel } from "../shared/aiConfigDefaults";
 
 /** 初期化 — init webview with topics/settings/progress */
 export async function handleReady(ctx: HandlerContext): Promise<void> {
@@ -14,21 +15,25 @@ export async function handleReady(ctx: HandlerContext): Promise<void> {
 
   const cfg = vscode.workspace.getConfiguration("codepractice");
   const aiSettings = {
-    provider: cfg.get<string>("aiProvider") || "groq",
-    localEndpoint: cfg.get<string>("aiEndpoint") || "http://127.0.0.1:1234/v1/chat/completions",
+    provider: cfg.get<string>("aiProvider") || DEFAULT_AI_PROVIDER,
+    localEndpoint: cfg.get<string>("aiEndpoint") || DEFAULT_LOCAL_ENDPOINT,
     groqApiKey: await getSecret("groqApiKey"),
-    groqModel: cfg.get<string>("groqModel") || "llama-3.3-70b-versatile",
-    cerebrasModel: cfg.get<string>("cerebrasModel") || "llama-3.3-70b",
-    togetherModel: cfg.get<string>("togetherModel") || "meta-llama/Llama-3.3-70B-Instruct-Turbo",
-    openrouterModel: cfg.get<string>("openrouterModel") || "meta-llama/llama-3.3-70b-instruct:free",
+    groqModel: cfg.get<string>("groqModel") || getDefaultModel("groq"),
+    cerebrasApiKey: await getStoredProviderApiKey("cerebras"),
+    cerebrasModel: cfg.get<string>("cerebrasModel") || getDefaultModel("cerebras"),
+    togetherApiKey: await getStoredProviderApiKey("together"),
+    togetherModel: cfg.get<string>("togetherModel") || getDefaultModel("together"),
+    openrouterApiKey: await getStoredProviderApiKey("openrouter"),
+    openrouterModel: cfg.get<string>("openrouterModel") || getDefaultModel("openrouter"),
     geminiApiKey: await getSecret("geminiApiKey"),
-    geminiModel: cfg.get<string>("geminiModel") || "gemini-2.0-flash",
+    geminiModel: cfg.get<string>("geminiModel") || getDefaultModel("gemini"),
     openaiApiKey: await getSecret("openaiApiKey"),
-    openaiModel: cfg.get<string>("openaiModel") || "gpt-4o-mini",
+    openaiModel: cfg.get<string>("openaiModel") || getDefaultModel("openai"),
     claudeApiKey: await getSecret("claudeApiKey"),
-    claudeModel: cfg.get<string>("claudeModel") || "claude-sonnet-4-20250514",
+    claudeModel: cfg.get<string>("claudeModel") || getDefaultModel("claude"),
+    localApiKey: await getStoredProviderApiKey("local"),
     endpointApiKey: await getSecret("endpointApiKey"),
-    endpointModel: cfg.get<string>("endpointModel") || ""
+    endpointModel: cfg.get<string>("endpointModel") || getDefaultModel("local")
   };
 
   const customPractices = ctx.context.globalState.get<any[]>("codepractice.customPractices") || [];
@@ -86,22 +91,38 @@ export async function handleSaveSettings(ctx: HandlerContext, msg: MsgOf<"saveSe
   const cfg = vscode.workspace.getConfiguration("codepractice");
   const s = msg.settings;
   if (s) {
+    const legacyEndpointKey = s.endpointApiKey || "";
+    const provider = s.provider || DEFAULT_AI_PROVIDER;
+    const cerebrasApiKey = s.cerebrasApiKey || (provider === "cerebras" ? legacyEndpointKey : "");
+    const togetherApiKey = s.togetherApiKey || (provider === "together" ? legacyEndpointKey : "");
+    const openrouterApiKey = s.openrouterApiKey || (provider === "openrouter" ? legacyEndpointKey : "");
+    const localApiKey = s.localApiKey || (provider === "local" ? legacyEndpointKey : "");
+    const compatibilityEndpointKey =
+      provider === "cerebras" ? cerebrasApiKey :
+      provider === "together" ? togetherApiKey :
+      provider === "openrouter" ? openrouterApiKey :
+      provider === "local" ? localApiKey :
+      legacyEndpointKey;
     await Promise.all([
-      cfg.update("aiProvider", s.provider, vscode.ConfigurationTarget.Global),
-      cfg.update("aiEndpoint", s.localEndpoint, vscode.ConfigurationTarget.Global),
-      cfg.update("groqModel", s.groqModel, vscode.ConfigurationTarget.Global),
-      cfg.update("cerebrasModel", s.cerebrasModel, vscode.ConfigurationTarget.Global),
-      cfg.update("togetherModel", s.togetherModel, vscode.ConfigurationTarget.Global),
-      cfg.update("openrouterModel", s.openrouterModel, vscode.ConfigurationTarget.Global),
-      cfg.update("geminiModel", s.geminiModel, vscode.ConfigurationTarget.Global),
-      cfg.update("openaiModel", s.openaiModel, vscode.ConfigurationTarget.Global),
-      cfg.update("claudeModel", s.claudeModel, vscode.ConfigurationTarget.Global),
-      cfg.update("endpointModel", s.endpointModel, vscode.ConfigurationTarget.Global),
+      cfg.update("aiProvider", provider, vscode.ConfigurationTarget.Global),
+      cfg.update("aiEndpoint", s.localEndpoint || DEFAULT_LOCAL_ENDPOINT, vscode.ConfigurationTarget.Global),
+      cfg.update("groqModel", s.groqModel || getDefaultModel("groq"), vscode.ConfigurationTarget.Global),
+      cfg.update("cerebrasModel", s.cerebrasModel || getDefaultModel("cerebras"), vscode.ConfigurationTarget.Global),
+      cfg.update("togetherModel", s.togetherModel || getDefaultModel("together"), vscode.ConfigurationTarget.Global),
+      cfg.update("openrouterModel", s.openrouterModel || getDefaultModel("openrouter"), vscode.ConfigurationTarget.Global),
+      cfg.update("geminiModel", s.geminiModel || getDefaultModel("gemini"), vscode.ConfigurationTarget.Global),
+      cfg.update("openaiModel", s.openaiModel || getDefaultModel("openai"), vscode.ConfigurationTarget.Global),
+      cfg.update("claudeModel", s.claudeModel || getDefaultModel("claude"), vscode.ConfigurationTarget.Global),
+      cfg.update("endpointModel", s.endpointModel || getDefaultModel("local"), vscode.ConfigurationTarget.Global),
       setSecret("groqApiKey", s.groqApiKey || ""),
+      setSecret("cerebrasApiKey", cerebrasApiKey),
+      setSecret("togetherApiKey", togetherApiKey),
+      setSecret("openrouterApiKey", openrouterApiKey),
       setSecret("geminiApiKey", s.geminiApiKey || ""),
       setSecret("openaiApiKey", s.openaiApiKey || ""),
       setSecret("claudeApiKey", s.claudeApiKey || ""),
-      setSecret("endpointApiKey", s.endpointApiKey || "")
+      setSecret("localApiKey", localApiKey),
+      setSecret("endpointApiKey", compatibilityEndpointKey)
     ]);
     invalidateAiConfigCache();
     ctx.post({ type: "settingsSaved" });

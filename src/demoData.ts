@@ -1,7 +1,8 @@
 // Offline mode — API不要のプリセット練習問題 (pre-generated practices for AI-free / offline mode)
 
 import * as vscode from "vscode";
-import { getResponseLang, getSecret } from "./aiHelpers";
+import { getResponseLang, getStoredProviderApiKey } from "./aiHelpers";
+import { DEFAULT_AI_PROVIDER } from "./shared/aiConfigDefaults";
 import type { UILang } from "./i18n";
 import { localizeOfflinePractice } from "./offlinePracticeLocalization";
 import { randomizePractice } from "./practiceRandomizer";
@@ -40,14 +41,13 @@ export async function checkDemoMode(): Promise<boolean> {
   if (_demoModeChecked) { return _isDemoMode; }
   try {
     const cfg = vscode.workspace.getConfiguration("codepractice");
-    const provider = cfg.get<string>("aiProvider") || "local";
+    const provider = cfg.get<string>("aiProvider") || DEFAULT_AI_PROVIDER;
     if (provider === "local") {
       const endpoint = cfg.get<string>("aiEndpoint") || "";
-      const key = await getSecret("endpointApiKey");
+      const key = await getStoredProviderApiKey("local");
       _isDemoMode = !endpoint && !key;
     } else {
-      const keyName = provider === "groq" ? "groqApiKey" : provider === "gemini" ? "geminiApiKey" : provider === "openai" ? "openaiApiKey" : provider === "claude" ? "claudeApiKey" : "endpointApiKey";
-      const key = await getSecret(keyName);
+      const key = await getStoredProviderApiKey(provider);
       _isDemoMode = !key;
     }
   } catch {

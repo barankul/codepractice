@@ -4,6 +4,7 @@ import { dom } from "../dom";
 import { t } from "../i18n";
 import { post } from "../vscodeApi";
 import type { AiSettings } from "../../shared/protocol";
+import { DEFAULT_AI_PROVIDER, DEFAULT_LOCAL_ENDPOINT, getDefaultModel } from "../../shared/aiConfigDefaults";
 
 const providerDisplayNames: Record<string, string> = {
   groq: "Groq", cerebras: "Cerebras", together: "Together", openrouter: "OpenRouter",
@@ -39,7 +40,7 @@ export function getSelectedModelLabel(provider: string): string {
 }
 
 export function isCurrentlyOffline(): boolean {
-  const prov = state.currentProvider || "groq";
+  const prov = state.currentProvider || DEFAULT_AI_PROVIDER;
   const keyEl = document.getElementById(keyFields[prov]) as HTMLInputElement | null;
   if (prov === "local") {
     const ep = document.getElementById("settingsLocalEndpoint") as HTMLInputElement | null;
@@ -107,31 +108,35 @@ export function updateConfigBanner(provider: string): void {
 
 export function loadSettingsUI(s: AiSettings): void {
   if (!s) return;
-  const prov = s.provider || "groq";
+  const prov = s.provider || DEFAULT_AI_PROVIDER;
   showProviderConfig(prov);
   const setVal = (id: string, val: string) => {
     const el = document.getElementById(id) as HTMLInputElement | HTMLSelectElement | null;
     if (el) el.value = val;
   };
   setVal("settingsLocalEndpoint", s.localEndpoint || "");
-  setVal("settingsEndpointModel", s.endpointModel || "");
+  setVal("settingsEndpointModel", s.endpointModel || getDefaultModel("local"));
   setVal("settingsGroqKey", s.groqApiKey || "");
-  setVal("settingsGroqModel", s.groqModel || "openai/gpt-oss-120b");
-  setVal("settingsCerebrasModel", s.cerebrasModel || "qwen-3-235b-a22b-instruct-2507");
-  setVal("settingsTogetherModel", s.togetherModel || "meta-llama/Llama-3.3-70B-Instruct-Turbo");
-  setVal("settingsOpenrouterModel", s.openrouterModel || "nvidia/nemotron-3-super-120b-a12b:free");
+  setVal("settingsGroqModel", s.groqModel || getDefaultModel("groq"));
+  setVal("settingsCerebrasKey", s.cerebrasApiKey || "");
+  setVal("settingsCerebrasModel", s.cerebrasModel || getDefaultModel("cerebras"));
+  setVal("settingsTogetherKey", s.togetherApiKey || "");
+  setVal("settingsTogetherModel", s.togetherModel || getDefaultModel("together"));
+  setVal("settingsOpenrouterKey", s.openrouterApiKey || "");
+  setVal("settingsOpenrouterModel", s.openrouterModel || getDefaultModel("openrouter"));
   setVal("settingsGeminiKey", s.geminiApiKey || "");
-  setVal("settingsGeminiModel", s.geminiModel || "gemini-2.5-flash");
+  setVal("settingsGeminiModel", s.geminiModel || getDefaultModel("gemini"));
   setVal("settingsOpenaiKey", s.openaiApiKey || "");
-  setVal("settingsOpenaiModel", s.openaiModel || "gpt-4.1-mini");
+  setVal("settingsOpenaiModel", s.openaiModel || getDefaultModel("openai"));
   setVal("settingsClaudeKey", s.claudeApiKey || "");
-  setVal("settingsClaudeModel", s.claudeModel || "claude-sonnet-4-6-20250827");
-  const epKey = s.endpointApiKey || "";
-  if (epKey) {
-    if (s.provider === "cerebras") setVal("settingsCerebrasKey", epKey);
-    else if (s.provider === "together") setVal("settingsTogetherKey", epKey);
-    else if (s.provider === "openrouter") setVal("settingsOpenrouterKey", epKey);
-    else if (s.provider === "local") setVal("settingsLocalKey", epKey);
+  setVal("settingsClaudeModel", s.claudeModel || getDefaultModel("claude"));
+  setVal("settingsLocalKey", s.localApiKey || "");
+  const legacyEndpointKey = s.endpointApiKey || "";
+  if (legacyEndpointKey) {
+    if (!s.cerebrasApiKey && prov === "cerebras") setVal("settingsCerebrasKey", legacyEndpointKey);
+    else if (!s.togetherApiKey && prov === "together") setVal("settingsTogetherKey", legacyEndpointKey);
+    else if (!s.openrouterApiKey && prov === "openrouter") setVal("settingsOpenrouterKey", legacyEndpointKey);
+    else if (!s.localApiKey && prov === "local") setVal("settingsLocalKey", legacyEndpointKey);
   }
   updateConfigBanner(prov);
 }
@@ -149,20 +154,24 @@ export function collectSettings(): Record<string, string> {
 
   return {
     provider: state.currentProvider,
-    localEndpoint: getVal("settingsLocalEndpoint", "http://127.0.0.1:1234/v1/chat/completions"),
+    localEndpoint: getVal("settingsLocalEndpoint", DEFAULT_LOCAL_ENDPOINT),
     groqApiKey: getVal("settingsGroqKey", ""),
-    groqModel: getVal("settingsGroqModel", "openai/gpt-oss-120b"),
-    cerebrasModel: getVal("settingsCerebrasModel", "qwen-3-235b-a22b-instruct-2507"),
-    togetherModel: getVal("settingsTogetherModel", "meta-llama/Llama-3.3-70B-Instruct-Turbo"),
-    openrouterModel: getVal("settingsOpenrouterModel", "nvidia/nemotron-3-super-120b-a12b:free"),
+    groqModel: getVal("settingsGroqModel", getDefaultModel("groq")),
+    cerebrasApiKey: getVal("settingsCerebrasKey", ""),
+    cerebrasModel: getVal("settingsCerebrasModel", getDefaultModel("cerebras")),
+    togetherApiKey: getVal("settingsTogetherKey", ""),
+    togetherModel: getVal("settingsTogetherModel", getDefaultModel("together")),
+    openrouterApiKey: getVal("settingsOpenrouterKey", ""),
+    openrouterModel: getVal("settingsOpenrouterModel", getDefaultModel("openrouter")),
     geminiApiKey: getVal("settingsGeminiKey", ""),
-    geminiModel: getVal("settingsGeminiModel", "gemini-2.5-flash"),
+    geminiModel: getVal("settingsGeminiModel", getDefaultModel("gemini")),
     openaiApiKey: getVal("settingsOpenaiKey", ""),
-    openaiModel: getVal("settingsOpenaiModel", "gpt-4.1-mini"),
+    openaiModel: getVal("settingsOpenaiModel", getDefaultModel("openai")),
     claudeApiKey: getVal("settingsClaudeKey", ""),
-    claudeModel: getVal("settingsClaudeModel", "claude-sonnet-4-6-20250827"),
+    claudeModel: getVal("settingsClaudeModel", getDefaultModel("claude")),
+    localApiKey: getVal("settingsLocalKey", ""),
     endpointApiKey: epKey,
-    endpointModel: getVal("settingsEndpointModel", ""),
+    endpointModel: getVal("settingsEndpointModel", getDefaultModel("local")),
   };
 }
 

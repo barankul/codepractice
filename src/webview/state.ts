@@ -35,7 +35,7 @@ export const state = {
   uiLanguages: [] as UiLanguage[],
 
   // Settings
-  currentProvider: "local",
+  currentProvider: "groq",
 
   // Loading
   currentLoadingAction: "",
