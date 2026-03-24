@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="README.ja.md">日本語</a> | English
+  <a href="README.ja.md">Japanese</a> | English
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/languages-Java%20%7C%20TypeScript%20%7C%20SQL-blue" alt="Languages" />
-  <img src="https://img.shields.io/badge/offline_practices-140%2B-green" alt="140+ Offline Practices" />
+  <img src="https://img.shields.io/badge/offline_practices-138-green" alt="138 Offline Practices" />
   <img src="https://img.shields.io/badge/AI_providers-8-orange" alt="8 AI Providers" />
   <img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="MIT License" />
 </p>
@@ -33,10 +33,10 @@
 Most coding practice platforms run in a browser. CodePractice brings the entire experience **inside VS Code** — where you already write code. No context switching, no browser tabs. Generate a problem, solve it in the editor, get instant feedback with auto-judging, and track your progress with spaced repetition.
 
 **Key highlights:**
-- Works **100% offline** with 140+ built-in exercises — no API key needed
+- Works **100% offline** with 138 built-in exercises, localized offline practice text, and verified offline bug-fix variants
 - Supports **8 AI providers** (free tiers available) for unlimited unique exercises
 - Built-in **code runners** — no external setup for Java, TypeScript, or SQL
-- **Multi-test validation** with detailed pass/fail feedback per test case
+- **Multi-test validation** with detailed pass/fail feedback per test case when the practice includes multiple test inputs
 - **FSRS spaced repetition** to schedule reviews at optimal intervals
 
 ---
@@ -49,9 +49,9 @@ Most coding practice platforms run in a browser. CodePractice brings the entire 
 | **3 Languages** | Java, TypeScript, SQL — each with built-in runner |
 | **Adaptive Difficulty** | 5 levels, auto-adjusted based on your performance |
 | **AI-Generated** | Unique problems every time via free AI providers |
-| **140+ Offline** | Full exercise bank that works without internet |
-| **Custom Practice** | Describe what you want to practice, AI generates it |
-| **Bug Fix Mode** | Find and fix bugs in real open-source code from GitHub |
+| **138 Offline Practices** | Full built-in exercise bank that works without internet |
+| **Custom Practice** | Describe what you want to practice, AI generates it in AI mode |
+| **Bug Fix Mode** | AI mode uses real GitHub code; offline mode generates verified local bug-fix variants |
 
 ### Code Execution & Judging
 | Feature | Description |
@@ -71,7 +71,8 @@ Most coding practice platforms run in a browser. CodePractice brings the entire 
 | **Teach Me** | Step-by-step teaching with examples |
 | **Ghost Text** | Inline code suggestions while you type |
 | **Alternative Solutions** | 2-3 different approaches to the same problem |
-| **Cross-Language** | See your solution in Python, JavaScript, C#, C++, Go, Rust, and more |
+| **Cross-Language** | Open translated solution files with per-line notes; offline only shows targets authored for that practice |
+| **Localized Practice Text** | Offline titles, tasks, hints, judge feedback, alternative-method notes, and cross-language notes follow the selected UI language |
 
 ### Progress Tracking
 | Feature | Description |
@@ -84,7 +85,9 @@ Most coding practice platforms run in a browser. CodePractice brings the entire 
 | **FSRS Scheduling** | Spaced repetition for optimal review timing |
 
 ### Internationalization
-- English, Japanese, Turkish
+- UI languages: English, Japanese, Turkish
+- Offline practice prose is localized for Japanese and Turkish while runnable code stays in English
+- Bug-fix explanations, custom-panel AI-required messages, and cross-language annotations follow the selected UI language
 
 ---
 
@@ -129,22 +132,22 @@ code --install-extension codepractice.vsix
 
 ## AI Providers
 
-CodePractice works with multiple AI providers. Free tiers are available — **no credit card required**.
+CodePractice supports the **8 provider options currently exposed in Settings**. Models are configurable; the table below reflects the current built-in selections shown in the settings UI.
 
-| Provider | Pricing | Models |
-|----------|---------|--------|
-| **Groq** | Free tier available | Llama 3.3 70B, GPT-oss 120B |
-| **Cerebras** | Free tier available | Llama 3.3 70B, Qwen 3 235B |
-| **Google Gemini** | Free tier available | Gemini 2.5 Flash, 2.5 Pro |
-| **Together AI** | Free credit on signup | Llama, DeepSeek, Qwen |
-| **OpenRouter** | Free models available | Llama, Nemotron, Mistral |
-| **OpenAI** | Pay-as-you-go | GPT-4.1 Mini, o4-mini |
-| **Claude** | Pay-as-you-go | Sonnet 4.6, Opus 4.6 |
-| **Local** | Free (self-hosted) | LM Studio, Ollama, any OpenAI-compatible |
+| Provider | Pricing | Current selectable models |
+|----------|---------|---------------------------|
+| **Groq** | Free tier available | GPT-OSS 120B, GPT-OSS 20B, Llama 3.3 70B, Llama 3.1 8B |
+| **Cerebras** | Free tier available | Qwen 3 235B, GPT-OSS 120B, Llama 3.1 8B |
+| **Together AI** | Free credit on signup | Llama 3.3 70B Turbo, Llama 3.1 8B Turbo |
+| **OpenRouter** | Free tier available | Nemotron 3 Super 120B, Qwen3 Coder 480B, GPT-OSS 120B, Hunter Alpha 1T, Llama 3.3 70B, Gemini 2.0 Flash, Qwen 3 235B |
+| **Google Gemini** | Free tier available (region dependent) | Gemini 2.5 Flash, Gemini 2.5 Pro, Gemini 2.0 Flash |
+| **OpenAI** | Pay-as-you-go | GPT-4.1 Mini, GPT-4.1 Nano, GPT-4.1, o4-mini, o3 |
+| **Claude** | Pay-as-you-go | Sonnet 4.6, Sonnet 4, Haiku 4.5, Opus 4.6 |
+| **Local** | Free (self-hosted) | LM Studio, Ollama, or any OpenAI-compatible endpoint |
 
 **Setup:** Open sidebar → gear icon → select provider → enter API key → Save.
 
-> **No API key?** CodePractice includes 140+ built-in exercises that work completely offline with full judging, hints, alternative solutions, cross-language comparison, and progress tracking.
+> **No API key?** CodePractice includes 138 built-in exercises that work completely offline with judging, localized hints and feedback, offline bug-fix mode, progress tracking, and authored cross-language comparisons where available.
 
 ---
 
@@ -152,15 +155,20 @@ CodePractice works with multiple AI providers. Free tiers are available — **no
 
 Works without any API key or internet connection. Toggle between **AI** and **Offline** mode from the main screen.
 
-- 140+ practices across Java, TypeScript, and SQL
+- 138 practices across Java, TypeScript, and SQL
 - All difficulty levels (1-5)
-- Multi-test validation per exercise
+- Offline bug-fix mode for the built-in catalog
+- Multi-test validation when the selected practice includes multiple test cases
 - Full judging with feedback
-- Hints and solution explanations
-- Alternative solution methods
-- Cross-language comparison
+- Hints, judge feedback, alternative methods, and cross-language notes localized to English, Japanese, or Turkish
+- Cross-language comparison for authored offline targets only; unsupported targets are hidden
 - Progress tracking and XP
 - Randomized values — different numbers/names each time
+
+**Offline limitations:**
+- Custom Practice, AI Chat, Teach Me, and other provider-backed features still require **AI mode**
+- SQL offline practices do not expose cross-language targets
+- In bug-fix mode, the sidebar focuses on the buggy file and hides "Other Ways" / "Other Languages"
 
 **Topics covered:**
 
@@ -197,10 +205,16 @@ src/
   parsers.ts              AI response parsing & error patterns
   progressTracker.ts      XP, levels, FSRS spaced repetition
   practiceRandomizer.ts   Offline practice value randomization
-  demoData.ts             Offline mode detection & selection
-  smokeTest.ts            Automated quality audit (38+ checks)
+  demoData.ts             Offline mode detection, selection, and localization hookup
+  offlineBugFix.ts        Verified offline bug-fix mutation generation
+  offlinePracticeLocalization.ts
+                          Offline prose / feedback localization (en/ja/tr)
+  offlinePracticeAudit.ts Offline catalog integrity + localization coverage checks
+  offlineSmokeAudit.ts    Full offline runtime smoke matrix
+  offlineSmokeCli.ts      CLI entry for offline smoke reports
+  smokeTest.ts            Automated AI quality audit
   i18n.ts                 Internationalization (en/ja/tr)
-  offlinePractices/       140+ built-in exercises
+  offlinePractices/       138 built-in exercises
   handlers/
     generateHandler.ts    Practice generation flow
     executionHandler.ts   Code execution & judging pipeline
@@ -213,7 +227,30 @@ core-java/src/
   DebugMain.java          Bug fix practice generator
 ```
 
-**Tech stack:** TypeScript · esbuild · VS Code Webview API · sql.js (WASM) · FSRS algorithm
+**Tech stack:** TypeScript × esbuild × VS Code Webview API × sql.js (WASM) × FSRS algorithm
+
+---
+
+## Quality Checks
+
+For extension-side AI audits:
+
+```bash
+npm test
+```
+
+For the offline catalog smoke matrix:
+
+```bash
+npm run offline:smoke
+```
+
+The offline smoke command writes reports to:
+
+- `.codepractice/offline-smoke/report.txt`
+- `.codepractice/offline-smoke/report.json`
+
+It verifies topic coverage, runtime health, offline bug-fix generation, and Japanese localization coverage across the built-in catalog.
 
 ---
 

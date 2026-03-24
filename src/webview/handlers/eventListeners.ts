@@ -4,7 +4,7 @@ import { dom } from "../dom";
 import { t, applyTranslations } from "../i18n";
 import { post } from "../vscodeApi";
 import { showLoading, showToast } from "../ui/loading";
-import { renderLangButtons, renderTopics, updateSourceToggle } from "../ui/langTopics";
+import { renderLangButtons, renderTopics, updateCodeSizeGroupVisibility, updateSourceToggle } from "../ui/langTopics";
 import { renderCustomLangButtons } from "../ui/custom";
 import { showProviderConfig, updateConfigBanner, updateOfflineIndicators, isCurrentlyOffline, collectSettings } from "../ui/settings";
 
@@ -354,8 +354,7 @@ export function initEventListeners(): void {
       document.querySelectorAll("#modeToggle .mode-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.selectedMode = ((btn as HTMLElement).dataset.mode || "practice") as "practice" | "bugfix";
-      const csGroup = document.getElementById("codeSizeGroup");
-      if (csGroup) csGroup.style.display = state.selectedMode === "bugfix" ? "block" : "none";
+      updateCodeSizeGroupVisibility();
     });
   });
 
@@ -374,8 +373,8 @@ export function initEventListeners(): void {
       document.querySelectorAll("#sourceToggle .mode-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.selectedSource = ((btn as HTMLElement).dataset.source || "offline") as "ai" | "offline";
-      post({ type: "setForceOffline", forceOffline: state.selectedSource === "offline" });
       updateOfflineIndicators();
+      updateSourceToggle();
     });
   });
 

@@ -149,10 +149,10 @@ export function getWebviewHtml(nonce: string): string {
     .loading-overlay.show { display: flex; animation: fadeIn 0.2s ease; }
     .loading-icon {
       width: 32px; height: 32px;
-      border: 2.5px solid rgba(128,128,128,0.1);
+      border: 2.5px solid rgba(128,128,128,0.16);
       border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      animation: none;
     }
     .loading-text {
       color: var(--vscode-foreground);
@@ -928,16 +928,39 @@ export function getWebviewHtml(nonce: string): string {
       margin-top: 14px;
     }
     .output-wrap.show { display: block; animation: fadeIn var(--transition-med) ease; }
+    .output-wrap .item {
+      display: flex;
+      flex-direction: column;
+      min-height: 190px;
+    }
+    .output-wrap.output-compact .item {
+      min-height: 0;
+    }
     .output-text {
       background: var(--surface);
       padding: 12px;
       border-radius: var(--radius-md);
       border: 1px solid var(--card-border);
+      box-sizing: border-box;
+      flex: 1;
+      min-height: 150px;
       max-height: 260px;
       overflow-y: auto;
       font-family: var(--mono);
       font-size: 12px;
       line-height: 1.5;
+    }
+    .output-wrap.output-compact .output-text {
+      background: var(--vscode-input-background, var(--surface));
+      padding: 6px 8px;
+      border-radius: var(--radius-sm);
+      flex: 0 1 auto;
+      min-height: 0;
+      font-size: 10px;
+      line-height: 1.4;
+      white-space: pre;
+      overflow-x: auto;
+      color: var(--vscode-descriptionForeground);
     }
     .result-badge {
       font-size: 10px;
@@ -961,6 +984,10 @@ export function getWebviewHtml(nonce: string): string {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 5px;
+      box-sizing: border-box;
+      flex: 1;
+      min-height: 150px;
+      align-content: start;
     }
     @media (max-width: 200px) {
       .stats-grid { grid-template-columns: 1fr; }
@@ -1968,11 +1995,6 @@ export function getWebviewHtml(nonce: string): string {
       border-radius: 50%;
       background: var(--good);
       flex-shrink: 0;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
     }
     .settings-current-banner .banner-label {
       font-weight: 500;
@@ -2422,13 +2444,13 @@ export function getWebviewHtml(nonce: string): string {
     <!-- Offline overlay for Custom panel -->
     <div id="customOfflineOverlay" class="custom-offline-overlay" style="display:none;">
       <div class="custom-offline-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
-      <div class="custom-offline-title">AI Required</div>
-      <div class="custom-offline-desc">Custom practices require an AI provider.<br>Configure an API key in Settings to use this feature.</div>
+      <div class="custom-offline-title" data-i18n="custom.aiRequired">AI Required</div>
+      <div class="custom-offline-desc" data-i18n-html="custom.aiRequiredDesc">Custom practices require an AI provider.<br>Configure an API key in Settings to use this feature.</div>
       <div class="custom-offline-source">Source: AI</div>
       <!-- When no API key: show Open Settings -->
-      <button class="btn-gen custom-offline-settings-btn" id="customGoSettingsBtn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Open Settings</button>
+      <button class="btn-gen custom-offline-settings-btn" id="customGoSettingsBtn" data-i18n="custom.openSettings"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Open Settings</button>
       <!-- When API key exists but source is offline: show Switch to AI -->
-      <button class="btn-gen custom-offline-switch-btn" id="customSwitchAiBtn" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 15H8l-3 6h14l-3-6z"/><circle cx="9" cy="10" r="0.5" fill="currentColor"/><circle cx="15" cy="10" r="0.5" fill="currentColor"/></svg>Switch to AI Mode</button>
+      <button class="btn-gen custom-offline-switch-btn" id="customSwitchAiBtn" data-i18n="custom.switchAi" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 15H8l-3 6h14l-3-6z"/><circle cx="9" cy="10" r="0.5" fill="currentColor"/><circle cx="15" cy="10" r="0.5" fill="currentColor"/></svg>Switch to AI Mode</button>
     </div>
     <div class="subtitle" id="customSubtitle" data-i18n="custom.empty">No custom practices yet. Describe what you want to learn!</div>
 
@@ -3193,9 +3215,9 @@ export function getWebviewHtml(nonce: string): string {
       if (customSettingsBtn) customSettingsBtn.style.display = noApiKey ? "" : "none";
       if (customSwitchBtn) customSwitchBtn.style.display = hasKeyButOffline ? "" : "none";
       if (customOfflineDesc && hasKeyButOffline) {
-        customOfflineDesc.innerHTML = 'Custom practices require AI mode.<br>Switch your source to AI to use this feature.';
+        customOfflineDesc.innerHTML = t("custom.aiModeRequiredDesc");
       } else if (customOfflineDesc && noApiKey) {
-        customOfflineDesc.innerHTML = 'Custom practices require an AI provider.<br>Configure an API key in Settings to use this feature.';
+        customOfflineDesc.innerHTML = t("custom.aiRequiredDesc");
       }
 
       // AI Chat button: disable when offline
@@ -4032,7 +4054,7 @@ export function getWebviewHtml(nonce: string): string {
 
       if (msg.type === "busy") {
         const v = !!msg.value;
-        spin.style.display = v ? "block" : "none";
+        spin.style.display = "none";
         var topProg = document.getElementById("topbarProgress");
         if (topProg) { v ? topProg.classList.add("active") : topProg.classList.remove("active"); }
         genBtn.disabled = v;
@@ -4155,6 +4177,7 @@ export function getWebviewHtml(nonce: string): string {
         document.getElementById("quickSolveBtn").disabled = false;
         hintCodeBtn.disabled = false;
         outputWrap.classList.remove("show");
+        outputWrap.classList.remove("output-compact");
         outputEl.style.display = "none";
         outputEl.textContent = "\u2014";
         if (testCasesList) testCasesList.innerHTML = "";
@@ -4298,6 +4321,7 @@ export function getWebviewHtml(nonce: string): string {
 
       if (msg.type === "output") {
         outputWrap.classList.add("show");
+        outputWrap.classList.add("output-compact");
         outputEl.style.display = "block";
         outputEl.textContent = msg.text || "—";
         if (testCasesList) { testCasesList.innerHTML = ""; testCasesList.style.display = "none"; }
@@ -4319,6 +4343,7 @@ export function getWebviewHtml(nonce: string): string {
 
       if (msg.type === "judgeResult") {
         outputWrap.classList.add("show");
+        outputWrap.classList.remove("output-compact");
 
         // Show execution performance gauge
         showPerfCard(msg.durationMs);

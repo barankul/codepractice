@@ -78,7 +78,12 @@ export function extractPrintStatement(code: string, lang: string): string | null
 }
 
 /** 学生ロジック抽出 — extract student-written logic (minus data & print) */
-export function extractStudentLogic(studentCode: string, starterCode: string, lang: string): string {
+export function extractStudentLogic(
+  studentCode: string,
+  starterCode: string,
+  lang: string,
+  keepPrintStmt: boolean = false
+): string {
   const studentBody = lang === "TypeScript" ? studentCode : extractMainBody(studentCode, lang);
   const dataLines = extractDataBlock(starterCode, lang);
   const printStmt = extractPrintStatement(studentCode, lang);
@@ -111,7 +116,7 @@ export function extractStudentLogic(studentCode: string, starterCode: string, la
     }
     if (/\/\/\s*YOUR\s*CODE\s*HERE/i.test(trimmed)) { continue; }
     if (/\/\/\s*TODO/i.test(trimmed)) { continue; }
-    if (printStmt && trimmed === printStmt.trim()) { continue; }
+    if (!keepPrintStmt && printStmt && trimmed === printStmt.trim()) { continue; }
     logicLines.push(line);
   }
 
@@ -181,8 +186,10 @@ function stripInputVarLines(
 ): string[] {
   const result: string[] = [];
   let bracketDepth = 0; // Track []{} depth for multi-line declarations
+  let scopeDepth = 0;
   for (const line of lines) {
     const trimmed = line.trim();
+    const currentScopeDepth = scopeDepth;
     if (bracketDepth > 0) {
       // Inside a multi-line declaration — count brackets until balanced
       const opens = (trimmed.match(/[\[{(]/g) || []).length;
@@ -191,16 +198,25 @@ function stripInputVarLines(
       continue;
     }
     // Check if this line starts an input var declaration (but never skip structural brace-only lines)
-    if (inputVarDecls.some(d => d.pattern.test(trimmed)) && !/^[{}\s;]*$/.test(trimmed)) {
+    if (currentScopeDepth === 0 && inputVarDecls.some(d => d.pattern.test(trimmed)) && !/^[{}\s;]*$/.test(trimmed)) {
       const opens = (trimmed.match(/[\[{(]/g) || []).length;
       const closes = (trimmed.match(/[\]})]/g) || []).length;
       const net = opens - closes;
       if (net > 0) { bracketDepth = net; }
       continue;
     }
-    // Check method calls on input variables
-    if (isMethodCallOnVar(trimmed, inputVarNames)) { continue; }
+    // Check method calls on input variables, including multi-line callback blocks
+    if (currentScopeDepth === 0 && isMethodCallOnVar(trimmed, inputVarNames)) {
+      const opens = (trimmed.match(/[\[{(]/g) || []).length;
+      const closes = (trimmed.match(/[\]})]/g) || []).length;
+      const net = opens - closes;
+      if (net > 0) { bracketDepth = net; }
+      continue;
+    }
     result.push(line);
+    const opens = (trimmed.match(/\{/g) || []).length;
+    const closes = (trimmed.match(/\}/g) || []).length;
+    scopeDepth = Math.max(0, scopeDepth + opens - closes);
   }
   return result;
 }
@@ -209,36 +225,91 @@ function stripInputVarLines(
 function extractTypeDeclarations(bodyLines: string[]): { typeLines: string[]; remaining: string[] } {
   const typeLines: string[] = [];
   const remaining: string[] = [];
-  let inBlock = false;
+  let collecting = false;
   let braceDepth = 0;
+  let parenDepth = 0;
+  let sawBrace = false;
   // Matches: type, interface, function, async function, class, enum, abstract class
   const TOP_LEVEL_DECL = /^(?:export\s+)?(?:type|interface|(?:async\s+)?function|class|abstract\s+class|enum)\s+\w+/;
+  const updateDepths = (line: string): void => {
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"' || ch === "'" || ch === '`') {
+        i = skipStringLiteral(line, i) - 1;
+        continue;
+      }
+      if (ch === "/" && line[i + 1] === "/") {
+        break;
+      }
+      if (ch === "(") { parenDepth++; }
+      else if (ch === ")") { parenDepth = Math.max(0, parenDepth - 1); }
+      else if (ch === "{") {
+        braceDepth++;
+        sawBrace = true;
+      } else if (ch === "}") {
+        braceDepth = Math.max(0, braceDepth - 1);
+      }
+    }
+  };
+  const shouldFlush = (trimmed: string): boolean => {
+    if (sawBrace) {
+      return braceDepth === 0 && parenDepth === 0;
+    }
+    return parenDepth === 0 && /;\s*$/.test(trimmed);
+  };
   for (const line of bodyLines) {
     const trimmed = line.trim();
-    if (!inBlock && TOP_LEVEL_DECL.test(trimmed)) {
+    if (!collecting && TOP_LEVEL_DECL.test(trimmed)) {
+      collecting = true;
       typeLines.push(line);
-      const opens = (trimmed.match(/\{/g) || []).length;
-      const closes = (trimmed.match(/\}/g) || []).length;
-      const net = opens - closes;
-      if (net > 0) {
-        inBlock = true;
-        braceDepth = net;
+      updateDepths(line);
+      if (shouldFlush(trimmed)) {
+        collecting = false;
+        braceDepth = 0;
+        parenDepth = 0;
+        sawBrace = false;
       }
       // Single-line declaration (e.g. "type Foo = string;") — already captured
-    } else if (inBlock) {
+    } else if (collecting) {
       typeLines.push(line);
-      const opens = (trimmed.match(/\{/g) || []).length;
-      const closes = (trimmed.match(/\}/g) || []).length;
-      braceDepth += opens - closes;
-      if (braceDepth <= 0) {
-        inBlock = false;
+      updateDepths(line);
+      if (shouldFlush(trimmed)) {
+        collecting = false;
         braceDepth = 0;
+        parenDepth = 0;
+        sawBrace = false;
       }
     } else {
       remaining.push(line);
     }
   }
   return { typeLines, remaining };
+}
+
+function splitTypeDeclarationBlocks(typeLines: string[]): string[] {
+  const blocks: string[] = [];
+  let current: string[] = [];
+  let braceDepth = 0;
+
+  for (const line of typeLines) {
+    current.push(line);
+    const trimmed = line.trim();
+    const opens = (trimmed.match(/\{/g) || []).length;
+    const closes = (trimmed.match(/\}/g) || []).length;
+    braceDepth += opens - closes;
+
+    if (braceDepth <= 0 && (/;\s*$/.test(trimmed) || /}\s*$/.test(trimmed))) {
+      blocks.push(current.join("\n").trim());
+      current = [];
+      braceDepth = 0;
+    }
+  }
+
+  if (current.length > 0) {
+    blocks.push(current.join("\n").trim());
+  }
+
+  return blocks.filter(block => block.length > 0);
 }
 
 function expandDeclarations(declarations: string, indent: string): string {
@@ -296,31 +367,48 @@ function expandDeclarations(declarations: string, indent: string): string {
     .join("\n");
 }
 
-function buildPrefixedPrint(printStmt: string, index: number, lang: string): string {
-  const indent = printStmt.match(/^(\s*)/)?.[1] || "        ";
+function buildJavaCapturedOutputFooter(index: number, indent: string): string {
+  return [
+    `${indent}if (_tcOk${index}) {`,
+    `${indent}    String _tcOut${index} = new String(_buf${index}.toByteArray(), java.nio.charset.StandardCharsets.UTF_8)`,
+    `${indent}        .replace("\\r\\n", "\\n")`,
+    `${indent}        .replace("\\r", "\\n")`,
+    `${indent}        .trim();`,
+    `${indent}    System.out.println("TC${index}:B64:" + java.util.Base64.getEncoder().encodeToString(_tcOut${index}.getBytes(java.nio.charset.StandardCharsets.UTF_8)));`,
+    `${indent}}`,
+  ].join("\n");
+}
 
-  if (lang === "Java") {
-    const fnMatch = printStmt.match(/System\.out\.println?\s*\(/);
-    if (fnMatch) {
-      const start = printStmt.indexOf(fnMatch[0]) + fnMatch[0].length;
-      const end = findMatchingClose(printStmt, start, "(", ")");
-      const arg = printStmt.substring(start, end - 1).trim();
-      return `${indent}System.out.println("TC${index}:" + (${arg}));`;
+function buildTypeScriptCapturedOutputFooter(index: number, indent: string): string {
+  return [
+    `${indent}if (_tcOk${index}) {`,
+    `${indent}    const _tcOut${index} = _logs${index}.join("\\n").trim();`,
+    `${indent}    _origLog${index}("TC${index}:B64:" + Buffer.from(_tcOut${index}, "utf8").toString("base64"));`,
+    `${indent}}`,
+  ].join("\n");
+}
+
+export function parseMultiTestTcLine(line: string): { tcNum: number; output: string } | null {
+  const cleaned = line.replace(/\r$/, "").trim();
+
+  const errorMatch = cleaned.match(/^TC(\d+):(ERROR:.*)$/);
+  if (errorMatch) {
+    return { tcNum: parseInt(errorMatch[1], 10), output: errorMatch[2].trim() };
+  }
+
+  const base64Match = cleaned.match(/^TC(\d+):B64:(.*)$/);
+  if (base64Match) {
+    const tcNum = parseInt(base64Match[1], 10);
+    try {
+      return { tcNum, output: Buffer.from(base64Match[2], "base64").toString("utf8") };
+    } catch {
+      return { tcNum, output: "" };
     }
   }
 
-  if (lang === "TypeScript") {
-    const fnMatch = printStmt.match(/console\.log\s*\(/);
-    if (fnMatch) {
-      const start = printStmt.indexOf(fnMatch[0]) + fnMatch[0].length;
-      const end = findMatchingClose(printStmt, start, "(", ")");
-      const arg = printStmt.substring(start, end - 1).trim();
-      // Use a helper to stringify arrays/objects properly (avoid "[object Object]" or missing brackets)
-      return `${indent}{ const _v${index} = (${arg}); console.log("TC${index}:" + (typeof _v${index} === "object" && _v${index} !== null ? JSON.stringify(_v${index}) : _v${index})); }`;
-    }
-  }
-
-  return printStmt;
+  const rawMatch = cleaned.match(/^TC(\d+):(.*)$/);
+  if (!rawMatch) { return null; }
+  return { tcNum: parseInt(rawMatch[1], 10), output: rawMatch[2].trim() };
 }
 
 /** Reference test — use solution's full main body, swap input vars per test case */
@@ -352,6 +440,7 @@ function buildReferenceTestCode(
 
   // Collect all input variable names (for stripping method calls like .add(), .put())
   const inputVarNames = new Set(inputVarDecls.map(d => d.varName));
+  const staticDataLines = stripInputVarLines(dataLines, inputVarDecls, inputVarNames);
 
   const bodyLines = body.split("\n");
 
@@ -360,14 +449,16 @@ function buildReferenceTestCode(
     const importBlock = imports.length > 0 ? imports.join("\n") + "\n" : "";
     const helpers = extractHelperMethods(solutionCode);
     const indent = "            ";
+    const staticBlock = staticDataLines.length > 0
+      ? staticDataLines.map(l => indent + l.trim()).join("\n") + "\n"
+      : "";
 
     let blocks = "";
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
       const tcInputDecls = expandDeclarations(tc.input, indent);
-      const prefixedPrint = buildPrefixedPrint(printStmt, i + 1, lang);
 
-      // Rebuild body: strip data setup lines, replace print with prefixed
+      // Rebuild body: strip data setup lines, keep original prints, and capture the full output per TC
       const rewritten: string[] = [];
       let refSkipDepth = 0;
       for (const line of bodyLines) {
@@ -396,22 +487,28 @@ function buildReferenceTestCode(
         }
         // Skip method calls on input variables (e.g. numbers.add(...), scores.put(...))
         if (isMethodCallOnVar(trimmed, inputVarNames)) { continue; }
-        // Replace print statement with prefixed version
-        if (trimmed === printStmt.trim()) {
-          rewritten.push(prefixedPrint);
-          continue;
-        }
         rewritten.push(indent + trimmed);
       }
 
       // Wrap each TC in try-catch so one failure doesn't kill subsequent TCs
       blocks += `        { // TC${i + 1}\n`;
+      blocks += `${indent}boolean _tcOk${i + 1} = false;\n`;
+      blocks += `${indent}java.io.PrintStream _origOut${i + 1} = System.out;\n`;
+      blocks += `${indent}java.io.ByteArrayOutputStream _buf${i + 1} = new java.io.ByteArrayOutputStream();\n`;
       blocks += `${indent}try {\n`;
+      blocks += `${indent}    System.setOut(new java.io.PrintStream(_buf${i + 1}, true));\n`;
       blocks += tcInputDecls + "\n";
+      blocks += staticBlock;
       blocks += rewritten.join("\n") + "\n";
+      blocks += `${indent}    _tcOk${i + 1} = true;\n`;
       blocks += `${indent}} catch (Throwable _tcErr${i + 1}) {\n`;
+      blocks += `${indent}    System.setOut(_origOut${i + 1});\n`;
       blocks += `${indent}    System.out.println("TC${i + 1}:ERROR:" + _tcErr${i + 1}.getMessage());\n`;
+      blocks += `${indent}} finally {\n`;
+      blocks += `${indent}    try { System.out.flush(); } catch (Throwable _flushErr${i + 1}) {}\n`;
+      blocks += `${indent}    System.setOut(_origOut${i + 1});\n`;
       blocks += `${indent}}\n`;
+      blocks += buildJavaCapturedOutputFooter(i + 1, indent) + "\n";
       blocks += `        }\n`;
     }
 
@@ -429,18 +526,15 @@ function buildReferenceTestCode(
   if (lang === "TypeScript") {
     const indent = "    ";
 
-    // 1. Extract top-level declarations (type, interface, function, class, enum) to hoist
-    const { typeLines: hoisted } = extractTypeDeclarations(bodyLines);
-    const hoistedSet = new Set(hoisted.map(l => l.trim()));
-
-    // 2. Get student logic (strips data from starter + print + comments)
-    const studentLogic = extractStudentLogic(solutionCode, starterCode, lang);
+    // 1. Get student logic while preserving print statements so capture can serialize full output
+    const studentLogic = extractStudentLogic(solutionCode, starterCode, lang, true);
 
     // 3. Remove hoisted lines from logic (function bodies etc. that overlap)
     //    Use brace depth tracking to strip entire multi-line blocks, not individual lines
-    const cleanLogicLines: string[] = [];
+    const { typeLines: hoisted, remaining: cleanLogicLines } = extractTypeDeclarations(studentLogic.split("\n"));
+    const hoistedSet = new Set<string>();
     let hoistSkipDepth = 0;
-    for (const l of studentLogic.split("\n")) {
+    for (const l of [] as string[]) {
       const trimmed = l.trim();
       if (!trimmed) { continue; }
       if (hoistSkipDepth > 0) {
@@ -463,15 +557,22 @@ function buildReferenceTestCode(
 
     // 4. Strip input var declarations (including multi-line) and method calls on input vars
     const finalLogicLines = stripInputVarLines(cleanLogicLines, inputVarDecls, inputVarNames);
+    const { typeLines: staticTypes, remaining: staticRemaining } = extractTypeDeclarations(staticDataLines);
 
     // 5. Build hoist block (deduplicated)
-    const hoistBlock = hoisted.length > 0 ? hoisted.join("\n") + "\n\n" : "";
+    const declarationBlocks = [...new Set([
+      ...splitTypeDeclarationBlocks(hoisted),
+      ...splitTypeDeclarationBlocks(staticTypes),
+    ])];
+    const hoistBlock = declarationBlocks.length > 0 ? declarationBlocks.join("\n\n") + "\n\n" : "";
+    const tsStaticBlock = staticRemaining.length > 0
+      ? staticRemaining.map(l => indent + l.trim()).join("\n") + "\n"
+      : "";
 
     let blocks = "";
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
       const tcInputDecls = expandDeclarations(tc.input, indent);
-      const prefixedPrint = buildPrefixedPrint(printStmt, i + 1, lang);
 
       const reindentedLogic = finalLogicLines.map(l => {
         const trimmed = l.trim();
@@ -481,13 +582,24 @@ function buildReferenceTestCode(
 
       // Wrap each TC in try-catch for resilience
       blocks += `{ // TC${i + 1}\n`;
+      blocks += `${indent}const _logs${i + 1}: string[] = [];\n`;
+      blocks += `${indent}const _origLog${i + 1} = console.log;\n`;
+      blocks += `${indent}let _tcOk${i + 1} = false;\n`;
       blocks += `${indent}try {\n`;
+      blocks += `${indent}    console.log = (...args: unknown[]) => {\n`;
+      blocks += `${indent}        _logs${i + 1}.push(args.map(_v => typeof _v === "string" ? _v : typeof _v === "object" && _v !== null ? JSON.stringify(_v) : String(_v)).join(" "));\n`;
+      blocks += `${indent}    };\n`;
       blocks += tcInputDecls + "\n";
+      blocks += tsStaticBlock;
       blocks += reindentedLogic + "\n";
-      blocks += prefixedPrint + "\n";
+      blocks += `${indent}    _tcOk${i + 1} = true;\n`;
       blocks += `${indent}} catch (_e) {\n`;
-      blocks += `${indent}    console.log("TC${i + 1}:ERROR:" + (_e instanceof Error ? _e.message : String(_e)));\n`;
+      blocks += `${indent}    console.log = _origLog${i + 1};\n`;
+      blocks += `${indent}    _origLog${i + 1}("TC${i + 1}:ERROR:" + (_e instanceof Error ? _e.message : String(_e)));\n`;
+      blocks += `${indent}} finally {\n`;
+      blocks += `${indent}    console.log = _origLog${i + 1};\n`;
       blocks += `${indent}}\n`;
+      blocks += buildTypeScriptCapturedOutputFooter(i + 1, indent) + "\n";
       blocks += `}\n`;
     }
 
@@ -553,49 +665,47 @@ export function buildMultiTestCode(
     return code;
   }
 
-  const studentLogic = extractStudentLogic(studentCode, starterCode, lang);
+  const studentLogic = extractStudentLogic(studentCode, starterCode, lang, true);
+  const helperMethods = lang === "Java" ? extractHelperMethods(studentCode) : "";
 
   console.error(`[buildMultiTestCode] logic=${studentLogic.trim().length} chars`);
-  if (!studentLogic.trim()) { console.error(`[buildMultiTestCode] FAIL: no logic extracted`); return null; }
+  if (!studentLogic.trim() && !helperMethods.trim()) {
+    console.error(`[buildMultiTestCode] FAIL: no logic extracted`);
+    return null;
+  }
 
-  // Identify variable names from test case input so we can strip them from student logic
   const firstInput = testCases[0]?.input || "";
-  const tcVarNames = new Set<string>();
-  const tcVarPatterns: RegExp[] = [];
-  const tcInputParts = firstInput.split(/[;\n]/).map(s => s.trim()).filter(s => s.length > 0);
-  for (const decl of tcInputParts) {
+  const inputVarDecls: { varName: string; pattern: RegExp }[] = [];
+  const inputParts = firstInput.split(/[;\n]/).map(s => s.trim()).filter(s => s.length > 0);
+  for (const decl of inputParts) {
     const varName = extractDeclVarName(decl);
     if (varName) {
-      tcVarNames.add(varName);
-      tcVarPatterns.push(buildDeclPattern(varName));
+      inputVarDecls.push({ varName, pattern: buildDeclPattern(varName) });
     }
   }
+  const inputVarNames = new Set(inputVarDecls.map(d => d.varName));
 
   // Strip test-case input variable declarations AND method calls on TC vars from student logic
   // (e.g. map.put(), list.add(), set.add() — these are in the TC input, not student logic)
-  const filteredLogic = studentLogic.split("\n").filter(l => {
-    const trimmed = l.trim();
-    if (tcVarPatterns.some(p => p.test(trimmed))) { return false; }
-    if (isMethodCallOnVar(trimmed, tcVarNames)) { return false; }
-    return true;
-  }).join("\n");
+  const filteredLogic = stripInputVarLines(
+    studentLogic.split("\n"),
+    inputVarDecls,
+    inputVarNames
+  ).join("\n");
 
   // Find starter data lines NOT covered by test case input (e.g. "int[] merged = new int[a.length + b.length]")
   // These are "static data" that must be included in each test block
   const starterDataLines = extractDataBlock(starterCode, lang);
-  const staticDataLines = starterDataLines.filter(line => {
-    const trimmed = line.trim();
-    const vn = extractDeclVarName(trimmed);
-    if (vn && tcVarNames.has(vn)) { return false; }
-    // Also exclude method calls on TC input variables (e.g. list.add(), map.put())
-    if (isMethodCallOnVar(trimmed, tcVarNames)) { return false; }
-    return true;
-  });
+  const staticDataLines = stripInputVarLines(
+    starterDataLines,
+    inputVarDecls,
+    inputVarNames
+  );
 
   if (lang === "Java") {
     const imports = extractImports(studentCode);
     const importBlock = imports.length > 0 ? imports.join("\n") + "\n" : "";
-    const helpers = extractHelperMethods(studentCode);
+    const helpers = helperMethods;
     const indent = "            ";
     const staticBlock = staticDataLines.length > 0
       ? staticDataLines.map(l => indent + l.trim()).join("\n") + "\n"
@@ -605,7 +715,6 @@ export function buildMultiTestCode(
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
       const dataBlock = expandDeclarations(tc.input, indent);
-      const prefixedPrint = buildPrefixedPrint(printStmt, i + 1, lang);
 
       const reindentedLogic = filteredLogic.split("\n").map(l => {
         const trimmed = l.trim();
@@ -615,14 +724,23 @@ export function buildMultiTestCode(
 
       // Wrap each TC in try-catch so one failure doesn't kill subsequent TCs
       blocks += `        { // TC${i + 1}\n`;
+      blocks += `${indent}boolean _tcOk${i + 1} = false;\n`;
+      blocks += `${indent}java.io.PrintStream _origOut${i + 1} = System.out;\n`;
+      blocks += `${indent}java.io.ByteArrayOutputStream _buf${i + 1} = new java.io.ByteArrayOutputStream();\n`;
       blocks += `${indent}try {\n`;
+      blocks += `${indent}    System.setOut(new java.io.PrintStream(_buf${i + 1}, true));\n`;
       blocks += dataBlock + "\n";
       blocks += staticBlock;
       blocks += reindentedLogic + "\n";
-      blocks += prefixedPrint + "\n";
+      blocks += `${indent}    _tcOk${i + 1} = true;\n`;
       blocks += `${indent}} catch (Throwable _tcErr${i + 1}) {\n`;
+      blocks += `${indent}    System.setOut(_origOut${i + 1});\n`;
       blocks += `${indent}    System.out.println("TC${i + 1}:ERROR:" + _tcErr${i + 1}.getMessage());\n`;
+      blocks += `${indent}} finally {\n`;
+      blocks += `${indent}    try { System.out.flush(); } catch (Throwable _flushErr${i + 1}) {}\n`;
+      blocks += `${indent}    System.setOut(_origOut${i + 1});\n`;
       blocks += `${indent}}\n`;
+      blocks += buildJavaCapturedOutputFooter(i + 1, indent) + "\n";
       blocks += `        }\n`;
     }
 
@@ -650,8 +768,11 @@ export function buildMultiTestCode(
     const logicLines = filteredLogic.split("\n");
     const { typeLines: logicTypes, remaining: logicRemaining } = extractTypeDeclarations(logicLines);
     const { typeLines: staticTypes, remaining: staticRemaining } = extractTypeDeclarations(staticDataLines);
-    const allTypes = [...new Set([...logicTypes.map(l => l.trim()), ...staticTypes.map(l => l.trim())])];
-    const typeBlock = allTypes.length > 0 ? allTypes.join("\n") + "\n\n" : "";
+    const declarationBlocks = [...new Set([
+      ...splitTypeDeclarationBlocks(logicTypes),
+      ...splitTypeDeclarationBlocks(staticTypes),
+    ])];
+    const typeBlock = declarationBlocks.length > 0 ? declarationBlocks.join("\n\n") + "\n\n" : "";
 
     const tsStaticBlock = staticRemaining.length > 0
       ? staticRemaining.map(l => indent + l.trim()).join("\n") + "\n"
@@ -661,7 +782,6 @@ export function buildMultiTestCode(
     for (let i = 0; i < testCases.length; i++) {
       const tc = testCases[i];
       const dataBlock = expandDeclarations(tc.input, indent);
-      const prefixedPrint = buildPrefixedPrint(printStmt, i + 1, lang);
 
       const reindentedLogic = logicRemaining.map(l => {
         const trimmed = l.trim();
@@ -671,14 +791,24 @@ export function buildMultiTestCode(
 
       // Wrap each TC in try-catch for resilience
       blocks += `{ // TC${i + 1}\n`;
+      blocks += `${indent}const _logs${i + 1}: string[] = [];\n`;
+      blocks += `${indent}const _origLog${i + 1} = console.log;\n`;
+      blocks += `${indent}let _tcOk${i + 1} = false;\n`;
       blocks += `${indent}try {\n`;
+      blocks += `${indent}    console.log = (...args: unknown[]) => {\n`;
+      blocks += `${indent}        _logs${i + 1}.push(args.map(_v => typeof _v === "string" ? _v : typeof _v === "object" && _v !== null ? JSON.stringify(_v) : String(_v)).join(" "));\n`;
+      blocks += `${indent}    };\n`;
       blocks += dataBlock + "\n";
       blocks += tsStaticBlock;
       blocks += reindentedLogic + "\n";
-      blocks += prefixedPrint + "\n";
+      blocks += `${indent}    _tcOk${i + 1} = true;\n`;
       blocks += `${indent}} catch (_e) {\n`;
-      blocks += `${indent}    console.log("TC${i + 1}:ERROR:" + (_e instanceof Error ? _e.message : String(_e)));\n`;
+      blocks += `${indent}    console.log = _origLog${i + 1};\n`;
+      blocks += `${indent}    _origLog${i + 1}("TC${i + 1}:ERROR:" + (_e instanceof Error ? _e.message : String(_e)));\n`;
+      blocks += `${indent}} finally {\n`;
+      blocks += `${indent}    console.log = _origLog${i + 1};\n`;
       blocks += `${indent}}\n`;
+      blocks += buildTypeScriptCapturedOutputFooter(i + 1, indent) + "\n";
       blocks += `}\n`;
     }
 

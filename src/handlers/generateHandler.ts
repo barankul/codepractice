@@ -11,10 +11,11 @@ import { fetchGitHubCode } from "../githubFetcher";
 import { resetDatabase } from "../sqlRunner";
 import { ensureJUnitJar, JUNIT_JAR } from "../scaffoldGradle";
 import { ensureVitestScaffold } from "../scaffoldVitest";
-import { t } from "../aiHelpers";
+import { getResponseLang, t } from "../aiHelpers";
 import { friendlyError } from "./aiFeatureHandler";
-import { practiceFilename, PRACTICE_DIR } from "../constants";
+import { getAvailableCrossLangTargets, practiceFilename, PRACTICE_DIR } from "../constants";
 import { checkDemoMode, getDemoPractice, invalidateDemoModeCache } from "../demoData";
+import { createOfflineBugFixPractice } from "../offlineBugFix";
 
 /** 実コード判定 — check if solution has real logic */
 function hasRealSolutionLogic(code: string, starterCode: string): boolean {
@@ -233,7 +234,7 @@ export async function handleGenerate(ctx: HandlerContext, msg: GenerateMsg): Pro
 
   if (await checkDemoMode()) {
     try {
-      ctx.output.appendLine(`[OFFLINE] Generate: ${lang} / ${topic} (Level ${ctx.currentLevel})`);
+      ctx.output.appendLine(`[OFFLINE] Generate: ${lang} / ${topic} (Level ${ctx.currentLevel})${practiceMode === "bugfix" ? " [BUG FIX]" : ""}`);
       ctx.post({ type: "loadingProgress", text: "Loading practice..." });
 
       const demo = getDemoPractice(lang, topic, ctx.currentLevel);
@@ -242,11 +243,31 @@ export async function handleGenerate(ctx: HandlerContext, msg: GenerateMsg): Pro
         return;
       }
 
-      const filename = practiceFilename(lang);
+      if (demo.lang !== lang) {
+        throw new Error(`Offline practice language mismatch: requested ${lang}, got ${demo.lang}`);
+      }
+
+      const offlinePractice = practiceMode === "bugfix"
+        ? await createOfflineBugFixPractice(demo, ctx.verifySolutionOutput, (getResponseLang() || "en") as "en" | "ja" | "tr")
+        : {
+            ...demo,
+            mode: "practice" as const,
+            sourceRepo: undefined,
+            bugExplanation: undefined,
+          };
+
+      if (!offlinePractice) {
+        ctx.post({ type: "toast", kind: "error", text: `No offline bug-fix available for ${lang} / ${topic}` });
+        return;
+      }
+
+      const offlineCrossLang = "crossLang" in offlinePractice ? offlinePractice.crossLang : undefined;
+      const offlineAltMethods = "altMethods" in offlinePractice ? offlinePractice.altMethods : undefined;
+      const filename = practiceFilename(offlinePractice.lang);
       const dirUri = vscode.Uri.joinPath(ws.uri, PRACTICE_DIR);
       await vscode.workspace.fs.createDirectory(dirUri);
       const fileUri = vscode.Uri.joinPath(dirUri, filename);
-      await vscode.workspace.fs.writeFile(fileUri, Buffer.from(demo.code, "utf8"));
+      await vscode.workspace.fs.writeFile(fileUri, Buffer.from(offlinePractice.code, "utf8"));
 
       const doc = await vscode.workspace.openTextDocument(fileUri);
       await vscode.window.showTextDocument(doc, { preview: false });
@@ -255,28 +276,39 @@ export async function handleGenerate(ctx: HandlerContext, msg: GenerateMsg): Pro
       ctx.post({
         type: "details",
         details: {
-          lang, topic,
-          title: demo.title,
-          task: demo.task,
-          expectedOutput: demo.expectedOutput,
-          hint: demo.hint,
-          level: demo.level,
+          lang: offlinePractice.lang,
+          topic: offlinePractice.topic,
+          title: offlinePractice.title,
+          task: offlinePractice.task,
+          expectedOutput: offlinePractice.expectedOutput,
+          hint: offlinePractice.hint,
+          availableCrossLangs: offlinePractice.mode === "bugfix"
+            ? []
+            : getAvailableCrossLangTargets(offlineCrossLang, offlinePractice.lang),
+          level: offlinePractice.level,
+          mode: offlinePractice.mode,
+          bugExplanation: offlinePractice.bugExplanation,
+          sourceRepo: offlinePractice.sourceRepo,
           topicXP,
         }
       });
 
       const practice = {
-        lang, topic,
-        task: demo.task,
-        code: demo.code,
-        expectedOutput: demo.expectedOutput,
-        title: demo.title,
-        hint: demo.hint,
-        testCases: demo.testCases,
-        solutionCode: demo.solutionCode,
-        judgeFeedback: demo.judgeFeedback,
-        altMethods: demo.altMethods,
-        crossLang: demo.crossLang,
+        lang: offlinePractice.lang,
+        topic: offlinePractice.topic,
+        task: offlinePractice.task,
+        code: offlinePractice.code,
+        expectedOutput: offlinePractice.expectedOutput,
+        title: offlinePractice.title,
+        hint: offlinePractice.hint,
+        mode: offlinePractice.mode,
+        bugExplanation: offlinePractice.bugExplanation,
+        sourceRepo: offlinePractice.sourceRepo,
+        testCases: offlinePractice.testCases,
+        solutionCode: offlinePractice.solutionCode,
+        judgeFeedback: offlinePractice.judgeFeedback,
+        altMethods: offlinePractice.mode === "bugfix" ? undefined : offlineAltMethods,
+        crossLang: offlinePractice.mode === "bugfix" ? undefined : offlineCrossLang,
         testFile: undefined as string | undefined,
       };
       ctx.setCurrentPractice(practice);
@@ -284,9 +316,9 @@ export async function handleGenerate(ctx: HandlerContext, msg: GenerateMsg): Pro
 
       ctx.post({ type: "testGenStatus", status: "ready" });
 
-      if (lang === "SQL") { showSchemaPanel(ctx); }
+      if (offlinePractice.lang === "SQL") { showSchemaPanel(ctx); }
 
-      ctx.output.appendLine(`[OFFLINE] Loaded: "${demo.title}"`);
+      ctx.output.appendLine(`[OFFLINE] Loaded: "${offlinePractice.title}"`);
     } catch (e: any) {
       ctx.output.appendLine(`[OFFLINE] Error: ${e?.message ?? e}`);
       ctx.post({ type: "toast", kind: "error", text: friendlyError(e) });

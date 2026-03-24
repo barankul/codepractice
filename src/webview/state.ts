@@ -22,6 +22,7 @@ export const state = {
   hintVisible: false,
   _isBugFixMode: false,
   practiceSkipped: false,
+  availableCrossLangs: null as string[] | null,
 
   // Progress
   progressStats: { totalPractices: 0, masteredTopics: 0, dueCount: 0, weakTopics: 0 } as ProgressStats,

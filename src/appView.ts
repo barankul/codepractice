@@ -14,7 +14,7 @@ import { ChatPanelManager } from "./chatPanel";
 import { runTests } from "./testEngine";
 import { JUNIT_JAR } from "./scaffoldGradle";
 import { parseVitestOutput, vitestToTestResults } from "./vitestOutputParser";
-import { buildMultiTestCode } from "./multiTestRunner";
+import { buildMultiTestCode, parseMultiTestTcLine } from "./multiTestRunner";
 import { buildTsRunCommand } from "./tsRunner";
 import * as fs from "fs";
 import * as path from "path";
@@ -300,8 +300,8 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
         const output = (result.stdout || "").trim();
         const tcOutputs: Record<number, string> = {};
         for (const line of output.split("\n")) {
-          const m = line.trim().match(/^TC(\d+):(.*)$/);
-          if (m) { tcOutputs[parseInt(m[1])] = m[2].trim(); }
+          const parsed = parseMultiTestTcLine(line);
+          if (parsed) { tcOutputs[parsed.tcNum] = parsed.output; }
         }
         return tcOutputs;
       };

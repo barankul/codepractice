@@ -28,31 +28,52 @@ const SCHEMA_SQL = `
 
     CREATE TABLE products (
       id INTEGER PRIMARY KEY,
-      name TEXT,
-      price REAL,
+      name TEXT UNIQUE,
       category TEXT,
+      price REAL,
       stock INTEGER
     );
 
+    CREATE TABLE employees (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      department TEXT NOT NULL,
+      salary REAL NOT NULL
+    );
+
+    CREATE TABLE archived_orders (
+      id INTEGER PRIMARY KEY,
+      user_id INTEGER,
+      product TEXT,
+      amount REAL,
+      order_date TEXT
+    );
+
     -- Sample data
-    INSERT INTO users VALUES (1, 'Alice', 'alice@mail.com', 25, 'Tokyo');
-    INSERT INTO users VALUES (2, 'Bob', 'bob@mail.com', 30, 'Osaka');
-    INSERT INTO users VALUES (3, 'Charlie', 'charlie@mail.com', 22, 'Tokyo');
-    INSERT INTO users VALUES (4, 'Diana', 'diana@mail.com', 28, 'Kyoto');
-    INSERT INTO users VALUES (5, 'Eve', 'eve@mail.com', 35, 'Osaka');
+    INSERT INTO users VALUES (1, 'Alice', 'alice@gmail.com', 25, 'New York');
+    INSERT INTO users VALUES (2, 'Bob', 'bob@yahoo.com', 30, 'London');
+    INSERT INTO users VALUES (3, 'Charlie', 'charlie@gmail.com', 22, 'New York');
+    INSERT INTO users VALUES (4, 'Diana', 'diana@example.com', 28, 'Berlin');
+    INSERT INTO users VALUES (5, 'Eve', 'eve@gmail.com', 35, 'Osaka');
 
     INSERT INTO orders VALUES (1, 1, 'Laptop', 1200.00, '2024-01-15');
     INSERT INTO orders VALUES (2, 1, 'Mouse', 25.00, '2024-01-16');
-    INSERT INTO orders VALUES (3, 2, 'Keyboard', 75.00, '2024-01-17');
+    INSERT INTO orders VALUES (3, 2, 'Webcam', 75.00, '2024-01-17');
     INSERT INTO orders VALUES (4, 3, 'Monitor', 300.00, '2024-01-18');
     INSERT INTO orders VALUES (5, 2, 'Laptop', 1200.00, '2024-01-19');
-    INSERT INTO orders VALUES (6, 4, 'Headphones', 150.00, '2024-01-20');
+    INSERT INTO orders VALUES (6, 1, 'Speakers', 150.00, '2024-01-20');
 
-    INSERT INTO products VALUES (1, 'Laptop', 1200.00, 'Electronics', 50);
-    INSERT INTO products VALUES (2, 'Mouse', 25.00, 'Electronics', 200);
-    INSERT INTO products VALUES (3, 'Keyboard', 75.00, 'Electronics', 150);
-    INSERT INTO products VALUES (4, 'Monitor', 300.00, 'Electronics', 80);
-    INSERT INTO products VALUES (5, 'Headphones', 150.00, 'Electronics', 120);
+    INSERT INTO products VALUES (1, 'Laptop', 'Electronics', 1200.00, 50);
+    INSERT INTO products VALUES (2, 'Mouse', 'Electronics', 25.00, 200);
+    INSERT INTO products VALUES (3, 'Webcam', 'Electronics', 75.00, 150);
+    INSERT INTO products VALUES (4, 'Monitor', 'Electronics', 300.00, 80);
+    INSERT INTO products VALUES (5, 'Speakers', 'Electronics', 150.00, 120);
+
+    INSERT INTO employees VALUES (1, 'Alice', 'Engineering', 50000);
+    INSERT INTO employees VALUES (2, 'Bob', 'Sales', 60000);
+    INSERT INTO employees VALUES (3, 'Charlie', 'Engineering', 55000);
+    INSERT INTO employees VALUES (4, 'Diana', 'Sales', 60000);
+    INSERT INTO employees VALUES (5, 'Eve', 'Marketing', 48000);
 `;
 
 /** DB初期化 — init SQLite WASM */
@@ -97,6 +118,25 @@ export interface QueryResult {
   rowsAffected?: number;
 }
 
+export function sanitizeSql(sql: string): string {
+  let sanitized = (sql || "")
+    .replace(/^```[\w]*\s*/gm, "")
+    .replace(/```$/gm, "")
+    .replace(/^\s*(?:SQL\s*QUERY|QUERY|SOLUTION|ANSWER|FINAL\s*QUERY|FINAL\s*ANSWER)\s*:\s*/gim, "")
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/^\s*--.*$/gm, "")
+    .replace(/^\s*\d+[\.\)]\s*/gm, "")
+    .trim();
+
+  const firstSqlKeyword = sanitized.search(/\b(?:SELECT|INSERT|UPDATE|DELETE|WITH|CREATE|DROP|ALTER)\b/i);
+  if (firstSqlKeyword > 0) {
+    sanitized = sanitized.slice(firstSqlKeyword).trim();
+  }
+
+  return sanitized;
+}
+
 /** クエリ実行 — run SQL query */
 export async function runQuery(sql: string): Promise<QueryResult> {
   try {
@@ -109,10 +149,11 @@ export async function runQuery(sql: string): Promise<QueryResult> {
   }
 
   try {
-    const trimmed = sql.replace(/--.*$/gm, "").trim();
+    const sanitizedSql = sanitizeSql(sql);
+    const trimmed = sanitizedSql;
     const isModify = /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/i.test(trimmed);
 
-    const results = db.exec(sql);
+    const results = db.exec(sanitizedSql);
 
     if (results.length === 0) {
       if (isModify) {
@@ -144,9 +185,9 @@ TABLE users:
   email TEXT
   age INTEGER
   city TEXT
-Sample: (1,'Alice','alice@mail.com',25,'Tokyo'), (2,'Bob','bob@mail.com',30,'Osaka'),
-        (3,'Charlie','charlie@mail.com',22,'Tokyo'), (4,'Diana','diana@mail.com',28,'Kyoto'),
-        (5,'Eve','eve@mail.com',35,'Osaka')
+Sample: (1,'Alice','alice@gmail.com',25,'New York'), (2,'Bob','bob@yahoo.com',30,'London'),
+        (3,'Charlie','charlie@gmail.com',22,'New York'), (4,'Diana','diana@example.com',28,'Berlin'),
+        (5,'Eve','eve@gmail.com',35,'Osaka')
 
 TABLE orders:
   id INTEGER PRIMARY KEY
@@ -155,16 +196,33 @@ TABLE orders:
   amount REAL
   order_date TEXT
 Sample: (1,1,'Laptop',1200.00,'2024-01-15'), (2,1,'Mouse',25.00,'2024-01-16'),
-        (3,2,'Keyboard',75.00,'2024-01-17'), (4,3,'Monitor',300.00,'2024-01-18'),
-        (5,2,'Laptop',1200.00,'2024-01-19'), (6,4,'Headphones',150.00,'2024-01-20')
+        (3,2,'Webcam',75.00,'2024-01-17'), (4,3,'Monitor',300.00,'2024-01-18'),
+        (5,2,'Laptop',1200.00,'2024-01-19'), (6,1,'Speakers',150.00,'2024-01-20')
 
 TABLE products:
   id INTEGER PRIMARY KEY
-  name TEXT
-  price REAL
+  name TEXT UNIQUE
   category TEXT
+  price REAL
   stock INTEGER
-Sample: (1,'Laptop',1200.00,'Electronics',50), (2,'Mouse',25.00,'Electronics',200),
-        (3,'Keyboard',75.00,'Electronics',150), (4,'Monitor',300.00,'Electronics',80),
-        (5,'Headphones',150.00,'Electronics',120)`;
+Sample: (1,'Laptop','Electronics',1200.00,50), (2,'Mouse','Electronics',25.00,200),
+        (3,'Webcam','Electronics',75.00,150), (4,'Monitor','Electronics',300.00,80),
+        (5,'Speakers','Electronics',150.00,120)
+
+TABLE employees:
+  id INTEGER PRIMARY KEY
+  name TEXT NOT NULL
+  department TEXT NOT NULL
+  salary REAL NOT NULL
+Sample: (1,'Alice','Engineering',50000), (2,'Bob','Sales',60000),
+        (3,'Charlie','Engineering',55000), (4,'Diana','Sales',60000),
+        (5,'Eve','Marketing',48000)
+
+TABLE archived_orders:
+  id INTEGER PRIMARY KEY
+  user_id INTEGER
+  product TEXT
+  amount REAL
+  order_date TEXT
+Sample: initially empty`;
 }

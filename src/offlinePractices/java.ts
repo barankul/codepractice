@@ -1264,9 +1264,9 @@ export const JAVA_PRACTICES: OfflinePractice[] = [
     ].join("\n"),
     expectedOutput: "[1, 2, 3, 4, 5, 6, 7, 8, 9]",
     testCases: [
-      { input: "nested.add(new int[]{1, 2, 3}); nested.add(new int[]{4, 5}); nested.add(new int[]{6, 7, 8, 9})", output: "[1, 2, 3, 4, 5, 6, 7, 8, 9]" },
-      { input: "nested.add(new int[]{10}); nested.add(new int[]{20})", output: "[10, 20]" },
-      { input: "nested.add(new int[]{1, 2, 3, 4, 5})", output: "[1, 2, 3, 4, 5]" },
+      { input: "ArrayList<int[]> nested = new ArrayList<>(); nested.add(new int[]{1, 2, 3}); nested.add(new int[]{4, 5}); nested.add(new int[]{6, 7, 8, 9})", output: "[1, 2, 3, 4, 5, 6, 7, 8, 9]" },
+      { input: "ArrayList<int[]> nested = new ArrayList<>(); nested.add(new int[]{10}); nested.add(new int[]{20})", output: "[10, 20]" },
+      { input: "ArrayList<int[]> nested = new ArrayList<>(); nested.add(new int[]{1, 2, 3, 4, 5})", output: "[1, 2, 3, 4, 5]" },
     ],
     hint: "Use nested for-each loops: outer loop over the arrays, inner loop over each array's elements.",
     judgeFeedback: {
@@ -1492,9 +1492,9 @@ export const JAVA_PRACTICES: OfflinePractice[] = [
     ].join("\n"),
     expectedOutput: "Grades: {Bob=87, Alice=95, Charlie=92}\nAlice's grade: 95",
     testCases: [
-      { input: "grades.put(\"Alice\", 95); grades.put(\"Bob\", 87); grades.put(\"Charlie\", 92); String lookup = \"Alice\"", output: "Grades: {Bob=87, Alice=95, Charlie=92}\nAlice's grade: 95" },
-      { input: "grades.put(\"Alice\", 100); grades.put(\"Bob\", 90); grades.put(\"Charlie\", 80); String lookup = \"Alice\"", output: "Grades: {Bob=90, Alice=100, Charlie=80}\nAlice's grade: 100" },
-      { input: "grades.put(\"Dan\", 75); grades.put(\"Eve\", 88); grades.put(\"Frank\", 93); String lookup = \"Dan\"", output: "Grades: {Eve=88, Dan=75, Frank=93}\nDan's grade: 75" },
+      { input: "HashMap<String, Integer> grades = new HashMap<>(); grades.put(\"Alice\", 95); grades.put(\"Bob\", 87); grades.put(\"Charlie\", 92); String lookup = \"Alice\"", output: "Grades: {Bob=87, Alice=95, Charlie=92}\nAlice's grade: 95" },
+      { input: "HashMap<String, Integer> grades = new HashMap<>(); grades.put(\"Alice\", 100); grades.put(\"Bob\", 90); grades.put(\"Charlie\", 80); String lookup = \"Alice\"", output: "Grades: {Bob=90, Alice=100, Charlie=80}\nAlice's grade: 100" },
+      { input: "HashMap<String, Integer> grades = new HashMap<>(); grades.put(\"Alice\", 75); grades.put(\"Eve\", 88); grades.put(\"Frank\", 93); String lookup = \"Alice\"", output: "Grades: {Eve=88, Alice=75, Frank=93}\nAlice's grade: 75" },
     ],
     hint: "Use `put(key, value)` to add entries and `get(key)` to retrieve values.",
     judgeFeedback: {
@@ -4811,8 +4811,8 @@ export const JAVA_PRACTICES: OfflinePractice[] = [
     ].join("\n"),
     expectedOutput: "Common: [3, 5]",
     testCases: [
-      { input: "a={1,2,3,4,5} b={3,4,5,6,7} c={5,6,7,8,3}", output: "Common: [3, 5]" },
-      { input: "a={1,2} b={3,4} c={5,6}", output: "Common: []" },
+      { input: "int[] a = {1, 2, 3, 4, 5}; int[] b = {3, 4, 5, 6, 7}; int[] c = {5, 6, 7, 8, 3}", output: "Common: [3, 5]" },
+      { input: "int[] a = {1, 2}; int[] b = {3, 4}; int[] c = {5, 6}", output: "Common: []" },
     ],
     hint: "Put two arrays into HashSets, then iterate the third checking membership in both.",
     judgeFeedback: {

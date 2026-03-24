@@ -6,6 +6,19 @@ import { post } from "../vscodeApi";
 import { escHtml } from "./codeView";
 import { isCurrentlyOffline } from "./settings";
 
+// Language SVG icons for V5 card grid
+export const langIcons: Record<string, string> = {
+  Java: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 18.5c2.7 1 6.3 1 9 0"/><path d="M6.8 16.2c3.2 1.2 7.2 1.2 10.4 0"/><path d="M8.5 11.3h6v2.1a2.9 2.9 0 0 1-2.9 2.9h-.2a2.9 2.9 0 0 1-2.9-2.9v-2.1Z"/><path d="M14.5 12h1a1.6 1.6 0 0 1 0 3.2h-1"/><path d="M10.8 4.3c1 1-.8 1.8 0 2.9.7.9 2.1 1 2.1 2.5"/><path d="M13.9 3.8c1 .9-.8 1.7 0 2.8.6.8 1.9.9 1.9 2.3"/></svg>',
+  TypeScript: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2.5" fill="currentColor"/><path fill="var(--vscode-editor-background, #fff)" d="M7.4 8.2h7v1.9h-2.6V16H9.9v-5.9H7.4V8.2Zm8.1 4c.5-.5 1.3-.8 2.2-.8.9 0 1.7.2 2.5.7v1.9c-.7-.5-1.5-.8-2.4-.8-.5 0-.8.1-1.1.2-.2.1-.3.3-.3.5 0 .3.2.6.5.8.2.1.6.3 1.2.5.9.3 1.5.6 1.9 1 .4.4.6.9.6 1.6 0 .8-.3 1.5-.9 1.9-.6.4-1.4.7-2.5.7-1 0-2-.2-2.8-.7v-2c.8.6 1.7.9 2.8.9.9 0 1.3-.2 1.3-.7 0-.3-.2-.6-.5-.8-.2-.1-.7-.4-1.3-.6-.8-.3-1.4-.7-1.8-1-.4-.4-.6-.9-.6-1.5 0-.8.3-1.5.9-2Z"/></svg>',
+  JavaScript: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M10 8v8c0 1.1-.9 2-2 2"/><path d="M16 12c0-1.1-.9-2-2-2h-.5c-.8 0-1.5.7-1.5 1.5s.7 1.5 1.5 1.5h.5c.8 0 1.5.7 1.5 1.5s-.7 1.5-1.5 1.5H14c-1.1 0-2-.9-2-2"/></svg>',
+  Python: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-4 0-5 2-5 4v3h5v1H6c-2 0-4 1.5-4 5s1.5 5 4 5h2v-3c0-2 1.5-3.5 3.5-3.5h5c1.5 0 3-1 3-3V7c0-2-1.5-4-5-4z"/><circle cx="9" cy="6.5" r="0.8"/><path d="M12 21c4 0 5-2 5-4v-3h-5v-1h6c2 0 4-1.5 4-5s-1.5-5-4-5h-2v3c0 2-1.5 3.5-3.5 3.5h-5c-1.5 0-3 1-3 3v4c0 2 1.5 4 5 4z"/><circle cx="15" cy="17.5" r="0.8"/></svg>',
+  SQL: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5.5" rx="7" ry="2.5"/><path d="M5 5.5v6c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-6"/><path d="M5 11.5v6c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-6"/></svg>',
+  "C#": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/><path d="M16 9v6"/><path d="M19 9v6"/><path d="M14.5 10.5h6"/><path d="M14.5 13.5h6"/></svg>',
+  "C++": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/><path d="M16 9v6"/><path d="M19 9v6"/><path d="M14.5 12h6"/><path d="M17.5 9v6"/></svg>',
+  Go: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12h2"/><path d="M16 12h2"/><rect x="4" y="8" width="16" height="8" rx="4"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/></svg>',
+  Rust: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 4v2"/><path d="M12 18v2"/><path d="M4 12h2"/><path d="M18 12h2"/><path d="M9 9l4 6"/><path d="M15 9l-4 6"/></svg>',
+};
+
 // Topic SVG icons
 const topicIcons: Record<string, string> = {
   "Array": '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12" rx="2"/><path d="M9.33 6v12"/><path d="M14.66 6v12"/></svg>',
@@ -31,21 +44,55 @@ const topicIcons: Record<string, string> = {
 
 const defaultTopicIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 3v4h4"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>';
 
+export function shouldShowCodeSizeGroup(
+  selectedMode: "practice" | "bugfix",
+  selectedSource: "ai" | "offline",
+  selectedTopic: string
+): boolean {
+  return selectedTopic !== "API" && selectedMode === "bugfix" && selectedSource === "ai";
+}
+
+export function updateCodeSizeGroupVisibility(): void {
+  const csGroup = document.getElementById("codeSizeGroup");
+  const shouldShow = shouldShowCodeSizeGroup(state.selectedMode, state.selectedSource, state.selectedTopic);
+
+  if (!shouldShow) {
+    state.selectedCodeSize = "snippet";
+  }
+
+  document.querySelectorAll("#codeSizeToggle .mode-btn").forEach(btn => {
+    (btn as HTMLElement).classList.toggle("active", (btn as HTMLElement).dataset.size === state.selectedCodeSize);
+  });
+
+  if (csGroup) {
+    csGroup.style.display = shouldShow ? "block" : "none";
+  }
+}
+
 export function renderLangButtons(): void {
   if (!dom.langRow) return;
   dom.langRow.innerHTML = "";
   Object.keys(state.topics).forEach(lang => {
-    const b = document.createElement("button");
-    b.className = "lang-btn" + (lang === state.selectedLang ? " active" : "");
-    const icon = state.icons[lang] || "";
-    b.textContent = icon ? icon + " " + lang : lang;
-    b.onclick = () => {
+    const card = document.createElement("div");
+    card.className = "lang-card" + (lang === state.selectedLang ? " active" : "");
+    const svgIcon = langIcons[lang] || "";
+    if (svgIcon) {
+      const iconDiv = document.createElement("div");
+      iconDiv.className = "lang-card-icon";
+      iconDiv.innerHTML = svgIcon;
+      card.appendChild(iconDiv);
+    }
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "lang-card-name";
+    nameSpan.textContent = lang;
+    card.appendChild(nameSpan);
+    card.onclick = () => {
       state.selectedLang = lang;
       state.selectedTopic = "__multi__";
       renderLangButtons();
       renderTopics();
     };
-    dom.langRow!.appendChild(b);
+    dom.langRow!.appendChild(card);
   });
 }
 
@@ -59,18 +106,16 @@ export function selectTopicRow(value: string): void {
   if (infoEl) infoEl.style.display = value === "__multi__" ? "block" : "none";
 
   const modeToggle = document.getElementById("modeToggle");
-  const csGroup = document.getElementById("codeSizeGroup");
   if (value === "API") {
     if (modeToggle) modeToggle.style.display = "none";
-    if (csGroup) csGroup.style.display = "none";
     state.selectedMode = "practice";
     document.querySelectorAll("#modeToggle .mode-btn").forEach(b => {
       (b as HTMLElement).classList.toggle("active", (b as HTMLElement).dataset.mode === "practice");
     });
   } else {
     if (modeToggle) modeToggle.style.display = "";
-    if (csGroup) csGroup.style.display = state.selectedMode === "bugfix" ? "block" : "none";
   }
+  updateCodeSizeGroupVisibility();
 }
 
 export function renderTopics(): void {
@@ -113,5 +158,6 @@ export function updateSourceToggle(): void {
       if ((b as HTMLElement).dataset.source === "ai") (b as HTMLButtonElement).disabled = false;
     });
   }
+  updateCodeSizeGroupVisibility();
   post({ type: "setForceOffline", forceOffline: state.selectedSource === "offline" });
 }

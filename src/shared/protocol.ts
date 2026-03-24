@@ -159,6 +159,7 @@ export interface PracticeDetails {
   task: string;
   expectedOutput?: string;
   hint?: string;
+  availableCrossLangs?: string[];
   level?: number;
   topicXP?: { xp: number; xpNeeded: number; level: number };
   mode?: string;

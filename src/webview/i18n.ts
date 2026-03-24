@@ -22,6 +22,12 @@ export function applyTranslations(): void {
       }
     }
   });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => {
+    const key = el.getAttribute("data-i18n-html");
+    if (!key) return;
+    const val = t(key);
+    if (val && val !== key) el.innerHTML = val;
+  });
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
     const key = el.getAttribute("data-i18n-placeholder");
     if (!key) return;

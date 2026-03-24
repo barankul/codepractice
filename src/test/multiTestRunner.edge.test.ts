@@ -6,6 +6,7 @@ import {
   extractPrintStatement,
   extractStudentLogic,
   buildMultiTestCode,
+  parseMultiTestTcLine,
 } from "../multiTestRunner.js";
 
 function javaClass(body: string): string {
@@ -275,6 +276,119 @@ suite("multiTestRunner — advanced edge cases", () => {
       assert.ok(result!.includes("const nums = [5, 5]"));
     });
 
+    test("TypeScript: keeps full top-level declarations without dropping duplicate closing braces", () => {
+      const student = `// Enum Days of Week
+enum Day {
+  Monday,
+  Tuesday,
+  Wednesday,
+  Thursday,
+  Friday,
+  Saturday,
+  Sunday
+}
+
+function isWeekend(day: Day): boolean {
+  return day === Day.Saturday || day === Day.Sunday;
+}
+
+console.log(\`Monday: \${isWeekend(Day.Monday)}\`);
+console.log(\`Friday: \${isWeekend(Day.Friday)}\`);
+console.log(\`Saturday: \${isWeekend(Day.Saturday)}\`);
+console.log(\`Sunday: \${isWeekend(Day.Sunday)}\`);
+`;
+      const starter = `// Enum Days of Week
+// YOUR CODE HERE
+`;
+      const testCases = [
+        { input: "const testDays = [\"Monday\", \"Friday\", \"Saturday\", \"Sunday\"]", output: "Monday: false\nFriday: false\nSaturday: true\nSunday: true" },
+      ];
+      const result = buildMultiTestCode(student, starter, testCases, "TypeScript");
+      assert.ok(result);
+      assert.ok(result!.includes("enum Day"));
+      assert.ok(result!.includes("function isWeekend"));
+      assert.ok(result!.includes("TC1:"));
+    });
+
+    test("Java: allows helper-method solutions even when main logic is minimal", () => {
+      const student = [
+        "public class Practice {",
+        "    public static int factorial(int n) {",
+        "        if (n <= 1) return 1;",
+        "        return n * factorial(n - 1);",
+        "    }",
+        "    public static void main(String[] args) {",
+        "        int n = 5;",
+        "        System.out.println(factorial(n));",
+        "    }",
+        "}",
+      ].join("\n");
+      const starter = [
+        "public class Practice {",
+        "    public static int factorial(int n) {",
+        "        // YOUR CODE HERE",
+        "        return 0;",
+        "    }",
+        "    public static void main(String[] args) {",
+        "        int n = 5;",
+        "        System.out.println(factorial(n));",
+        "    }",
+        "}",
+      ].join("\n");
+      const testCases = [
+        { input: "int n = 3", output: "6" },
+      ];
+      const result = buildMultiTestCode(student, starter, testCases, "Java");
+      assert.ok(result);
+      assert.ok(result!.includes("factorial"));
+      assert.ok(result!.includes("TC1:"));
+    });
+
+    test("Java: captures multi-line loop output without leaking loop variables", () => {
+      const student = [
+        "import java.util.ArrayList;",
+        "import java.util.Arrays;",
+        "public class Practice {",
+        "    public static void main(String[] args) {",
+        "        int[][] intervals = {{1, 3}, {2, 6}, {8, 10}, {15, 18}};",
+        "        Arrays.sort(intervals, (a, b) -> a[0] - b[0]);",
+        "        ArrayList<int[]> merged = new ArrayList<>();",
+        "        merged.add(intervals[0]);",
+        "        for (int i = 1; i < intervals.length; i++) {",
+        "            int[] last = merged.get(merged.size() - 1);",
+        "            if (intervals[i][0] <= last[1]) {",
+        "                last[1] = Math.max(last[1], intervals[i][1]);",
+        "            } else {",
+        "                merged.add(intervals[i]);",
+        "            }",
+        "        }",
+        "        for (int[] iv : merged) {",
+        "            System.out.println(Arrays.toString(iv));",
+        "        }",
+        "    }",
+        "}",
+      ].join("\n");
+      const starter = [
+        "import java.util.ArrayList;",
+        "import java.util.Arrays;",
+        "public class Practice {",
+        "    public static void main(String[] args) {",
+        "        int[][] intervals = {{1, 3}, {2, 6}, {8, 10}, {15, 18}};",
+        "        // YOUR CODE HERE",
+        "    }",
+        "}",
+      ].join("\n");
+      const testCases = [
+        { input: "int[][] intervals = {{1, 3}, {2, 6}, {8, 10}, {15, 18}}", output: "[1, 6]\n[8, 10]\n[15, 18]" },
+      ];
+      const result = buildMultiTestCode(student, starter, testCases, "Java");
+      assert.ok(result);
+      assert.ok(result!.includes("System.setOut(new java.io.PrintStream(_buf1, true));"));
+      assert.ok(result!.includes("System.out.println(Arrays.toString(iv));"));
+      assert.ok(result!.includes("TC1:B64:"));
+      assert.ok(!result!.includes('System.out.println("TC1:" + (Arrays.toString(iv)));'));
+    });
+
     test("returns null for SQL", () => {
       const result = buildMultiTestCode("SELECT 1", "SELECT 1", [{ input: "x", output: "1" }], "SQL");
       assert.strictEqual(result, null);
@@ -284,6 +398,13 @@ suite("multiTestRunner — advanced edge cases", () => {
       const code = javaClass("        System.out.println(42);");
       const result = buildMultiTestCode(code, code, [{ input: "int x = 1", output: "1" }], "Java");
       assert.strictEqual(result, null);
+    });
+  });
+
+  suite("parseMultiTestTcLine", () => {
+    test("decodes base64 multi-line output", () => {
+      const parsed = parseMultiTestTcLine("TC2:B64:WzEsIDZdCls4LCAxMF0=");
+      assert.deepStrictEqual(parsed, { tcNum: 2, output: "[1, 6]\n[8, 10]" });
     });
   });
 });

@@ -1,7 +1,81 @@
 // パーサー — text/code parsing utilities
 import { ParsedMeta, TestCase } from "./constants";
 
+type MetaFieldKey =
+  | "TITLE"
+  | "TASK"
+  | "EXPECTED_OUTPUT"
+  | "OUTPUT"
+  | "MINI_TEST"
+  | "HINT"
+  | "DESCRIPTION"
+  | "BUG_HINT"
+  | "BUG_EXPLANATION"
+  | "TEST_CASES"
+  | "CALCULATION";
+
+const META_LABEL_ALIASES: Record<string, MetaFieldKey> = {
+  title: "TITLE",
+  task: "TASK",
+  expectedoutput: "EXPECTED_OUTPUT",
+  output: "OUTPUT",
+  minitest: "MINI_TEST",
+  hint: "HINT",
+  description: "DESCRIPTION",
+  bughint: "BUG_HINT",
+  bugexplanation: "BUG_EXPLANATION",
+  testcases: "TEST_CASES",
+  calculation: "CALCULATION",
+
+  "\u30bf\u30a4\u30c8\u30eb": "TITLE",
+  "\u8ab2\u984c": "TASK",
+  "\u30bf\u30b9\u30af": "TASK",
+  "\u671f\u5f85\u3055\u308c\u308b\u51fa\u529b": "EXPECTED_OUTPUT",
+  "\u671f\u5f85\u51fa\u529b": "EXPECTED_OUTPUT",
+  "\u51fa\u529b": "OUTPUT",
+  "\u30d2\u30f3\u30c8": "HINT",
+  "\u8aac\u660e": "DESCRIPTION",
+  "\u30d0\u30b0\u30d2\u30f3\u30c8": "BUG_HINT",
+  "\u30d0\u30b0\u306e\u30d2\u30f3\u30c8": "BUG_HINT",
+  "\u30d0\u30b0\u8aac\u660e": "BUG_EXPLANATION",
+  "\u30d0\u30b0\u306e\u8aac\u660e": "BUG_EXPLANATION",
+  "\u30c6\u30b9\u30c8\u30b1\u30fc\u30b9": "TEST_CASES",
+  "\u8a08\u7b97": "CALCULATION",
+
+  "ba\u015fl\u0131k": "TITLE",
+  "g\u00f6rev": "TASK",
+  "beklenen\u00e7\u0131kt\u0131": "EXPECTED_OUTPUT",
+  "\u00e7\u0131kt\u0131": "OUTPUT",
+  ipucu: "HINT",
+  "a\u00e7\u0131klama": "DESCRIPTION",
+  bugipucu: "BUG_HINT",
+  hataipucu: "BUG_HINT",
+  "buga\u00e7\u0131klamas\u0131": "BUG_EXPLANATION",
+  bugaciklamasi: "BUG_EXPLANATION",
+  "testdurumlar\u0131": "TEST_CASES",
+  testdurumlari: "TEST_CASES",
+  hesaplama: "CALCULATION",
+};
+
+function normalizeMetaLabel(label: string): string {
+  return (label || "")
+    .normalize("NFKC")
+    .replace(/^[*\s]+|[*\s]+$/g, "")
+    .replace(/[：:]+$/g, "")
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+}
+
 /** コードブロック除去 — strip markdown fences */
+function canonicalMetaLabel(label: string): string {
+  return (label || "")
+    .normalize("NFKC")
+    .replace(/^[*\s]+|[*\s]+$/g, "")
+    .replace(/[:\uFF1A]+$/g, "")
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+}
+
 export function stripCodeBlocks(text: string): string {
   if (!text) return text;
   let result = text.replace(/^```[\w]*\n?/gm, "");
@@ -32,14 +106,23 @@ function parseTestCases(testCasesRaw: string): TestCase[] {
 /** メタ解析 — parse TITLE/TASK/EXPECTED_OUTPUT fields */
 export function parseMeta(meta: string): ParsedMeta {
   const lines = (meta || "").replace(/\r\n/g, "\n").split("\n");
-  const out: Record<string, string> = {
+  const out: Record<MetaFieldKey, string> = {
     TITLE: "", TASK: "", EXPECTED_OUTPUT: "", OUTPUT: "", MINI_TEST: "", HINT: "",
     DESCRIPTION: "", BUG_HINT: "", BUG_EXPLANATION: "", TEST_CASES: "", CALCULATION: ""
   };
-  let cur: keyof typeof out | null = null;
+  let cur: MetaFieldKey | null = null;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    const localizedMetaMatch = line.match(/^\*{0,2}(.+?)[:\uFF1A]\*{0,2}\s*(.*)$/);
+    if (localizedMetaMatch) {
+      const mapped = META_LABEL_ALIASES[canonicalMetaLabel(localizedMetaMatch[1])];
+      if (mapped) {
+        cur = mapped;
+        out[cur] = (localizedMetaMatch[2] || "").trim();
+        continue;
+      }
+    }
     const m = line.match(/^\*{0,2}(TITLE|TASK|EXPECTED_OUTPUT|OUTPUT|MINI_TEST|HINT|DESCRIPTION|BUG_HINT|BUG_EXPLANATION|TEST_CASES|CALCULATION):\*{0,2}\s*(.*)$/i);
     if (m) {
       cur = m[1].toUpperCase() as keyof typeof out;
@@ -88,16 +171,18 @@ export function parseMeta(meta: string): ParsedMeta {
 
   const expectedOutput = stripCodeBlocks(out.EXPECTED_OUTPUT.trim() || out.OUTPUT.trim() || out.MINI_TEST.trim());
   const testCases = parseTestCases(out.TEST_CASES);
+  const bugHint = out.BUG_HINT.trim();
+  const bugExplanation = out.BUG_EXPLANATION.trim() || bugHint;
 
   return {
     title: out.TITLE.trim(),
     task: out.TASK.trim() || out.DESCRIPTION.trim(),
     starterCode: "",
     expectedOutput,
-    hint: out.HINT.trim() || out.BUG_HINT.trim(),
+    hint: out.HINT.trim() || bugHint,
     description: out.DESCRIPTION.trim(),
-    bugHint: out.BUG_HINT.trim(),
-    bugExplanation: out.BUG_EXPLANATION.trim(),
+    bugHint,
+    bugExplanation,
     testCases: testCases.length > 0 ? testCases : undefined
   };
 }

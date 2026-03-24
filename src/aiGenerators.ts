@@ -18,6 +18,35 @@ export interface BugFixResult {
   filename: string;
 }
 
+function fallbackBugExplanation(uiLang: string, bugHint: string): string {
+  if (bugHint && bugHint.trim()) {
+    return bugHint.trim();
+  }
+  if (uiLang === "ja") {
+    return "ロジックの不整合を見つけ、条件式や更新処理を見直して修正してください。";
+  }
+  if (uiLang === "tr") {
+    return "Mantık hatasını bulup koşulu veya güncelleme adımını düzelterek sorunu giderin.";
+  }
+  return "Find the logic mistake and fix the condition or update step causing the wrong result.";
+}
+
+function fallbackCrossLanguageHighlights(
+  sourceLang: string,
+  targetLang: string,
+  code: string,
+  uiLang: string
+): { lines: number[]; explanation: string }[] {
+  const firstContentLine = code.split("\n").findIndex(line => line.trim().length > 0) + 1;
+  const lineNum = firstContentLine > 0 ? firstContentLine : 1;
+  const explanation = uiLang === "ja"
+    ? `${targetLang} では ${sourceLang} と構文や標準ライブラリの使い方が異なります。`
+    : uiLang === "tr"
+    ? `${targetLang}, ${sourceLang}'dan farklı sözdizimi ve standart kütüphane kullanımı içerir.`
+    : `${targetLang} uses different syntax and standard library patterns than ${sourceLang}.`;
+  return [{ lines: [lineNum], explanation }];
+}
+
 export async function generateBugFromRealCode(
   sourceCode: string,
   lang: string,
@@ -139,7 +168,7 @@ EXPECTED_OUTPUT: (correct output after the bug is fixed)${langNote}`;
     description: parsed.description || parsed.task || "Find and fix the bug in this code.",
     buggyCode,
     bugHint: parsed.bugHint || parsed.hint || "Look carefully at the logic.",
-    bugExplanation: parsed.bugExplanation || "",
+    bugExplanation: parsed.bugExplanation || fallbackBugExplanation(uiLang, parsed.bugHint || parsed.hint || ""),
     expectedOutput: parsed.expectedOutput || "",
     sourceRepo: repo,
     filename
@@ -155,6 +184,27 @@ export interface AlternativeMethod {
   durationMs?: number;  // actual measured execution time
 }
 
+function cleanAlternativeMethodCode(rawCode: string): string {
+  let code = rawCode || "";
+  code = unescapeCodeLiterals(code);
+  const fenceMatch = code.match(/```[\w]*\n?([\s\S]*?)```/);
+  if (fenceMatch) { code = fenceMatch[1]; }
+  if (code.length > 100 && !code.includes("\n")) {
+    code = code
+      .replace(/;\s*/g, ";\n")
+      .replace(/\{\s*/g, "{\n")
+      .replace(/\}\s*/g, "}\n")
+      .replace(/import\s/g, "\nimport ");
+  }
+  return code.trim();
+}
+
+function normalizeAlternativeMethodFingerprint(code: string): string {
+  return cleanAlternativeMethodCode(code)
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /**
  * Generate alternative ways to solve a practice exercise.
  * Returns 2-4 methods with code, explanation, and relative speed comparison.
@@ -164,6 +214,13 @@ export async function generateAlternativeMethods(
   task: string,
   currentCode: string
 ): Promise<AlternativeMethod[]> {
+  const studentMethod: AlternativeMethod = {
+    name: "Student's Approach",
+    code: cleanAlternativeMethodCode(currentCode),
+    explanation: "Baseline implementation using the current solution structure.",
+    speedPercent: 100,
+  };
+
   const systemPrompt =
     "You are a senior developer showing different ways to solve a coding exercise. " +
     "Return ONLY a JSON array of 2-4 alternative methods. Each object has: " +
@@ -211,36 +268,36 @@ export async function generateAlternativeMethods(
       const methods = parsed
         .filter((m: any) => m && typeof m === "object" && typeof m.code === "string" && m.code.trim().length > 0)
         .map((m: any) => {
-          let code = m.code || "";
-          // Fix escaped newlines/tabs (AI may double-escape)
-          code = unescapeCodeLiterals(code);
-          // Strip wrapping code fences if AI included them inside JSON
-          const fenceM = code.match(/```[\w]*\n?([\s\S]*?)```/);
-          if (fenceM) { code = fenceM[1]; }
-          // Fallback: if code is long but has NO newlines, inject them at code boundaries
-          if (code.length > 100 && !code.includes("\n")) {
-            code = code
-              .replace(/;\s*/g, ";\n")
-              .replace(/\{\s*/g, "{\n")
-              .replace(/\}\s*/g, "}\n")
-              .replace(/import\s/g, "\nimport ");
-          }
           let explanation = (m.explanation || "");
           explanation = explanation.replaceAll("\\n", "\n");
           return {
             name: typeof m.name === "string" ? m.name : "Method",
-            code: code.trim(),
+            code: cleanAlternativeMethodCode(m.code || ""),
             explanation: explanation.trim(),
             speedPercent: Number(m.speedPercent) || 100,
           };
         });
-      if (methods.length > 0) { return methods; }
+      if (methods.length > 0) {
+        const seen = new Set<string>([normalizeAlternativeMethodFingerprint(studentMethod.code)]);
+        const dedupedOthers = methods.filter(method => {
+          const fingerprint = normalizeAlternativeMethodFingerprint(method.code);
+          if (!fingerprint || seen.has(fingerprint)) {
+            return false;
+          }
+          seen.add(fingerprint);
+          return true;
+        });
+        return [studentMethod, ...dedupedOthers].slice(0, 4);
+      }
     }
   } catch (parseErr: any) {
     console.warn("[CodePractice] Alt methods JSON parse failed:", parseErr?.message, "Raw:", jsonStr.slice(0, 200));
   }
 
-  return [{ name: "Error", code: rawResponse, explanation: "Could not parse response", speedPercent: 100 }];
+  return [
+    studentMethod,
+    { name: "Error", code: rawResponse, explanation: "Could not parse response", speedPercent: 100 }
+  ];
 }
 
 // Cross-language translation result
@@ -360,7 +417,12 @@ export async function generateCrossLanguageCode(
           }));
         } catch { /* ignore */ }
       }
-      return { code: extractedCode.trim(), highlights: extractedHighlights };
+      return {
+        code: extractedCode.trim(),
+        highlights: extractedHighlights.length > 0
+          ? extractedHighlights
+          : fallbackCrossLanguageHighlights(sourceLang, targetLang, extractedCode.trim(), uiLang)
+      };
     }
     return { code: rawResponse, highlights: [] };
   }
@@ -377,7 +439,12 @@ export async function generateCrossLanguageCode(
     explanation: String(h.explanation || "")
   })) : [];
 
-  return { code: resultCode.trim(), highlights };
+  return {
+    code: resultCode.trim(),
+    highlights: highlights.length > 0
+      ? highlights
+      : fallbackCrossLanguageHighlights(sourceLang, targetLang, resultCode.trim(), uiLang)
+  };
 }
 
 // Generate solution for a practice exercise

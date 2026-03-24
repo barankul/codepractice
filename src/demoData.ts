@@ -1,7 +1,9 @@
 // Offline mode — API不要のプリセット練習問題 (pre-generated practices for AI-free / offline mode)
 
 import * as vscode from "vscode";
-import { getSecret } from "./aiHelpers";
+import { getResponseLang, getSecret } from "./aiHelpers";
+import type { UILang } from "./i18n";
+import { localizeOfflinePractice } from "./offlinePracticeLocalization";
 import { randomizePractice } from "./practiceRandomizer";
 import { JAVA_PRACTICES as OFFLINE_JAVA } from "./offlinePractices/java";
 import { TYPESCRIPT_PRACTICES as OFFLINE_TS } from "./offlinePractices/typescript";
@@ -60,21 +62,36 @@ export function invalidateDemoModeCache(): void {
   _demoModeChecked = false;
 }
 
-let _usedIndices: Set<number> = new Set();
+let _usedPracticeKeys: Set<string> = new Set();
+
+function practiceKey(practice: DemoPractice): string {
+  return `${practice.lang}\u241f${practice.topic}\u241f${practice.title}`;
+}
+
+function localizeDemoPractice(practice: DemoPractice): DemoPractice {
+  const uiLang = (getResponseLang() || "en") as UILang;
+  return localizeOfflinePractice(practice, uiLang) as DemoPractice;
+}
 
 /** 練習問題選択 — pick a practice matching lang/topic, avoid repeats */
 export function getDemoPractice(lang: string, topic: string, _level: number): DemoPractice | null {
-  const matches = DEMO_PRACTICES.filter(p => p.lang === lang && p.topic === topic);
-  if (matches.length === 0) {
-    const langMatches = DEMO_PRACTICES.filter(p => p.lang === lang);
-    if (langMatches.length === 0) { return null; }
-    return randomizePractice(langMatches[Math.floor(Math.random() * langMatches.length)]) as DemoPractice;
+  const langPool = DEMO_PRACTICES_BY_LANG[lang] || DEMO_PRACTICES.filter(p => p.lang === lang);
+  if (langPool.length === 0) { return null; }
+
+  const matches = langPool.filter(p => p.topic === topic);
+  const candidates = matches.length > 0 ? matches : langPool;
+
+  const unused = candidates.filter(p => !_usedPracticeKeys.has(practiceKey(p)));
+  const pick = unused.length > 0 ? unused[Math.floor(Math.random() * unused.length)] : candidates[Math.floor(Math.random() * candidates.length)];
+
+  _usedPracticeKeys.add(practiceKey(pick));
+
+  const langKeys = langPool.map(practiceKey);
+  if (langKeys.every(key => _usedPracticeKeys.has(key))) {
+    langKeys.forEach(key => _usedPracticeKeys.delete(key));
   }
-  const unused = matches.filter((_, i) => !_usedIndices.has(DEMO_PRACTICES.indexOf(matches[i])));
-  const pick = unused.length > 0 ? unused[Math.floor(Math.random() * unused.length)] : matches[Math.floor(Math.random() * matches.length)];
-  _usedIndices.add(DEMO_PRACTICES.indexOf(pick));
-  if (_usedIndices.size >= DEMO_PRACTICES.length) { _usedIndices.clear(); }
-  return randomizePractice(pick) as DemoPractice;
+
+  return localizeDemoPractice(randomizePractice(pick) as DemoPractice);
 }
 
 /** トピック一覧 — list available demo topics for a language */
@@ -1012,11 +1029,23 @@ const SQL_PRACTICES: DemoPractice[] = [
 
 // Combined
 
+const DEMO_PRACTICES_BY_LANG: Record<string, DemoPractice[]> = {
+  Java: [
+    ...JAVA_PRACTICES,
+    ...(OFFLINE_JAVA as DemoPractice[]),
+  ],
+  TypeScript: [
+    ...TS_PRACTICES,
+    ...(OFFLINE_TS as DemoPractice[]),
+  ],
+  SQL: [
+    ...SQL_PRACTICES,
+    ...(OFFLINE_SQL as DemoPractice[]),
+  ],
+};
+
 export const DEMO_PRACTICES: DemoPractice[] = [
-  ...JAVA_PRACTICES,
-  ...TS_PRACTICES,
-  ...SQL_PRACTICES,
-  ...(OFFLINE_JAVA as DemoPractice[]),
-  ...(OFFLINE_TS as DemoPractice[]),
-  ...(OFFLINE_SQL as DemoPractice[]),
+  ...DEMO_PRACTICES_BY_LANG.Java,
+  ...DEMO_PRACTICES_BY_LANG.TypeScript,
+  ...DEMO_PRACTICES_BY_LANG.SQL,
 ];

@@ -4,13 +4,28 @@ import { dom } from "../dom";
 import { t, applyTranslations } from "../i18n";
 import { post } from "../vscodeApi";
 import { showLoading, showPerfCard, showToast } from "../ui/loading";
-import { renderLangButtons, renderTopics, updateSourceToggle } from "../ui/langTopics";
+import { renderLangButtons, renderTopics, updateCodeSizeGroupVisibility, updateSourceToggle } from "../ui/langTopics";
 import { renderCustomLangButtons, renderCustomHistory } from "../ui/custom";
 import { renderProgressStats, renderRecommendations, renderTopicProgress } from "../ui/progress";
 import { loadSettingsUI, updateConfigBanner, updateOfflineIndicators, isCurrentlyOffline, providerDisplayNames, getSelectedModelLabel } from "../ui/settings";
 import { highlightCode, enhanceTask } from "../ui/codeView";
 import { createAltMethodsWrap, removeAltMethodsWrap } from "../ui/altMethods";
 import type { ExtToWebviewMsg } from "../../shared/protocol";
+
+const DEFAULT_CROSS_LANG_TARGETS = ["Java", "TypeScript", "JavaScript", "Python", "C#", "C++", "Go", "Rust"];
+
+function setRunOutputCompactMode(enabled: boolean): void {
+  dom.outputWrap?.classList.toggle("output-compact", enabled);
+}
+
+function clearJudgeFeedbackUi(): void {
+  dom.outputWrap?.querySelector(".judge-feedback")?.remove();
+}
+
+function resetLastJudgeState(): void {
+  state.lastTestResults = null;
+  state.lastJudgeMsg = null;
+}
 
 export function initMessageHandler(): void {
   window.addEventListener("message", (event: MessageEvent) => {
@@ -40,13 +55,11 @@ export function initMessageHandler(): void {
       renderTopics();
       renderCustomLangButtons();
 
-      const csGroupInit = document.getElementById("codeSizeGroup");
-      if (csGroupInit) csGroupInit.style.display = state.selectedMode === "bugfix" ? "block" : "none";
-
       if (msg.customPractices) { state.customPractices = msg.customPractices; renderCustomHistory(); }
       if (msg.stats) renderProgressStats(msg.stats);
       if (msg.recommendations) renderRecommendations(msg.recommendations);
       if (msg.aiSettings) loadSettingsUI(msg.aiSettings);
+      updateCodeSizeGroupVisibility();
       updateSourceToggle();
     }
 
@@ -90,7 +103,7 @@ export function initMessageHandler(): void {
 
     if (msg.type === "busy") {
       const v = !!msg.value;
-      if (dom.spin) dom.spin.style.display = v ? "block" : "none";
+      if (dom.spin) dom.spin.style.display = "none";
       const topProg = document.getElementById("topbarProgress");
       if (topProg) { v ? topProg.classList.add("active") : topProg.classList.remove("active"); }
       if (dom.genBtn) dom.genBtn.disabled = v;
@@ -224,6 +237,8 @@ export function initMessageHandler(): void {
 
 function handleDetails(msg: Extract<ExtToWebviewMsg, { type: "details" }>): void {
   const d = msg.details;
+  const isBugFix = d.mode === "bugfix";
+  state.availableCrossLangs = isBugFix ? [] : (d.availableCrossLangs ?? null);
   if (dom.practiceForm) dom.practiceForm.style.display = "none";
   if (dom.practiceTopbar) dom.practiceTopbar.style.display = "flex";
   const dwD = document.getElementById("detailsWrap");
@@ -278,10 +293,13 @@ function handleDetails(msg: Extract<ExtToWebviewMsg, { type: "details" }>): void
   if (dom.quickSolveBtn) dom.quickSolveBtn.disabled = false;
   if (dom.hintCodeBtn) dom.hintCodeBtn.disabled = false;
   dom.outputWrap?.classList.remove("show");
+  setRunOutputCompactMode(false);
   if (dom.outputEl) { dom.outputEl.style.display = "none"; dom.outputEl.textContent = "\u2014"; }
   if (dom.testCasesList) dom.testCasesList.innerHTML = "";
   if (dom.resultBadge) { dom.resultBadge.textContent = ""; dom.resultBadge.className = "result-badge"; }
   dom.passButtons?.classList.remove("show");
+  clearJudgeFeedbackUi();
+  resetLastJudgeState();
 
   // Remove old celebration
   if (dom.outputWrap) {
@@ -299,23 +317,32 @@ function handleDetails(msg: Extract<ExtToWebviewMsg, { type: "details" }>): void
   // Populate cross-language dropdown
   if (dom.crossLangDropdown) {
     dom.crossLangDropdown.innerHTML = "";
-    const crossTargets: Record<string, string> = { Java: "java", TypeScript: "ts", JavaScript: "js", Python: "py", "C#": "cs", "C++": "cpp", Go: "go", Rust: "rs" };
-    Object.keys(crossTargets).forEach(targetLang => {
-      if (targetLang === d.lang) return;
+    const crossTargets = isBugFix
+      ? []
+      : (state.availableCrossLangs ?? DEFAULT_CROSS_LANG_TARGETS.filter(targetLang => targetLang !== d.lang));
+
+    crossTargets.forEach(targetLang => {
       const item = document.createElement("button");
       item.className = "cross-lang-item";
       item.textContent = targetLang;
-      item.addEventListener("click", () => {
-        dom.crossLangDropdown!.classList.remove("show");
-        state.currentLoadingAction = "teach";
-        post({ type: "crossLanguage", targetLang });
-      });
+      /*
+        item.title = `${d.lang} offline practice için ${targetLang} cross-language henüz eklenmedi.`;
+        item.style.opacity = "0.7";
+        item.addEventListener("click", () => {
+          dom.crossLangDropdown!.classList.remove("show");
+          showToast("info", `${d.lang} offline practice için ${targetLang} cross-language henüz yok.`);
+        });
+      */
+        item.addEventListener("click", () => {
+          dom.crossLangDropdown!.classList.remove("show");
+          state.currentLoadingAction = "teach";
+          post({ type: "crossLanguage", targetLang });
+        });
       dom.crossLangDropdown!.appendChild(item);
     });
   }
 
   // Bug Fix mode
-  const isBugFix = d.mode === "bugfix";
   const bugBadge = document.getElementById("bugFixBadge");
   const sourceAttr = document.getElementById("sourceAttribution");
   const sourceRepoName = document.getElementById("sourceRepoName");
@@ -341,6 +368,8 @@ function handleDetails(msg: Extract<ExtToWebviewMsg, { type: "details" }>): void
 
 function handleOutput(msg: Extract<ExtToWebviewMsg, { type: "output" }>): void {
   dom.outputWrap?.classList.add("show");
+  setRunOutputCompactMode(true);
+  clearJudgeFeedbackUi();
   if (dom.outputEl) { dom.outputEl.style.display = "block"; dom.outputEl.textContent = msg.text || "\u2014"; }
   if (dom.testCasesList) { dom.testCasesList.innerHTML = ""; dom.testCasesList.style.display = "none"; }
   if (dom.resultBadge) { dom.resultBadge.textContent = ""; dom.resultBadge.className = "result-badge"; }
@@ -357,6 +386,7 @@ function handleOutput(msg: Extract<ExtToWebviewMsg, { type: "output" }>): void {
 
 function handleJudgeResult(msg: Extract<ExtToWebviewMsg, { type: "judgeResult" }>): void {
   dom.outputWrap?.classList.add("show");
+  setRunOutputCompactMode(false);
   showPerfCard(msg.durationMs);
 
   // Store test results for repair feature
@@ -375,6 +405,10 @@ function handleJudgeResult(msg: Extract<ExtToWebviewMsg, { type: "judgeResult" }
       if (tr.pass) passed++;
       const card = document.createElement("div");
       card.className = "tc-card " + (tr.pass ? "tc-pass" : "tc-fail");
+      const dot = document.createElement("div");
+      dot.className = "tc-dot";
+      dot.textContent = tr.pass ? "\u2713" : "\u2717";
+      card.appendChild(dot);
       const body = document.createElement("div");
       body.className = "tc-body";
       const nameEl = document.createElement("div");
@@ -449,6 +483,7 @@ function handleJudgeResult(msg: Extract<ExtToWebviewMsg, { type: "judgeResult" }
   }
 
   if (msg.pass) {
+    clearJudgeFeedbackUi();
     if (dom.outputWrap) {
       dom.outputWrap.querySelector(".celebrate")?.remove();
       dom.outputWrap.querySelector(".xp-earned-wrap")?.remove();
@@ -488,9 +523,17 @@ function handleJudgeResult(msg: Extract<ExtToWebviewMsg, { type: "judgeResult" }
     }
 
     dom.passButtons?.classList.add("show");
-    if (dom.crossLangBtn) dom.crossLangBtn.style.display = "block";
-    if (!state.altMethodsLoaded) { post({ type: "alternativeMethods" }); }
-    else { createAltMethodsWrap(); }
+    if (state._isBugFixMode) {
+      if (dom.crossLangBtn) dom.crossLangBtn.style.display = "none";
+      removeAltMethodsWrap();
+    } else {
+      if (dom.crossLangBtn) {
+        const hasCrossLangTargets = state.availableCrossLangs === null || state.availableCrossLangs.length > 0;
+        dom.crossLangBtn.style.display = hasCrossLangTargets ? "block" : "none";
+      }
+      if (!state.altMethodsLoaded) { post({ type: "alternativeMethods" }); }
+      else { createAltMethodsWrap(); }
+    }
   } else {
     if (dom.outputWrap) {
       dom.outputWrap.querySelector(".celebrate")?.remove();
@@ -502,10 +545,7 @@ function handleJudgeResult(msg: Extract<ExtToWebviewMsg, { type: "judgeResult" }
     removeAltMethodsWrap();
 
     // AI feedback
-    if (dom.outputWrap) {
-      const oldFb = dom.outputWrap.querySelector(".judge-feedback");
-      if (oldFb) oldFb.remove();
-    }
+    clearJudgeFeedbackUi();
     if (msg.feedback && msg.feedback.summary) {
       const fbWrap = document.createElement("div"); fbWrap.className = "judge-feedback";
       const fbSummary = document.createElement("div"); fbSummary.className = "fb-summary";

@@ -1,6 +1,7 @@
 // Settings panel — provider config, offline indicators, config banner
 import { state } from "../state";
 import { dom } from "../dom";
+import { t } from "../i18n";
 import { post } from "../vscodeApi";
 import type { AiSettings } from "../../shared/protocol";
 
@@ -23,7 +24,7 @@ const keyFields: Record<string, string> = {
 
 export function showProviderConfig(provider: string): void {
   state.currentProvider = provider;
-  document.querySelectorAll(".provider-card").forEach(c =>
+  document.querySelectorAll(".provider-item").forEach(c =>
     (c as HTMLElement).classList.toggle("active", (c as HTMLElement).dataset.provider === provider));
   document.querySelectorAll(".provider-config").forEach(c => c.classList.remove("active"));
   const cfg = document.getElementById("config-" + provider);
@@ -73,9 +74,9 @@ export function updateOfflineIndicators(): void {
   if (customSettingsBtn) (customSettingsBtn as HTMLElement).style.display = noApiKey ? "" : "none";
   if (customSwitchBtn) (customSwitchBtn as HTMLElement).style.display = hasKeyButOffline ? "" : "none";
   if (customOfflineDesc && hasKeyButOffline) {
-    customOfflineDesc.innerHTML = "Custom practices require AI mode.<br>Switch your source to AI to use this feature.";
+    customOfflineDesc.innerHTML = t("custom.aiModeRequiredDesc");
   } else if (customOfflineDesc && noApiKey) {
-    customOfflineDesc.innerHTML = "Custom practices require an AI provider.<br>Configure an API key in Settings to use this feature.";
+    customOfflineDesc.innerHTML = t("custom.aiRequiredDesc");
   }
 
   // AI Chat button
@@ -99,7 +100,7 @@ export function updateConfigBanner(provider: string): void {
     if (bn) bn.textContent = providerDisplayNames[provider] || provider;
     if (bm) bm.textContent = getSelectedModelLabel(provider);
   }
-  document.querySelectorAll(".provider-card").forEach(c =>
+  document.querySelectorAll(".provider-item").forEach(c =>
     (c as HTMLElement).classList.toggle("saved", (c as HTMLElement).dataset.provider === provider));
   updateOfflineIndicators();
 }

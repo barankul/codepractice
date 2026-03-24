@@ -104,6 +104,45 @@ suite("parsers — edge cases", () => {
       assert.strictEqual(r.hint, "Check loop bounds");
     });
 
+    test("BUG_EXPLANATION falls back to BUG_HINT when omitted", () => {
+      const meta = "TITLE: T\nTASK: Fix\nBUG_HINT: Check loop bounds";
+      const r = parseMeta(meta);
+      assert.strictEqual(r.bugExplanation, "Check loop bounds");
+    });
+
+    test("parses Japanese bug fields with localized labels", () => {
+      const meta =
+        "\u30bf\u30a4\u30c8\u30eb: \u30d0\u30b0\u4fee\u6b63\n" +
+        "\u8ab2\u984c: \u30d0\u30b0\u3092\u898b\u3064\u3051\u3066\u4fee\u6b63\u3057\u3066\u304f\u3060\u3055\u3044\n" +
+        "\u30d0\u30b0\u30d2\u30f3\u30c8: \u30eb\u30fc\u30d7\u6761\u4ef6\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044\n" +
+        "\u30d0\u30b0\u8aac\u660e: <= \u306e\u4ee3\u308f\u308a\u306b < \u3092\u4f7f\u3046\u3079\u304d\u3067\u3059";
+      const r = parseMeta(meta);
+      assert.strictEqual(r.hint, "\u30eb\u30fc\u30d7\u6761\u4ef6\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044");
+      assert.strictEqual(r.bugExplanation, "<= \u306e\u4ee3\u308f\u308a\u306b < \u3092\u4f7f\u3046\u3079\u304d\u3067\u3059");
+    });
+
+    test("parses Japanese full-width colon labels", () => {
+      const meta =
+        "\u30bf\u30a4\u30c8\u30eb\uff1a \u30d0\u30b0\u4fee\u6b63\n" +
+        "\u30bf\u30b9\u30af\uff1a \u30ed\u30b8\u30c3\u30af\u3092\u4fee\u6b63\u3057\u3066\u304f\u3060\u3055\u3044\n" +
+        "\u30d0\u30b0\u8aac\u660e\uff1a \u6761\u4ef6\u5f0f\u304c\u9006\u3067\u3059";
+      const r = parseMeta(meta);
+      assert.strictEqual(r.title, "\u30d0\u30b0\u4fee\u6b63");
+      assert.strictEqual(r.task, "\u30ed\u30b8\u30c3\u30af\u3092\u4fee\u6b63\u3057\u3066\u304f\u3060\u3055\u3044");
+      assert.strictEqual(r.bugExplanation, "\u6761\u4ef6\u5f0f\u304c\u9006\u3067\u3059");
+    });
+
+    test("parses Japanese natural labels with の", () => {
+      const meta =
+        "\u30bf\u30a4\u30c8\u30eb: \u30d0\u30b0\u4fee\u6b63\n" +
+        "\u30bf\u30b9\u30af: \u30ed\u30b8\u30c3\u30af\u3092\u4fee\u6b63\u3057\u3066\u304f\u3060\u3055\u3044\n" +
+        "\u30d0\u30b0\u306e\u30d2\u30f3\u30c8: \u30eb\u30fc\u30d7\u6761\u4ef6\u3092\u898b\u76f4\u3057\u3066\u304f\u3060\u3055\u3044\n" +
+        "\u30d0\u30b0\u306e\u8aac\u660e: \u6bd4\u8f03\u6f14\u7b97\u5b50\u304c\u9006\u3067\u3059";
+      const r = parseMeta(meta);
+      assert.strictEqual(r.hint, "\u30eb\u30fc\u30d7\u6761\u4ef6\u3092\u898b\u76f4\u3057\u3066\u304f\u3060\u3055\u3044");
+      assert.strictEqual(r.bugExplanation, "\u6bd4\u8f03\u6f14\u7b97\u5b50\u304c\u9006\u3067\u3059");
+    });
+
     test("null/undefined input", () => {
       const r1 = parseMeta(null as any);
       assert.strictEqual(r1.title, "");

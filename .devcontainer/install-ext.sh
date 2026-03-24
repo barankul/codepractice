@@ -10,7 +10,11 @@ if [ -f "$VSIX" ]; then
   code --install-extension "$VSIX" --force 2>/dev/null && rm -f "$VSIX" || true
 fi
 
-# Open the getting started file in markdown preview
+# Wait for VS Code to be fully ready, then open getting started file
 if [ -f "$GS" ]; then
+  sleep 3
+  # Open file first, then show markdown preview to the side (right panel)
   code "$GS" 2>/dev/null || true
+  sleep 1
+  code --command "markdown.showPreviewToSide" 2>/dev/null || true
 fi

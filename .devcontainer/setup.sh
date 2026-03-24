@@ -9,7 +9,7 @@ S="$WS/GETTING_STARTED.md"
 
 update_status() {
   cat > "$S" << EOF
-# CodePractice — Setting Up...
+# CodePractice — Setting Up... / セットアップ中...
 
 $1
 
@@ -18,6 +18,7 @@ $2
 \`\`\`
 
 Please wait... this takes about 1-2 minutes.
+お待ちください…約1〜2分かかります。
 EOF
 }
 
@@ -61,9 +62,11 @@ rm -f /tmp/codepractice.vsix
 
 # Done — update status to getting started guide
 cat > "$S" << 'DONE'
-# CodePractice — Ready!
+# CodePractice — Ready! / 準備完了！
 
-## Setup Complete
+## Setup Complete / セットアップ完了
+
+---
 
 ### How to Start
 
@@ -78,11 +81,25 @@ cat > "$S" << 'DONE'
 
 ---
 
-### If the sidebar icon doesn't appear:
+### 使い方
+
+1. **左サイドバーのCodePracticeアイコン**をクリック
+2. **言語を選択** — Java、TypeScript、またはSQL
+3. **トピックを選択** — 配列、ループ、文字列など
+4. **Generateをクリック** — エディタに練習問題が開きます
+5. **解答を書く** — TODOコメントを置き換えてください
+6. **Judgeをクリック** — AIがコードを評価します
+
+> **ヒント:** まずは **Offline** モードから — APIキー不要！120以上の練習問題が内蔵されています。
+
+---
+
+### If the sidebar icon doesn't appear / サイドバーにアイコンが表示されない場合:
 Press `Ctrl+Shift+P` → type **Reload Window** → press Enter
 
-### Want AI-generated practices?
+### Want AI-generated practices? / AI生成の練習問題を使いたい場合:
 Click the gear icon in the sidebar → configure a free API key:
+サイドバーの歯車アイコンをクリック → 無料のAPIキーを設定：
 - **Groq** — Free 100K tokens/day
 - **Cerebras** — Free ~1M tokens/day
 - **OpenRouter** — Free tier

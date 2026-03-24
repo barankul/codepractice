@@ -179,6 +179,7 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
+    "offline:smoke": "npm run compile-tests && node esbuild.js && node out/offlineSmokeCli.js",
     "test": "vscode-test"
   },
   "devDependencies": {

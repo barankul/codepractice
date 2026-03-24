@@ -326,13 +326,13 @@ ${css}
     <!-- Offline overlay for Custom panel -->
     <div id="customOfflineOverlay" class="custom-offline-overlay" style="display:none;">
       <div class="custom-offline-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
-      <div class="custom-offline-title">AI Required</div>
-      <div class="custom-offline-desc">Custom practices require an AI provider.<br>Configure an API key in Settings to use this feature.</div>
+      <div class="custom-offline-title" data-i18n="custom.aiRequired">AI Required</div>
+      <div class="custom-offline-desc" data-i18n-html="custom.aiRequiredDesc">Custom practices require an AI provider.<br>Configure an API key in Settings to use this feature.</div>
       <div class="custom-offline-source">Source: AI</div>
       <!-- When no API key: show Open Settings -->
-      <button class="btn-gen custom-offline-settings-btn" id="customGoSettingsBtn"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Open Settings</button>
+      <button class="btn-gen custom-offline-settings-btn" id="customGoSettingsBtn" data-i18n="custom.openSettings"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Open Settings</button>
       <!-- When API key exists but source is offline: show Switch to AI -->
-      <button class="btn-gen custom-offline-switch-btn" id="customSwitchAiBtn" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 15H8l-3 6h14l-3-6z"/><circle cx="9" cy="10" r="0.5" fill="currentColor"/><circle cx="15" cy="10" r="0.5" fill="currentColor"/></svg>Switch to AI Mode</button>
+      <button class="btn-gen custom-offline-switch-btn" id="customSwitchAiBtn" data-i18n="custom.switchAi" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 15H8l-3 6h14l-3-6z"/><circle cx="9" cy="10" r="0.5" fill="currentColor"/><circle cx="15" cy="10" r="0.5" fill="currentColor"/></svg>Switch to AI Mode</button>
     </div>
     <div class="subtitle" id="customSubtitle" data-i18n="custom.empty">No custom practices yet. Describe what you want to learn!</div>
 
@@ -366,15 +366,15 @@ ${css}
     </div>
     <div class="settings-section">
       <div class="kicker" data-i18n="settings.aiProvider">AI PROVIDER</div>
-      <div class="provider-cards" id="providerCards">
-        <div class="provider-card" data-provider="groq">Groq<div class="provider-sub">Free 100K/day</div></div>
-        <div class="provider-card" data-provider="cerebras">Cerebras<div class="provider-sub">Free ~1M/day</div></div>
-        <div class="provider-card" data-provider="together">Together<div class="provider-sub">$1 free</div></div>
-        <div class="provider-card" data-provider="openrouter">OpenRouter<div class="provider-sub">Free tier</div></div>
-        <div class="provider-card" data-provider="gemini">Gemini<div class="provider-sub">Free tier</div></div>
-        <div class="provider-card" data-provider="openai">OpenAI<div class="provider-sub">Pay-as-you-go</div></div>
-        <div class="provider-card" data-provider="claude">Claude<div class="provider-sub">Pay-as-you-go</div></div>
-        <div class="provider-card" data-provider="local"><span data-i18n="settings.local">Local</span><div class="provider-sub">LM Studio</div></div>
+      <div class="provider-list" id="providerCards">
+        <div class="provider-item" data-provider="groq"><div class="provider-item-icon" style="color:#f97316">G</div><div class="provider-item-info"><div class="provider-item-name">Groq</div><div class="provider-item-desc">100K tokens/day</div></div><span class="provider-item-free">FREE</span></div>
+        <div class="provider-item" data-provider="cerebras"><div class="provider-item-icon" style="color:#8b5cf6">C</div><div class="provider-item-info"><div class="provider-item-name">Cerebras</div><div class="provider-item-desc">~1M tokens/day</div></div><span class="provider-item-free">FREE</span></div>
+        <div class="provider-item" data-provider="together"><div class="provider-item-icon" style="color:#06b6d4">T</div><div class="provider-item-info"><div class="provider-item-name">Together</div><div class="provider-item-desc">$1 free credit</div></div><span class="provider-item-free">FREE</span></div>
+        <div class="provider-item" data-provider="openrouter"><div class="provider-item-icon" style="color:#ec4899">O</div><div class="provider-item-info"><div class="provider-item-name">OpenRouter</div><div class="provider-item-desc">Free tier available</div></div><span class="provider-item-free">FREE</span></div>
+        <div class="provider-item" data-provider="gemini"><div class="provider-item-icon" style="color:#3b82f6">G</div><div class="provider-item-info"><div class="provider-item-name">Gemini</div><div class="provider-item-desc">Free tier available</div></div><span class="provider-item-free">FREE</span></div>
+        <div class="provider-item" data-provider="openai"><div class="provider-item-icon" style="color:#10b981">O</div><div class="provider-item-info"><div class="provider-item-name">OpenAI</div><div class="provider-item-desc">Pay-as-you-go</div></div></div>
+        <div class="provider-item" data-provider="claude"><div class="provider-item-icon" style="color:#d97706">C</div><div class="provider-item-info"><div class="provider-item-name">Claude</div><div class="provider-item-desc">Pay-as-you-go</div></div></div>
+        <div class="provider-item" data-provider="local"><div class="provider-item-icon" style="color:#6b7280">L</div><div class="provider-item-info"><div class="provider-item-name" data-i18n="settings.local">Local</div><div class="provider-item-desc">LM Studio</div></div></div>
       </div>
     </div>
 

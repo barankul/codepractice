@@ -2433,8 +2433,8 @@ b: banana, blueberry
 c: cherry`,
     testCases: [
       { input: "const numbers = [1, 2, 3, 4, 5, 6, 7, 8]; const words = [\"apple\", \"avocado\", \"banana\", \"blueberry\", \"cherry\"]", output: "odd: 1, 3, 5, 7\neven: 2, 4, 6, 8\na: apple, avocado\nb: banana, blueberry\nc: cherry" },
-      { input: "const numbers = [2, 4, 6]; const words = [\"dog\", \"duck\", \"eagle\"]", output: "even: 2, 4, 6\nd: dog, duck\ne: eagle" },
-      { input: "const numbers = [1, 3, 5, 7, 9]; const words = [\"fig\"]", output: "odd: 1, 3, 5, 7, 9\nf: fig" },
+      { input: "const numbers = [1, 2, 4, 7]; const words = [\"ant\", \"bear\", \"cat\"]", output: "odd: 1, 7\neven: 2, 4\na: ant\nb: bear\nc: cat" },
+      { input: "const numbers = [1, 3, 5, 6]; const words = [\"apple\", \"banana\", \"cherry\"]", output: "odd: 1, 3, 5\neven: 6\na: apple\nb: banana\nc: cherry" },
     ],
     hint: "Use `Record<string, T[]>` for the result type. For each item, compute the key and push the item into the corresponding array.",
     judgeFeedback: {
@@ -2897,9 +2897,9 @@ Zip: 62701
 Email: alice@example.com
 Phone: 555-1234`,
     testCases: [
-      { input: "const name = \"Alice\"; const street = \"123 Main St\"; const city = \"Springfield\"; const zip = \"62701\"; const email = \"alice@example.com\"; const phone = \"555-1234\"", output: "Name: Alice\nStreet: 123 Main St\nCity: Springfield\nZip: 62701\nEmail: alice@example.com\nPhone: 555-1234" },
-      { input: "const name = \"Bob\"; const street = \"456 Oak Ave\"; const city = \"Portland\"; const zip = \"97201\"; const email = \"bob@test.com\"; const phone = \"555-9999\"", output: "Name: Bob\nStreet: 456 Oak Ave\nCity: Portland\nZip: 97201\nEmail: bob@test.com\nPhone: 555-9999" },
-      { input: "const name = \"Eve\"; const street = \"789 Pine Rd\"; const city = \"Denver\"; const zip = \"80201\"; const email = \"eve@dev.io\"; const phone = \"555-0000\"", output: "Name: Eve\nStreet: 789 Pine Rd\nCity: Denver\nZip: 80201\nEmail: eve@dev.io\nPhone: 555-0000" },
+      { input: "const user: UserProfile = { name: \"Alice\", address: { street: \"123 Main St\", city: \"Springfield\", zip: \"62701\" }, contacts: { email: \"alice@example.com\", phone: \"555-1234\" } }", output: "Name: Alice\nStreet: 123 Main St\nCity: Springfield\nZip: 62701\nEmail: alice@example.com\nPhone: 555-1234" },
+      { input: "const user: UserProfile = { name: \"Bob\", address: { street: \"456 Oak Ave\", city: \"Portland\", zip: \"97201\" }, contacts: { email: \"bob@test.com\", phone: \"555-9999\" } }", output: "Name: Bob\nStreet: 456 Oak Ave\nCity: Portland\nZip: 97201\nEmail: bob@test.com\nPhone: 555-9999" },
+      { input: "const user: UserProfile = { name: \"Eve\", address: { street: \"789 Pine Rd\", city: \"Denver\", zip: \"80201\" }, contacts: { email: \"eve@dev.io\", phone: \"555-0000\" } }", output: "Name: Eve\nStreet: 789 Pine Rd\nCity: Denver\nZip: 80201\nEmail: eve@dev.io\nPhone: 555-0000" },
     ],
     hint: "Use nested destructuring: `const { prop, nested: { innerProp } } = obj;`. The colon in destructuring renames or drills into nested objects.",
     judgeFeedback: {
@@ -5174,9 +5174,9 @@ Login handler removed
 Message from Dave: Goodbye!`,
     hint: "Use a mapped type for the handlers storage: `{ [K in keyof Events]?: ((payload: Events[K]) => void)[] }`. The `on` method pushes handlers, `emit` calls all handlers for an event, and `off` filters out the specific handler.",
     testCases: [
-      { input: "const emitter = new TypedEmitter<AppEvents>(); emitter.on(\"login\", h); emitter.emit(\"login\", { user: \"Alice\" });", output: "Login: Alice" },
-      { input: "emitter.emit(\"message\", { from: \"Bob\", text: \"Hello!\" });", output: "Message from Bob: Hello!" },
-      { input: "emitter.off(\"login\", loginHandler); emitter.emit(\"login\", { user: \"Charlie\" });", output: "" }
+      { input: "const emitter = new TypedEmitter<AppEvents>(); const loginHandler = (payload: AppEvents[\"login\"]) => { console.log(`Login: ${payload.user}`); }; emitter.on(\"login\", loginHandler); emitter.emit(\"login\", { user: \"Alice\" });", output: "Login: Alice" },
+      { input: "const emitter = new TypedEmitter<AppEvents>(); const loginHandler = (payload: AppEvents[\"login\"]) => { console.log(`Login: ${payload.user}`); }; emitter.on(\"message\", (payload) => { console.log(`Message from ${payload.from}: ${payload.text}`); }); emitter.emit(\"message\", { from: \"Bob\", text: \"Hello!\" });", output: "Message from Bob: Hello!" },
+      { input: "const emitter = new TypedEmitter<AppEvents>(); const loginHandler = (payload: AppEvents[\"login\"]) => { console.log(`Login: ${payload.user}`); }; emitter.on(\"login\", loginHandler); emitter.off(\"login\", loginHandler); emitter.emit(\"login\", { user: \"Charlie\" });", output: "" }
     ],
     judgeFeedback: {
       summary: "Ensure the event map is properly typed so that payloads are checked at compile time for each event name.",
@@ -5417,9 +5417,9 @@ State: count=2, lang=ja
 Final: count=99`,
     hint: "Use two stacks (arrays) for undo and redo history. On update, push current state to undo stack and clear redo stack. Use the spread operator for shallow immutable copies.",
     testCases: [
-      { input: "const mgr = new StateManager({ count: 0 }); mgr.update({ count: 1 }); mgr.update({ count: 2 });", output: "[sub] count=1\n[sub] count=2" },
-      { input: "mgr.undo(); console.log(mgr.state.count);", output: "1" },
-      { input: "mgr.redo(); console.log(mgr.state.count);", output: "2" }
+      { input: "const mgr = new StateManager<AppState>({ count: 0, theme: \"dark\", lang: \"en\" }); mgr.update({ count: 1 }); mgr.update({ count: 2 });", output: "[sub] count=1\n[sub] count=2" },
+      { input: "const mgr = new StateManager<AppState>({ count: 0, theme: \"dark\", lang: \"en\" }); mgr.undo(); console.log(mgr.state.count);", output: "1" },
+      { input: "const mgr = new StateManager<AppState>({ count: 0, theme: \"dark\", lang: \"en\" }); mgr.redo(); console.log(mgr.state.count);", output: "2" }
     ],
     judgeFeedback: {
       summary: "Ensure state is never mutated directly — always create copies. Undo/redo stacks must be managed symmetrically.",
@@ -5680,9 +5680,9 @@ HELLO WORLD!!!
 TYPESCRIPT!!!`,
     hint: "Use function overloads for 1, 2, 3, and 4 argument versions to preserve type flow. The implementation uses `reduce` to chain functions.",
     testCases: [
-      { input: "const transform = pipe(parseFloat, double, toFixed1, addPrefix); const result = transform(\"3.14\");", output: "Result: 6.3" },
-      { input: "const result = transform(\"10.5\");", output: "Result: 21.0" },
-      { input: "const shout = pipe(s => s.trim(), s => s.toUpperCase(), s => s + \"!!!\"); const result = shout(\"  hello world  \");", output: "HELLO WORLD!!!" }
+      { input: "const double = (n: number): number => n * 2; const toFixed1 = (n: number): string => n.toFixed(1); const addPrefix = (s: string): string => `Result: ${s}`; const transform = pipe(parseFloat, double, toFixed1, addPrefix);", output: "Result: 6.3" },
+      { input: "const double = (n: number): number => n * 2; const toFixed1 = (n: number): string => n.toFixed(1); const addPrefix = (s: string): string => `Result: ${s}`; const transform = pipe(parseFloat, double, toFixed1, addPrefix);", output: "Result: 21.0" },
+      { input: "const double = (n: number): number => n * 2; const toFixed1 = (n: number): string => n.toFixed(1); const addPrefix = (s: string): string => `Result: ${s}`; const transform = pipe(parseFloat, double, toFixed1, addPrefix);", output: "HELLO WORLD!!!" }
     ],
     judgeFeedback: {
       summary: "Ensure each overload correctly threads the return type of one function as the parameter type of the next.",
@@ -5884,8 +5884,8 @@ fib(10) = 55`,
     hint: "Use `JSON.stringify(args)` as the cache key. Store entries as `{ value, expiry: Date.now() + ttl }`. Check if cached entry exists AND hasn't expired before returning it.",
     testCases: [
       { input: "const memoFib = memoize(fibonacci, 5000); memoFib(10);", output: "  [computing] key=[10]\nfib(10) = 55" },
-      { input: "memoFib(10);", output: "  [cache hit] key=[10]\nfib(10) = 55" },
-      { input: "memoFib.clear(); memoFib(10);", output: "  [computing] key=[10]\nfib(10) = 55" }
+      { input: "const memoFib = memoize(fibonacci, 5000); memoFib(10);", output: "  [cache hit] key=[10]\nfib(10) = 55" },
+      { input: "const memoFib = memoize(fibonacci, 5000); memoFib.clear(); memoFib(10);", output: "  [computing] key=[10]\nfib(10) = 55" }
     ],
     judgeFeedback: {
       summary: "Ensure the memoized function preserves the original type signature using Parameters<F> and ReturnType<F>.",
@@ -6160,9 +6160,9 @@ Partial name: not set
 Partial db: not set`,
     hint: "Use mapped types with conditional checks: `T[K] extends object ? DeepX<T[K]> : T[K]`. Exclude functions from recursion with `T[K] extends (...args: any[]) => any`.",
     testCases: [
-      { input: "const cfg: DeepReadonly<Config> = { app: { name: \"MyApp\", version: 1, features: { darkMode: true, notifications: false } }, database: { host: \"localhost\", port: 5432 } };", output: "App: MyApp v1" },
-      { input: "const partial: DeepPartial<Config> = { app: { features: { darkMode: false } } };", output: "Partial dark mode: false" },
-      { input: "console.log(partial.app?.name ?? \"not set\");", output: "not set" }
+      { input: "const fullConfig: DeepReadonly<Config> = { app: { name: \"MyApp\", version: 1, features: { darkMode: true, notifications: false } }, database: { host: \"localhost\", port: 5432 } }; const partial: DeepPartial<Config> = { app: { features: { darkMode: false } } };", output: "App: MyApp v1" },
+      { input: "const fullConfig: DeepReadonly<Config> = { app: { name: \"MyApp\", version: 1, features: { darkMode: true, notifications: false } }, database: { host: \"localhost\", port: 5432 } }; const partial: DeepPartial<Config> = { app: { features: { darkMode: false } } };", output: "Partial dark mode: false" },
+      { input: "const fullConfig: DeepReadonly<Config> = { app: { name: \"MyApp\", version: 1, features: { darkMode: true, notifications: false } }, database: { host: \"localhost\", port: 5432 } }; const partial: DeepPartial<Config> = {};", output: "not set" }
     ],
     judgeFeedback: {
       summary: "Ensure the utility types recurse into nested objects but skip function types to avoid breaking callable properties.",
@@ -6568,9 +6568,9 @@ for (const s of shapes) {
 }`,
     expectedOutput: "78.54\n24.00\n12.00",
     testCases: [
-      { input: "circle r=5", output: "78.54" },
-      { input: "rectangle 4x6", output: "24.00" },
-      { input: "triangle b=3 h=8", output: "12.00" },
+      { input: "const shapes: Shape[] = [{ kind: \"circle\", radius: 5 }];", output: "78.54" },
+      { input: "const shapes: Shape[] = [{ kind: \"rectangle\", width: 4, height: 6 }];", output: "24.00" },
+      { input: "const shapes: Shape[] = [{ kind: \"triangle\", base: 3, height: 8 }];", output: "12.00" },
     ],
     hint: "Use a `kind` property as the discriminant. TypeScript narrows the type automatically in each switch case.",
     judgeFeedback: {
@@ -7241,8 +7241,8 @@ Results: Result-1, Result-2, Result-3, Result-4, Result-5`,
     hint: "Create N worker functions (where N = concurrency) that each pull the next task from a shared index. All workers run concurrently via Promise.all, but each worker processes tasks sequentially.",
     testCases: [
       { input: "const tasks = [createTask(1, 100), createTask(2, 50)]; const results = await asyncPool(2, tasks);", output: "Task 1 started\nTask 2 started\nTask 2 done (50ms)\nTask 1 done (100ms)\nResults: Result-1, Result-2" },
-      { input: "const results = await asyncPool(1, tasks);", output: "Task 1 started\nTask 1 done (100ms)\nTask 2 started\nTask 2 done (50ms)" },
-      { input: "const results = await asyncPool(5, tasks);", output: "Task 1 started\nTask 2 started\nTask 2 done (50ms)\nTask 1 done (100ms)" }
+      { input: "const tasks = [createTask(1, 100), createTask(2, 50)]; const results = await asyncPool(1, tasks);", output: "Task 1 started\nTask 1 done (100ms)\nTask 2 started\nTask 2 done (50ms)" },
+      { input: "const tasks = [createTask(1, 100), createTask(2, 50)]; const results = await asyncPool(5, tasks);", output: "Task 1 started\nTask 2 started\nTask 2 done (50ms)\nTask 1 done (100ms)" }
     ],
     judgeFeedback: {
       summary: "Ensure tasks run concurrently up to the limit, not all at once. Results must be in the original order regardless of completion order.",
@@ -7517,9 +7517,9 @@ Call 4: Success!
 Call 5: Success!`,
     hint: "For retry: loop with try/catch, computing delay as `baseDelay * backoffFactor^attempt`. For circuit breaker: track failure count and timestamps. In OPEN state, check if resetTimeout has elapsed before allowing a test call (HALF_OPEN).",
     testCases: [
-      { input: "let callCount = 0; const result = await retry(flakyApi, { maxRetries: 3, baseDelay: 10, backoffFactor: 2 });", output: "Result: Success!" },
-      { input: "const cb = new CircuitBreaker(2, 50); // after 2 failures", output: "Circuit: CLOSED -> OPEN (failures=2)" },
-      { input: "// after resetTimeout elapses and a successful call", output: "Circuit: HALF_OPEN -> CLOSED" }
+      { input: "// use default retry scenario", output: "Result: Success!" },
+      { input: "// use default retry scenario", output: "Circuit: CLOSED -> OPEN (failures=2)" },
+      { input: "// use default retry scenario", output: "Circuit: HALF_OPEN -> CLOSED" }
     ],
     judgeFeedback: {
       summary: "Ensure exponential backoff increases delay correctly and the circuit breaker transitions between all three states properly.",

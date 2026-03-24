@@ -3,20 +3,30 @@ import { state } from "../state";
 import { dom } from "../dom";
 import { t } from "../i18n";
 import { post } from "../vscodeApi";
+import { langIcons } from "./langTopics";
 
 export function renderCustomLangButtons(): void {
   if (!dom.customLangRow) return;
   dom.customLangRow.innerHTML = "";
   Object.keys(state.topics).forEach(lang => {
-    const b = document.createElement("button");
-    b.className = "lang-btn" + (lang === state.customLang ? " active" : "");
-    const icon = state.icons[lang] || "";
-    b.textContent = icon ? icon + " " + lang : lang;
-    b.onclick = () => {
+    const card = document.createElement("div");
+    card.className = "lang-card" + (lang === state.customLang ? " active" : "");
+    const svgIcon = langIcons[lang] || "";
+    if (svgIcon) {
+      const iconDiv = document.createElement("div");
+      iconDiv.className = "lang-card-icon";
+      iconDiv.innerHTML = svgIcon;
+      card.appendChild(iconDiv);
+    }
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "lang-card-name";
+    nameSpan.textContent = lang;
+    card.appendChild(nameSpan);
+    card.onclick = () => {
       state.customLang = lang;
       renderCustomLangButtons();
     };
-    dom.customLangRow!.appendChild(b);
+    dom.customLangRow!.appendChild(card);
   });
 }
 
