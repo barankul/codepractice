@@ -32,6 +32,76 @@ function hasRealSolutionLogic(code: string, starterCode: string): boolean {
   return solutionOnly.length >= 1;
 }
 
+function normalizeCodeFingerprint(code: string): string {
+  return (code || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isSuspiciousGeneratedPractice(
+  parsed: ReturnType<typeof parseMeta>,
+  starterCode: string,
+  aiSolution: string | null,
+  expectedOutput: string,
+  level?: number
+): { suspicious: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+  if (!parsed.title?.trim()) reasons.push("missing-title");
+  if (!parsed.task?.trim()) reasons.push("missing-task");
+  if (!parsed.hint?.trim()) reasons.push("missing-hint");
+  if (!expectedOutput?.trim()) reasons.push("missing-output");
+
+  // Task too short — weak models give 2-3 word tasks like "Sum the array"
+  const taskLen = (parsed.task || "").trim().length;
+  if (taskLen > 0 && taskLen < 20) reasons.push("task-too-short");
+
+  // Expected output is trivially simple (single digit / boolean / empty-ish)
+  const outTrimmed = (expectedOutput || "").trim();
+  if (outTrimmed && /^-?\d$/.test(outTrimmed)) reasons.push("trivial-output-single-digit");
+
+  // Detect hardcoded solution: if solution just assigns literal that matches output
+  if (aiSolution && outTrimmed) {
+    const solLines = aiSolution.split("\n").map(l => l.trim()).filter(l => l && !l.startsWith("//"));
+    const hardcoded = solLines.some(l =>
+      /^(result|ans|output|sum|count|total|product)\s*=\s*.+;$/.test(l) &&
+      l.includes(outTrimmed) && !l.includes("for") && !l.includes("while") && !l.includes("(")
+    );
+    if (hardcoded) reasons.push("hardcoded-answer");
+  }
+
+  if (aiSolution) {
+    const starterFingerprint = normalizeCodeFingerprint(starterCode);
+    const solutionFingerprint = normalizeCodeFingerprint(aiSolution);
+    if (starterFingerprint && starterFingerprint === solutionFingerprint) {
+      reasons.push("starter-same-as-solution");
+    }
+    if (!hasRealSolutionLogic(aiSolution, starterCode)) {
+      reasons.push("no-real-solution-delta");
+    }
+
+    // Solution complexity vs level — higher levels should have more logic
+    const solutionDelta = countSolutionDelta(aiSolution, starterCode);
+    const lvl = level || 1;
+    const minDelta = lvl <= 1 ? 1 : lvl <= 2 ? 2 : lvl <= 3 ? 3 : 4;
+    if (solutionDelta < minDelta) reasons.push(`solution-too-simple-for-lvl${lvl}`);
+  }
+
+  return { suspicious: reasons.length > 0, reasons };
+}
+
+/** Count non-trivial solution lines beyond starter code */
+function countSolutionDelta(solution: string, starter: string): number {
+  const starterLines = new Set(starter.split("\n").map(l => l.trim()));
+  return solution.split("\n").filter(l => {
+    const t = l.trim();
+    if (!t || t === "{" || t === "}" || t === ");" || t === "});") return false;
+    if (t.startsWith("//") || t.startsWith("/*") || t.startsWith("*")) return false;
+    if (t.startsWith("TODO") || t.includes("YOUR CODE HERE")) return false;
+    if (starterLines.has(t)) return false;
+    return true;
+  }).length;
+}
+
 /** 検証＋修正 — verify output and retry-fix loop */
 async function verifyAndFix(
   ctx: HandlerContext,
@@ -507,14 +577,48 @@ export async function handleGenerate(ctx: HandlerContext, msg: GenerateMsg): Pro
         codeOnly = normalizeJavaPractice(codeOnly);
       }
 
+      let aiSolutionCandidate = res.solutionCode && res.solutionCode.trim()
+        ? (lang === "Java" ? normalizeJavaPractice(res.solutionCode) : res.solutionCode)
+        : null;
+      const generatedQuality = isSuspiciousGeneratedPractice(
+        parsed,
+        codeOnly,
+        aiSolutionCandidate,
+        (res.actualOutput && res.actualOutput.trim()) || parsed.expectedOutput,
+        ctx.currentLevel
+      );
+
+      if (generatedQuality.suspicious) {
+        ctx.output.appendLine(`[Validate] Suspicious practice generation: ${generatedQuality.reasons.join(", ")} — retrying once...`);
+        const failedMarker = parsed.title || parsed.task || "SUSPICIOUS_GENERATION";
+        const retryHistory = [...topicHistory, failedMarker];
+        res = await runJavaCore(ctx.context, lang, topic, ctx.currentLevel, retryHistory);
+        parsed = parseMeta(res.meta);
+        codeOnly = res.content;
+        if (lang === "Java") {
+          codeOnly = normalizeJavaPractice(codeOnly);
+        }
+        aiSolutionCandidate = res.solutionCode && res.solutionCode.trim()
+          ? (lang === "Java" ? normalizeJavaPractice(res.solutionCode) : res.solutionCode)
+          : null;
+        const retryQuality = isSuspiciousGeneratedPractice(
+          parsed, codeOnly, aiSolutionCandidate,
+          (res.actualOutput && res.actualOutput.trim()) || parsed.expectedOutput,
+          ctx.currentLevel
+        );
+        ctx.output.appendLine(`[Validate] Retry title: "${parsed.title}"`);
+        ctx.output.appendLine(`[Validate] Retry task: "${parsed.task}"`);
+        if (retryQuality.suspicious) {
+          ctx.output.appendLine(`[Validate] Retry also suspicious: ${retryQuality.reasons.join(", ")} — proceeding anyway`);
+        }
+      }
+
       let verifiedOutput = (res.actualOutput && res.actualOutput.trim()) || parsed.expectedOutput;
 
       let solutionCode: string | null = null;
       if (lang !== "SQL") {
         // Use AI-generated solutionCode directly if available (skip extra AI call)
-        const aiSolution = res.solutionCode && res.solutionCode.trim()
-          ? (lang === "Java" ? normalizeJavaPractice(res.solutionCode) : res.solutionCode)
-          : null;
+        const aiSolution = aiSolutionCandidate;
 
         if (aiSolution) {
           ctx.output.appendLine(`[Verify] Using AI solutionCode directly (skipping extra solve call)`);

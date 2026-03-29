@@ -1,6 +1,12 @@
 // パネルHTML — HTML templates for explain/schema/API panels
 import * as vscode from "vscode";
 import { escapeHtml } from "./parsers";
+import { t } from "./aiHelpers";
+
+interface ExplainPanelOptions {
+  showTeachExampleNote?: boolean;
+  preserveFocus?: boolean;
+}
 
 /** 解説HTML — explain panel HTML */
 export function getExplainHtml(
@@ -8,7 +14,8 @@ export function getExplainHtml(
   title: string,
   task: string,
   code: string,
-  explanation: string
+  explanation: string,
+  options: ExplainPanelOptions = {}
 ): string {
   const esc = (s: string) => (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
@@ -21,6 +28,11 @@ export function getExplainHtml(
     return html;
   };
   const fmtExplanation = fmtBlock(explanation);
+  const teachNoteHtml = options.showTeachExampleNote ? `
+  <div class="teach-note">
+    <div class="teach-note-title">${esc(t("panel.teachDifferentExampleTitle"))}</div>
+    <div class="teach-note-body">${fmtBlock(t("panel.teachDifferentExampleBody"))}</div>
+  </div>` : "";
 
   return `<!DOCTYPE html>
 <html>
@@ -129,6 +141,24 @@ export function getExplainHtml(
       font-family: var(--mono);
       font-size: 12px;
     }
+    .teach-note {
+      margin-bottom: 18px;
+      padding: 12px 14px;
+      border: 1px solid rgba(0, 120, 212, 0.26);
+      border-radius: 8px;
+      background: rgba(0, 120, 212, 0.08);
+    }
+    .teach-note-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .teach-note-body {
+      font-size: 12.5px;
+      line-height: 1.65;
+      color: var(--fg);
+    }
   </style>
 </head>
 <body>
@@ -139,18 +169,20 @@ export function getExplainHtml(
     </div>
   </div>
 
+  ${teachNoteHtml}
+
   <div class="section">
-    <div class="section-label">Your Task</div>
+    <div class="section-label">${esc(t("panel.originalTask"))}</div>
     <div class="task-text">${fmtBlock(task)}</div>
   </div>
 
   ${code ? `<div class="section">
-    <div class="section-label">Example Code</div>
+    <div class="section-label">${esc(t("panel.guidedExample"))}</div>
     <pre class="code-block">${esc(code)}</pre>
   </div>` : ""}
 
   <div class="section">
-    <div class="section-label">How to Apply This</div>
+    <div class="section-label">${esc(t("panel.mapsBack"))}</div>
     <div class="explanation-text">${fmtExplanation}</div>
   </div>
 </body>
@@ -189,7 +221,7 @@ export function getApiPreviewHtml(output: string, apiType: string): string {
   if (isError) {
     fieldsHtml = `<div class="error-card"><div class="error-icon">!</div><div class="error-text">${escapeHtml(output.trim().slice(0, 300))}</div></div>`;
   } else if (fields.length === 0) {
-    fieldsHtml = `<div class="empty">No output to display</div>`;
+    fieldsHtml = `<div class="empty">${escapeHtml(t("panel.noOutput"))}</div>`;
   } else {
     fieldsHtml = fields.map(f => {
       if (!f.label) {
@@ -273,14 +305,14 @@ export function getApiPreviewHtml(output: string, apiType: string): string {
 <body>
   <div class="header">
     ${icon}
-    <h2>API Preview</h2>
+    <h2>${escapeHtml(t("panel.apiPreviewTitle"))}</h2>
     <span class="type-badge">${typeLabel}</span>
   </div>
   <div class="card">
     ${fieldsHtml}
   </div>
   <details class="raw">
-    <summary>Raw Output</summary>
+    <summary>${escapeHtml(t("panel.rawOutput"))}</summary>
     <pre>${escapeHtml(output.trim())}</pre>
   </details>
 </body>
@@ -377,7 +409,7 @@ export function getSchemaHtml(): string {
   </style>
 </head>
 <body>
-  <h2><span class="icon">&#128451;</span> Database Schema</h2>
+  <h2><span class="icon">&#128451;</span> ${escapeHtml(t("panel.schemaTitle"))}</h2>
 
   <div class="table-wrap">
     <div class="table-name">users</div>
@@ -442,22 +474,26 @@ export function openExplainPanel(
   title: string,
   task: string,
   solutionCode: string,
-  explanation: string
+  explanation: string,
+  options: ExplainPanelOptions = {}
 ): void {
+  const preserveFocus = options.preserveFocus ?? false;
+
   if (holder.explainPanel) {
-    holder.explainPanel.webview.html = getExplainHtml(lang, title, task, solutionCode, explanation);
-    holder.explainPanel.reveal(vscode.ViewColumn.Beside);
+    holder.explainPanel.title = t("panel.explainTitle");
+    holder.explainPanel.webview.html = getExplainHtml(lang, title, task, solutionCode, explanation, options);
+    holder.explainPanel.reveal(vscode.ViewColumn.Beside, preserveFocus);
     return;
   }
 
   const panel = vscode.window.createWebviewPanel(
     "codepracticeExplain",
-    "Code Explanation",
-    vscode.ViewColumn.Beside,
+    t("panel.explainTitle"),
+    { viewColumn: vscode.ViewColumn.Beside, preserveFocus },
     { enableScripts: false, retainContextWhenHidden: false }
   );
 
-  panel.webview.html = getExplainHtml(lang, title, task, solutionCode, explanation);
+  panel.webview.html = getExplainHtml(lang, title, task, solutionCode, explanation, options);
   panel.onDidDispose(() => { holder.setExplainPanel(undefined); });
   holder.setExplainPanel(panel);
 }
@@ -471,7 +507,7 @@ export function showSchemaPanel(holder: PanelHolder): void {
 
   const panel = vscode.window.createWebviewPanel(
     "codepracticeSchema",
-    "Database Schema",
+    t("panel.schemaTitle"),
     { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
     { enableScripts: false, retainContextWhenHidden: false }
   );
@@ -491,7 +527,7 @@ export function showApiPreview(holder: PanelHolder, output: string, apiType: str
 
   const panel = vscode.window.createWebviewPanel(
     "codepracticeApiPreview",
-    "API Preview",
+    t("panel.apiPreviewTitle"),
     { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true },
     { enableScripts: false, retainContextWhenHidden: false }
   );

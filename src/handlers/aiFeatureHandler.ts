@@ -38,10 +38,10 @@ export async function handleTeachMe(ctx: HandlerContext): Promise<void> {
       openExplainPanel(
         ctx,
         ctx.currentPractice.lang,
-        "Solution Walkthrough",
+        t("panel.solutionWalkthrough"),
         ctx.currentPractice.task,
         ctx.currentPractice.solutionCode,
-        ctx.currentPractice.hint || "Study this solution to understand the approach."
+        ctx.currentPractice.hint || t("panel.solutionWalkthroughHint")
       );
       ctx.post({ type: "busy", value: false });
       return;
@@ -58,10 +58,11 @@ export async function handleTeachMe(ctx: HandlerContext): Promise<void> {
     openExplainPanel(
       ctx,
       ctx.currentPractice.lang,
-      example.exampleTask || "Teaching Example",
+      example.exampleTask || t("panel.teachingExample"),
       ctx.currentPractice.task,
       example.code,
-      example.explanation
+      example.explanation,
+      { showTeachExampleNote: true }
     );
   } catch (e: any) {
     const msgText = e?.message ?? String(e);
@@ -129,16 +130,16 @@ export async function handleQuickSolve(ctx: HandlerContext): Promise<void> {
       title, ctx.currentPractice.task, false, "again"
     );
 
-    openExplainPanel(
-      ctx,
-      ctx.currentPractice.lang,
-      ctx.currentPractice.title || ctx.currentPractice.topic,
-      ctx.currentPractice.task,
-      "",
-      explanation
-    );
+    ctx.post({ type: "quickSolveApplied" });
 
-    ctx.post({ type: "skipped" });
+    // Open explain panel after webview state is settled, with preserveFocus
+    // so it doesn't steal focus from the sidebar webview
+    const practiceLang = ctx.currentPractice.lang;
+    const practiceTitle = ctx.currentPractice.title || ctx.currentPractice.topic;
+    const practiceTask = ctx.currentPractice.task;
+    setTimeout(() => {
+      openExplainPanel(ctx, practiceLang, practiceTitle, practiceTask, "", explanation, { preserveFocus: true });
+    }, 300);
   } catch (e: any) {
     const msgText = e?.message ?? String(e);
     ctx.output.appendLine(`ERROR quickSolve: ${msgText}`);
@@ -312,6 +313,7 @@ export async function handleShowSolution(ctx: HandlerContext): Promise<void> {
       title, ctx.currentPractice.task, false, "again"
     );
 
+    ctx.post({ type: "toast", kind: "ok", text: t("msg.solutionOpened") });
     ctx.post({ type: "skipped" });
   } catch (e: any) {
     const msgText = e?.message ?? String(e);

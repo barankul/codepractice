@@ -77,7 +77,7 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
     },
     writeAndOpenFile: async (code: string, lang: string) => {
       const ws = vscode.workspace.workspaceFolders?.[0];
-      if (!ws) { throw new Error("No workspace folder open"); }
+      if (!ws) { throw new Error(t("msg.noWorkspaceFolderOpen")); }
       const filename = practiceFilename(lang);
       if (lang === "Java") { code = normalizeJavaPractice(code); }
       const dirUri = vscode.Uri.joinPath(ws.uri, PRACTICE_DIR);
@@ -306,23 +306,13 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
         return tcOutputs;
       };
 
-      // Step 1: Run SOLUTION code to get reference outputs
-      let referenceOutputs: Record<number, string> | null = null;
+      // Build test code for both reference and student upfront
+      let solTestCode: string | null = null;
       if (solutionCode) {
         this.output.appendLine(`[MultiTest] Building reference test code from solutionCode (${solutionCode.length} chars)...`);
-        const solTestCode = buildMultiTestCode(solutionCode, starterCode, testCases, lang, "PracticeTCRef");
-        if (solTestCode) {
-          this.output.appendLine(`[MultiTest] Running solution as reference...`);
-          this.output.appendLine(`[MultiTest] Generated ref code (${solTestCode.length} chars):\n${solTestCode.slice(0, 600)}`);
-          referenceOutputs = await runMultiTest(solTestCode, "PracticeTCRef");
-          if (referenceOutputs) {
-            this.output.appendLine(`[MultiTest] Reference outputs: ${JSON.stringify(referenceOutputs)}`);
-          } else {
-            this.output.appendLine(`[MultiTest] Reference run returned null (compile/runtime error)`);
-          }
-        } else {
-          // Debug: log why buildMultiTestCode failed
-          const { extractMainBody, extractPrintStatement, extractStudentLogic } = require("./multiTestRunner");
+        solTestCode = buildMultiTestCode(solutionCode, starterCode, testCases, lang, "PracticeTCRef");
+        if (!solTestCode) {
+          const { extractMainBody, extractPrintStatement } = require("./multiTestRunner");
           const body = extractMainBody(solutionCode, lang);
           const print = extractPrintStatement(solutionCode, lang);
           this.output.appendLine(`[MultiTest] buildMultiTestCode returned null for solution`);
@@ -332,12 +322,6 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
         }
       }
 
-      if (!referenceOutputs) {
-        this.output.appendLine("[MultiTest] Reference solution failed — skipping (AI expected values unreliable)");
-        return null;
-      }
-
-      // Step 2: Run STUDENT code with test case data
       const studentTestCode = buildMultiTestCode(studentCode, starterCode, testCases, lang);
       if (!studentTestCode) {
         const { extractMainBody, extractPrintStatement } = require("./multiTestRunner");
@@ -349,9 +333,27 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
         return null;
       }
 
-      this.output.appendLine(`[MultiTest] Running ${testCases.length} test cases...`);
-      this.output.appendLine(`[MultiTest] Student test code (${studentTestCode.length} chars):\n${studentTestCode.slice(0, 600)}`);
-      const studentOutputs = await runMultiTest(studentTestCode, "PracticeTC");
+      if (!solTestCode) {
+        this.output.appendLine("[MultiTest] Reference solution build failed — skipping");
+        return null;
+      }
+
+      // Run reference and student in PARALLEL for speed
+      this.output.appendLine(`[MultiTest] Running reference + student in parallel (${testCases.length} test cases)...`);
+      this.output.appendLine(`[MultiTest] Ref code (${solTestCode.length} chars):\n${solTestCode.slice(0, 600)}`);
+      this.output.appendLine(`[MultiTest] Student code (${studentTestCode.length} chars):\n${studentTestCode.slice(0, 600)}`);
+
+      const [referenceOutputs, studentOutputs] = await Promise.all([
+        runMultiTest(solTestCode, "PracticeTCRef"),
+        runMultiTest(studentTestCode, "PracticeTC"),
+      ]);
+
+      if (!referenceOutputs) {
+        this.output.appendLine("[MultiTest] Reference solution failed — skipping (AI expected values unreliable)");
+        return null;
+      }
+      this.output.appendLine(`[MultiTest] Reference outputs: ${JSON.stringify(referenceOutputs)}`);
+
       if (!studentOutputs) { this.output.appendLine(`[MultiTest] Student run returned null (compile/runtime error)`); return null; }
       this.output.appendLine(`[MultiTest] Student outputs: ${JSON.stringify(studentOutputs)}`);
 
@@ -460,7 +462,7 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
     if (lang === "Java") {
       if (!(await checkJdk())) {
         await promptJdkInstall();
-        throw new Error("JDK not found. Install JDK 17+ and restart VS Code.");
+        throw new Error(t("msg.jdkNotFoundRestart"));
       }
       command = "javac -encoding UTF-8 -J-Duser.language=en Practice.java && java -Dfile.encoding=UTF-8 -Duser.language=en Practice";
     } else {
@@ -487,7 +489,7 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
 
     const output = result.stderr
       ? `${result.stdout}\n${result.stderr}`
-      : result.stdout || "(no output)";
+      : result.stdout || t("msg.noOutputShort");
 
     return output;
   }
@@ -525,7 +527,7 @@ export class CodePracticeAppView implements vscode.WebviewViewProvider {
         return [{ name: "JUnit: Compile", pass: false, expected: "Pass", got: (compile.stderr || "").slice(0, 150) }];
       }
 
-      this.post({ type: "toast", kind: "info", text: "Running JUnit tests..." });
+      this.post({ type: "toast", kind: "info", text: t("msg.runningJUnit") });
       const result = await runTests({
         workspaceRoot,
         runner: "custom",

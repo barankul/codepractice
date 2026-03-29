@@ -34,6 +34,102 @@ export function getLangInstruction(): string {
   return `Answer in ${name}.`;
 }
 
+function aiProviderKeyMissingMessage(providerLabel: string): string {
+  if (_responseLang === "ja") {
+    return `${providerLabel} のAPIキーが設定されていません。CodePracticeの設定を開いて入力してください。`;
+  }
+  if (_responseLang === "tr") {
+    return `${providerLabel} API anahtarı ayarlı değil. CodePractice ayarlarını açıp API anahtarını gir.`;
+  }
+  return `${providerLabel} API key not set. Open CodePractice settings and enter your API key.`;
+}
+
+function aiHttpErrorMessage(status: number): string {
+  if (_responseLang === "ja") {
+    if (status === 401) { return "APIキーが無効です。AIプロバイダーの設定を確認してください。"; }
+    if (status === 403) { return "アクセスが拒否されました。APIキーの権限またはプランを確認してください。"; }
+    if (status === 429) { return "レート制限に達しました。少し待つか、設定で別のモデルに切り替えてください。"; }
+    return `AIリクエストに失敗しました: ${status}`;
+  }
+  if (_responseLang === "tr") {
+    if (status === 401) { return "API anahtarı geçersiz. AI sağlayıcı ayarlarını kontrol et."; }
+    if (status === 403) { return "Erişim reddedildi. API anahtarının izinlerini veya planını kontrol et."; }
+    if (status === 429) { return "Hız sınırına ulaşıldı. Biraz bekle ya da ayarlardan farklı bir modele geç."; }
+    return `AI isteği başarısız oldu: ${status}`;
+  }
+  if (status === 401) { return "Invalid API key. Check your AI provider settings."; }
+  if (status === 403) { return "Access denied. Your API key may lack permissions or your plan may have expired."; }
+  if (status === 429) { return "Rate limited. Wait a moment and try again, or switch to a different model in settings."; }
+  return `AI request failed: ${status}`;
+}
+
+function aiResponseErrorMessage(kind: "invalidJson" | "empty" | "timeout" | "failedAfterRetries"): string {
+  if (_responseLang === "ja") {
+    if (kind === "invalidJson") { return "AIが無効なJSONレスポンスを返しました"; }
+    if (kind === "empty") { return "AIが空のレスポンスを返しました"; }
+    if (kind === "timeout") { return "AIリクエストがタイムアウトしました（60秒）。接続を確認して再試行してください。"; }
+    return "AIリクエストは再試行後も失敗しました";
+  }
+  if (_responseLang === "tr") {
+    if (kind === "invalidJson") { return "AI geçersiz JSON yanıtı döndürdü"; }
+    if (kind === "empty") { return "AI boş yanıt döndürdü"; }
+    if (kind === "timeout") { return "AI isteği zaman aşımına uğradı (60 sn). Bağlantını kontrol edip tekrar dene."; }
+    return "AI isteği yeniden denemelerden sonra da başarısız oldu";
+  }
+  if (kind === "invalidJson") { return "AI returned invalid JSON response"; }
+  if (kind === "empty") { return "AI returned empty response"; }
+  if (kind === "timeout") { return "AI request timed out (60s). Check your connection or try again."; }
+  return "AI request failed after retries";
+}
+
+function legacyAiProviderKeyMissingMessage(providerLabel: string): string {
+  if (_responseLang === "ja") {
+    return `${providerLabel} のAPIキーが設定されていません。CodePracticeの設定を開いて入力してください。`;
+  }
+  if (_responseLang === "tr") {
+    return `${providerLabel} API anahtarı ayarlı değil. CodePractice ayarlarını açıp API anahtarını gir.`;
+  }
+  return `${providerLabel} API key not set. Open CodePractice settings and enter your API key.`;
+}
+
+function legacyAiHttpErrorMessage(status: number): string {
+  if (_responseLang === "ja") {
+    if (status === 401) { return "APIキーが無効です。AIプロバイダーの設定を確認してください。"; }
+    if (status === 403) { return "アクセスが拒否されました。APIキーの権限またはプランを確認してください。"; }
+    if (status === 429) { return "レート制限に達しました。少し待つか、設定で別のモデルに切り替えてください。"; }
+    return `AIリクエストに失敗しました: ${status}`;
+  }
+  if (_responseLang === "tr") {
+    if (status === 401) { return "API anahtarı geçersiz. AI sağlayıcı ayarlarını kontrol et."; }
+    if (status === 403) { return "Erişim reddedildi. API anahtarının izinlerini veya planını kontrol et."; }
+    if (status === 429) { return "Hız sınırına ulaşıldı. Biraz bekle ya da ayarlardan farklı bir modele geç."; }
+    return `AI isteği başarısız oldu: ${status}`;
+  }
+  if (status === 401) { return "Invalid API key. Check your AI provider settings."; }
+  if (status === 403) { return "Access denied. Your API key may lack permissions or your plan may have expired."; }
+  if (status === 429) { return "Rate limited. Wait a moment and try again, or switch to a different model in settings."; }
+  return `AI request failed: ${status}`;
+}
+
+function legacyAiResponseErrorMessage(kind: "invalidJson" | "empty" | "timeout" | "failedAfterRetries"): string {
+  if (_responseLang === "ja") {
+    if (kind === "invalidJson") { return "AIが無効なJSONレスポンスを返しました"; }
+    if (kind === "empty") { return "AIが空のレスポンスを返しました"; }
+    if (kind === "timeout") { return "AIリクエストがタイムアウトしました（60秒）。接続を確認して再試行してください。"; }
+    return "AIリクエストは再試行後も失敗しました";
+  }
+  if (_responseLang === "tr") {
+    if (kind === "invalidJson") { return "AI geçersiz JSON yanıtı döndürdü"; }
+    if (kind === "empty") { return "AI boş yanıt döndürdü"; }
+    if (kind === "timeout") { return "AI isteği zaman aşımına uğradı (60 sn). Bağlantını kontrol edip tekrar dene."; }
+    return "AI isteği yeniden denemelerden sonra da başarısız oldu";
+  }
+  if (kind === "invalidJson") { return "AI returned invalid JSON response"; }
+  if (kind === "empty") { return "AI returned empty response"; }
+  if (kind === "timeout") { return "AI request timed out (60s). Check your connection or try again."; }
+  return "AI request failed after retries";
+}
+
 interface AiConfig {
   endpoint: string;
   headers: Record<string, string>;
@@ -41,6 +137,35 @@ interface AiConfig {
   isGemini?: boolean;
   isClaude?: boolean;
 }
+
+/** Detect if the current model is a "weak" small model that needs simpler prompts */
+const WEAK_MODEL_PATTERNS = [
+  /llama.*8b/i, /llama-3\.1-8b/i, /llama-3-8b/i,
+  /mistral.*7b/i, /mixtral.*8x7b/i,
+  /phi-[34]/i, /phi3/i,
+  /gemma.*2b/i, /gemma.*7b/i,
+  /qwen.*7b/i, /qwen.*1\.5b/i,
+  /yi-coder-9b/i, /deepseek.*7b/i, /deepseek-coder.*6/i,
+  /tinyllama/i, /smollm/i,
+];
+
+export function isWeakModel(model: string): boolean {
+  return WEAK_MODEL_PATTERNS.some(p => p.test(model));
+}
+
+export async function getCurrentModelTier(): Promise<"weak" | "strong"> {
+  const cfg = await getAiConfig();
+  return isWeakModel(cfg.model) ? "weak" : "strong";
+}
+
+const WEAK_MODEL_SUFFIX =
+  "\n\nCRITICAL RULES (you MUST follow these):\n" +
+  "- Return ONLY the requested format. No extra commentary.\n" +
+  "- Do NOT create trivially simple exercises. The code must require actual logic (loops, conditions, etc.)\n" +
+  "- The task description must be at least 2 sentences.\n" +
+  "- The solution must NOT hardcode the answer — it must compute it.\n" +
+  "- Include ALL required imports/headers so the code compiles as-is.\n" +
+  "- Double-check your output format matches EXACTLY what was requested.";
 
 // SecretStorage for API keys
 let _secrets: vscode.SecretStorage | null = null;
@@ -89,7 +214,7 @@ async function buildAiConfig(): Promise<AiConfig> {
     const model = cfg.get<string>("groqModel") || getDefaultModel("groq");
 
     if (!apiKey) {
-      throw new Error("Groq API key not set. Open CodePractice settings and enter your API key.");
+      throw new Error(aiProviderKeyMissingMessage("Groq"));
     }
 
     return {
@@ -107,7 +232,7 @@ async function buildAiConfig(): Promise<AiConfig> {
     const model = cfg.get<string>("geminiModel") || getDefaultModel("gemini");
 
     if (!apiKey) {
-      throw new Error("Gemini API key not set. Open CodePractice settings and enter your API key.");
+      throw new Error(aiProviderKeyMissingMessage("Gemini"));
     }
 
     return {
@@ -121,7 +246,7 @@ async function buildAiConfig(): Promise<AiConfig> {
   if (provider === "cerebras") {
     const apiKey = await getStoredProviderApiKey("cerebras");
     if (!apiKey) {
-      throw new Error("Cerebras API key not set. Open CodePractice settings and enter your API key.");
+      throw new Error(aiProviderKeyMissingMessage("Cerebras"));
     }
     const model = cfg.get<string>("cerebrasModel") || getDefaultModel("cerebras");
     return {
@@ -137,7 +262,7 @@ async function buildAiConfig(): Promise<AiConfig> {
   if (provider === "together") {
     const apiKey = await getStoredProviderApiKey("together");
     if (!apiKey) {
-      throw new Error("Together API key not set. Open CodePractice settings and enter your API key.");
+      throw new Error(aiProviderKeyMissingMessage("Together"));
     }
     return {
       endpoint: "https://api.together.xyz/v1/chat/completions",
@@ -152,7 +277,7 @@ async function buildAiConfig(): Promise<AiConfig> {
   if (provider === "openrouter") {
     const apiKey = await getStoredProviderApiKey("openrouter");
     if (!apiKey) {
-      throw new Error("OpenRouter API key not set. Open CodePractice settings and enter your API key.");
+      throw new Error(aiProviderKeyMissingMessage("OpenRouter"));
     }
     return {
       endpoint: "https://openrouter.ai/api/v1/chat/completions",
@@ -167,7 +292,7 @@ async function buildAiConfig(): Promise<AiConfig> {
   if (provider === "openai") {
     const apiKey = await getStoredProviderApiKey("openai");
     if (!apiKey) {
-      throw new Error("OpenAI API key not set. Open CodePractice settings and enter your API key.");
+      throw new Error(aiProviderKeyMissingMessage("OpenAI"));
     }
     const model = cfg.get<string>("openaiModel") || getDefaultModel("openai");
     return {
@@ -183,7 +308,7 @@ async function buildAiConfig(): Promise<AiConfig> {
   if (provider === "claude") {
     const apiKey = await getStoredProviderApiKey("claude");
     if (!apiKey) {
-      throw new Error("Claude API key not set. Open CodePractice settings and enter your API key.");
+      throw new Error(aiProviderKeyMissingMessage("Claude"));
     }
     const model = cfg.get<string>("claudeModel") || getDefaultModel("claude");
     return {
@@ -243,16 +368,21 @@ export function disposeAiConfigListener(): void {
 }
 
 // Helper function to make AI requests with timeout + retry
-const AI_TIMEOUT_MS = 60_000; // 60 second timeout
+const AI_TIMEOUT_MS = 35_000; // 35 second timeout
 const AI_MAX_RETRIES = 2;     // up to 2 retries (3 total attempts)
 const AI_MAX_RESPONSE_SIZE = 200_000; // 200KB max response to prevent freeze
 
 export async function makeAiRequest(systemPrompt: string, userPrompt: string): Promise<string> {
   const aiConfig = await getAiConfig();
 
+  // Reinforce prompt for weak models that struggle with complex instructions
+  const effectiveSystemPrompt = isWeakModel(aiConfig.model)
+    ? systemPrompt + WEAK_MODEL_SUFFIX
+    : systemPrompt;
+
   let body: string;
   if (aiConfig.isGemini) {
-    const fullPrompt = systemPrompt + "\n\n" + userPrompt;
+    const fullPrompt = effectiveSystemPrompt + "\n\n" + userPrompt;
     body = JSON.stringify({
       contents: [{ parts: [{ text: fullPrompt }] }],
       generationConfig: { temperature: 0.2 }
@@ -261,7 +391,7 @@ export async function makeAiRequest(systemPrompt: string, userPrompt: string): P
     body = JSON.stringify({
       model: aiConfig.model,
       max_tokens: 4096,
-      system: systemPrompt,
+      system: effectiveSystemPrompt,
       messages: [
         { role: "user", content: userPrompt }
       ]
@@ -271,7 +401,7 @@ export async function makeAiRequest(systemPrompt: string, userPrompt: string): P
       model: aiConfig.model,
       temperature: 0.2,
       messages: [
-        { role: "system", content: systemPrompt },
+        { role: "system", content: effectiveSystemPrompt },
         { role: "user", content: userPrompt }
       ]
     });
@@ -305,11 +435,13 @@ export async function makeAiRequest(systemPrompt: string, userPrompt: string): P
         }
         // Clear error messages for auth failures
         if (response.status === 401) {
-          throw new Error(`Invalid API key (401 Unauthorized). Check your AI provider settings.`);
+          throw new Error(aiHttpErrorMessage(401));
         }
         if (response.status === 403) {
-          throw new Error(`Access denied (403 Forbidden). Your API key may lack permissions or your plan may have expired.`);
+          throw new Error(aiHttpErrorMessage(403));
         }
+        if (response.status === 429) { throw new Error(aiHttpErrorMessage(429)); }
+        throw new Error(aiHttpErrorMessage(response.status));
         if (response.status === 429) {
           throw new Error(`Rate limited. Free models have usage limits — wait a moment and try again, or switch to a different model in settings.`);
         }
@@ -320,7 +452,7 @@ export async function makeAiRequest(systemPrompt: string, userPrompt: string): P
       try {
         json = await response.json();
       } catch {
-        throw new Error("AI returned invalid JSON response");
+        throw new Error(aiResponseErrorMessage("invalidJson"));
       }
 
       let content: string | undefined;
@@ -357,7 +489,7 @@ export async function makeAiRequest(systemPrompt: string, userPrompt: string): P
 
       if (!content) {
         console.error(`[CodePractice] AI empty response. Full JSON keys:`, JSON.stringify(json).slice(0, 500));
-        throw new Error("AI returned empty response");
+        throw new Error(aiResponseErrorMessage("empty"));
       }
       // Strip markdown bold from labels: **TITLE:** → TITLE:  **EXPLANATION:** → EXPLANATION:
       content = content.replace(/\*\*([A-Z_]+):\*\*/g, "$1:");
@@ -373,7 +505,7 @@ export async function makeAiRequest(systemPrompt: string, userPrompt: string): P
     } catch (e: any) {
       lastError = e;
       if (e?.name === "AbortError") {
-        lastError = new Error("AI request timed out (60s). Check your connection or try again.");
+        lastError = new Error(aiResponseErrorMessage("timeout"));
       }
       // Retry on timeout or network errors (transient)
       const isTransient = e?.name === "AbortError" ||
@@ -388,5 +520,5 @@ export async function makeAiRequest(systemPrompt: string, userPrompt: string): P
     }
   }
 
-  throw lastError || new Error("AI request failed after retries");
+  throw lastError || new Error(aiResponseErrorMessage("failedAfterRetries"));
 }

@@ -2,7 +2,7 @@
 import * as vscode from "vscode";
 import { spawn, execSync } from "child_process";
 import { CoreResult } from "./constants";
-import { getResponseLang, getStoredProviderApiKey } from "./aiHelpers";
+import { getResponseLang, getStoredProviderApiKey, isWeakModel, t } from "./aiHelpers";
 import { DEFAULT_AI_PROVIDER, getDefaultModel } from "./shared/aiConfigDefaults";
 
 const MAX_OUTPUT_SIZE = 1_000_000;
@@ -34,17 +34,17 @@ export async function promptJdkInstall(): Promise<void> {
   const canAutoInstall = platform === "win32" || platform === "darwin" || platform === "linux";
 
   const options = canAutoInstall
-    ? ["Install JDK Now", "Open Download Page", "Dismiss"]
-    : ["Open Download Page", "Dismiss"];
+    ? [t("msg.installJdkNow"), t("msg.openDownloadPage"), t("msg.dismiss")]
+    : [t("msg.openDownloadPage"), t("msg.dismiss")];
 
   const choice = await vscode.window.showErrorMessage(
-    "Java Development Kit (JDK) is required but not found. Install JDK 21 to use Java features.",
+    t("msg.jdkRequired"),
     ...options
   );
 
-  if (choice === "Install JDK Now") {
+  if (choice === t("msg.installJdkNow")) {
     await installJdkInTerminal();
-  } else if (choice === "Open Download Page") {
+  } else if (choice === t("msg.openDownloadPage")) {
     vscode.env.openExternal(vscode.Uri.parse("https://adoptium.net/"));
   }
 }
@@ -178,6 +178,13 @@ async function getAiEnvConfig(): Promise<Record<string, string>> {
     }
   }
 
+  // Detect model tier so JAR can adjust prompts for weak models
+  const modelName = env.CODETEACHER_GROQ_MODEL || env.CODETEACHER_GEMINI_MODEL || env.CODETEACHER_AI_MODEL
+    || cfg.get<string>("endpointModel") || "";
+  if (modelName && isWeakModel(modelName)) {
+    env.CODETEACHER_MODEL_TIER = "weak";
+  }
+
   return env;
 }
 
@@ -194,7 +201,7 @@ export async function runJavaCore(
 
   if (!(await checkJdk())) {
     await promptJdkInstall();
-    throw new Error("JDK not found. Install JDK 17+ and restart VS Code.");
+    throw new Error(t("msg.jdkNotFoundRestart"));
   }
 
   return new Promise((resolve, reject) => {

@@ -116,7 +116,7 @@ interface ToolAvailability {
 }
 
 const SQL_SCHEMA = `
-    CREATE TABLE users (
+    CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT,
@@ -124,7 +124,7 @@ const SQL_SCHEMA = `
       city TEXT
     );
 
-    CREATE TABLE orders (
+    CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY,
       user_id INTEGER,
       product TEXT,
@@ -133,7 +133,7 @@ const SQL_SCHEMA = `
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
-    CREATE TABLE products (
+    CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY,
       name TEXT UNIQUE,
       category TEXT,
@@ -141,14 +141,14 @@ const SQL_SCHEMA = `
       stock INTEGER
     );
 
-    CREATE TABLE employees (
+    CREATE TABLE IF NOT EXISTS employees (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
       department TEXT NOT NULL,
       salary REAL NOT NULL
     );
 
-    CREATE TABLE archived_orders (
+    CREATE TABLE IF NOT EXISTS archived_orders (
       id INTEGER PRIMARY KEY,
       user_id INTEGER,
       product TEXT,
@@ -333,9 +333,12 @@ class SqlSmokeRunner {
     const db = new this.SQL.Database();
     try {
       db.run(SQL_SCHEMA);
-      const trimmed = sql.replace(/--.*$/gm, "").trim();
+      // Auto-fix SQL to prevent clashes with pre-loaded schema data
+      let safeSql = sql.replace(/CREATE\s+TABLE\s+(?!IF\s)/gi, "CREATE TABLE IF NOT EXISTS ");
+      safeSql = safeSql.replace(/INSERT\s+INTO\s+(?!OR\s)/gi, "INSERT OR REPLACE INTO ");
+      const trimmed = safeSql.replace(/--.*$/gm, "").trim();
       const isModify = /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/i.test(trimmed);
-      const results = db.exec(sql);
+      const results = db.exec(safeSql);
 
       if (results.length === 0) {
         if (isModify) {

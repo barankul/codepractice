@@ -9,7 +9,7 @@ let _extensionPath: string | null = null;
 let _initPromise: Promise<void> | null = null;
 
 const SCHEMA_SQL = `
-    CREATE TABLE users (
+    CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT,
@@ -17,7 +17,7 @@ const SCHEMA_SQL = `
       city TEXT
     );
 
-    CREATE TABLE orders (
+    CREATE TABLE IF NOT EXISTS orders (
       id INTEGER PRIMARY KEY,
       user_id INTEGER,
       product TEXT,
@@ -26,7 +26,7 @@ const SCHEMA_SQL = `
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
 
-    CREATE TABLE products (
+    CREATE TABLE IF NOT EXISTS products (
       id INTEGER PRIMARY KEY,
       name TEXT UNIQUE,
       category TEXT,
@@ -34,14 +34,14 @@ const SCHEMA_SQL = `
       stock INTEGER
     );
 
-    CREATE TABLE employees (
+    CREATE TABLE IF NOT EXISTS employees (
       id INTEGER PRIMARY KEY,
       name TEXT NOT NULL,
       department TEXT NOT NULL,
       salary REAL NOT NULL
     );
 
-    CREATE TABLE archived_orders (
+    CREATE TABLE IF NOT EXISTS archived_orders (
       id INTEGER PRIMARY KEY,
       user_id INTEGER,
       product TEXT,
@@ -149,7 +149,10 @@ export async function runQuery(sql: string): Promise<QueryResult> {
   }
 
   try {
-    const sanitizedSql = sanitizeSql(sql);
+    let sanitizedSql = sanitizeSql(sql);
+    // Auto-fix SQL to prevent clashes with pre-loaded schema data
+    sanitizedSql = sanitizedSql.replace(/CREATE\s+TABLE\s+(?!IF\s)/gi, "CREATE TABLE IF NOT EXISTS ");
+    sanitizedSql = sanitizedSql.replace(/INSERT\s+INTO\s+(?!OR\s)/gi, "INSERT OR REPLACE INTO ");
     const trimmed = sanitizedSql;
     const isModify = /^\s*(INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)\b/i.test(trimmed);
 
