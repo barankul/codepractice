@@ -44,6 +44,17 @@ const topicIcons: Record<string, string> = {
 
 const defaultTopicIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 3v4h4"/><path d="M9 13h6"/><path d="M9 17h6"/></svg>';
 
+export function syncSegmentedToggle(toggleId: string): void {
+  const toggle = document.getElementById(toggleId);
+  if (!toggle) return;
+  const buttons = Array.from(toggle.querySelectorAll(".mode-btn"));
+  const activeIndex = buttons.findIndex(btn => btn.classList.contains("active"));
+  if (activeIndex >= 0) {
+    toggle.setAttribute("data-active-index", String(activeIndex));
+  }
+  toggle.setAttribute("data-count", String(buttons.length));
+}
+
 export function shouldShowCodeSizeGroup(
   selectedMode: "practice" | "bugfix",
   selectedSource: "ai" | "offline",
@@ -63,6 +74,7 @@ export function updateCodeSizeGroupVisibility(): void {
   document.querySelectorAll("#codeSizeToggle .mode-btn").forEach(btn => {
     (btn as HTMLElement).classList.toggle("active", (btn as HTMLElement).dataset.size === state.selectedCodeSize);
   });
+  syncSegmentedToggle("codeSizeToggle");
 
   if (csGroup) {
     csGroup.style.display = shouldShow ? "block" : "none";
@@ -112,6 +124,7 @@ export function selectTopicRow(value: string): void {
     document.querySelectorAll("#modeToggle .mode-btn").forEach(b => {
       (b as HTMLElement).classList.toggle("active", (b as HTMLElement).dataset.mode === "practice");
     });
+    syncSegmentedToggle("modeToggle");
   } else {
     if (modeToggle) modeToggle.style.display = "";
   }
@@ -121,14 +134,6 @@ export function selectTopicRow(value: string): void {
 export function renderTopics(): void {
   if (!dom.topicGrid) return;
   dom.topicGrid.innerHTML = "";
-
-  // Multi-Topic row
-  const multiRow = document.createElement("div");
-  multiRow.className = "topic-row multi" + (state.selectedTopic === "__multi__" ? " active" : "");
-  multiRow.dataset.value = "__multi__";
-  multiRow.innerHTML = '<span class="topic-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 8V6"/><path d="M12 18v-2"/><path d="M8 12H6"/><path d="M18 12h-2"/><path d="M9 6h.01"/><path d="M15 6h.01"/><path d="M9 18h.01"/><path d="M15 18h.01"/><path d="M19 4l.6 1.6L21 6.2l-1.4.6L19 8.4l-.6-1.6L17 6.2l1.4-.6L19 4z"/></svg></span><span class="topic-name">' + t("practice.multiTopic") + "</span>";
-  multiRow.addEventListener("click", () => { selectTopicRow("__multi__"); });
-  dom.topicGrid.appendChild(multiRow);
 
   const list = state.topics[state.selectedLang] || [];
   list.forEach(tp => {
@@ -140,6 +145,13 @@ export function renderTopics(): void {
     row.addEventListener("click", () => { selectTopicRow(tp); });
     dom.topicGrid!.appendChild(row);
   });
+
+  const multiRow = document.createElement("div");
+  multiRow.className = "topic-row multi" + (state.selectedTopic === "__multi__" ? " active" : "");
+  multiRow.dataset.value = "__multi__";
+  multiRow.innerHTML = '<span class="topic-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 8V6"/><path d="M12 18v-2"/><path d="M8 12H6"/><path d="M18 12h-2"/><path d="M9 6h.01"/><path d="M15 6h.01"/><path d="M9 18h.01"/><path d="M15 18h.01"/><path d="M19 4l.6 1.6L21 6.2l-1.4.6L19 8.4l-.6-1.6L17 6.2l1.4-.6L19 4z"/></svg></span><span class="topic-name">' + t("practice.multiTopic") + "</span>";
+  multiRow.addEventListener("click", () => { selectTopicRow("__multi__"); });
+  dom.topicGrid.appendChild(multiRow);
 
   const infoEl = document.getElementById("multiTopicInfo");
   if (infoEl) infoEl.style.display = state.selectedTopic === "__multi__" ? "block" : "none";
@@ -158,6 +170,7 @@ export function updateSourceToggle(): void {
       if ((b as HTMLElement).dataset.source === "ai") (b as HTMLButtonElement).disabled = false;
     });
   }
+  syncSegmentedToggle("sourceToggle");
   updateCodeSizeGroupVisibility();
   post({ type: "setForceOffline", forceOffline: state.selectedSource === "offline" });
 }

@@ -1,6 +1,7 @@
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// マークダウンからコードブロックを取り出す
 public class Extract {
     public static String firstCodeBlock(String text) {
         if (text == null) return null;

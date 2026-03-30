@@ -3,7 +3,7 @@ import * as vscode from "vscode";
 import { CodePracticeAppView } from "./appView";
 import { explainSelectedCode } from "./aiGenerators";
 import { initDatabase, runQuery, getSchema } from "./sqlRunner";
-import { initSecrets, disposeAiConfigListener } from "./aiHelpers";
+import { initSecrets, disposeAiConfigListener, t } from "./aiHelpers";
 import { openTestPanel } from "./testPanel";
 import { runSmokeTest } from "./smokeTest";
 import { GhostTextProvider } from "./ghostTextProvider";
@@ -44,34 +44,34 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("codepractice.runSQL", async () => {
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
-        vscode.window.showErrorMessage("No active editor");
+        vscode.window.showErrorMessage(t("msg.noActiveEditor"));
         return;
       }
 
       const sql = editor.document.getText();
       if (!sql.trim()) {
-        vscode.window.showErrorMessage("No SQL to run");
+        vscode.window.showErrorMessage(t("msg.noSqlToRun"));
         return;
       }
 
       const result = await runQuery(sql);
 
       if (result.error) {
-        vscode.window.showErrorMessage("SQL Error: " + result.error);
-        output.appendLine("SQL Error: " + result.error);
+        vscode.window.showErrorMessage(t("msg.sqlErrorPrefix") + " " + result.error);
+        output.appendLine(t("msg.sqlErrorPrefix") + " " + result.error);
         return;
       }
 
-      output.appendLine("\n--- SQL Result ---");
-      output.appendLine("Columns: " + result.columns.join(" | "));
+      output.appendLine(`\n--- ${t("msg.sqlResult")} ---`);
+      output.appendLine(t("msg.columns") + " " + result.columns.join(" | "));
       output.appendLine("-".repeat(50));
       for (const row of result.values) {
         output.appendLine(row.join(" | "));
       }
       output.appendLine("-".repeat(50));
-      output.appendLine(`${result.values.length} row(s)\n`);
+      output.appendLine(`${result.values.length} ${t("msg.rows")}\n`);
 
-      vscode.window.showInformationMessage(`Query returned ${result.values.length} row(s)`);
+      vscode.window.showInformationMessage(`${t("msg.queryReturned")} ${result.values.length} ${t("msg.rows")}`);
     })
   );
 

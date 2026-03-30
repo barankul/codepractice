@@ -25,11 +25,14 @@ ${css}
   </div>
 
   <div class="header">
-    <div class="logo">CODEPRACTICE</div>
+    <div class="logo">CODEPRACTICE<div class="offline-badge" id="offlineBadge"><div class="offline-dot"></div>OFFLINE</div></div>
     <div class="header-actions">
-      <div class="offline-badge" id="offlineBadge"><div class="offline-dot"></div>OFFLINE</div>
-      <select id="uiLangSelect" class="ui-lang-select"></select>
-      <button class="settings-gear" id="settingsGearBtn" title="Settings"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg></button>
+      <div class="ui-lang-wrap" title="UI Language">
+        <svg class="ui-lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a15.3 15.3 0 0 1 4 9 15.3 15.3 0 0 1-4 9 15.3 15.3 0 0 1-4-9 15.3 15.3 0 0 1 4-9z"/><path d="M3 12h18"/><path d="M5 7h14"/><path d="M5 17h14"/></svg>
+        <div id="uiLangSwitch" class="ui-lang-switch" aria-label="UI language"></div>
+        <select id="uiLangSelect" class="ui-lang-select" aria-hidden="true" tabindex="-1"></select>
+      </div>
+      <button class="settings-gear" id="settingsGearBtn" title="Settings" data-i18n-title="settings.title"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1.08 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1.08z"/></svg></button>
       <div class="spinner" id="spin"></div>
     </div>
   </div>
@@ -43,7 +46,7 @@ ${css}
 
   <!-- Practice Panel -->
   <div id="practicePanel" class="panel active">
-    <div id="practiceForm">
+    <div id="practiceForm" class="v5-form">
       <div class="welcome-banner" id="welcomeBanner">
         <div class="welcome-title" data-i18n="welcome.title">Welcome to CodePractice!</div>
         <div class="welcome-steps">
@@ -57,15 +60,12 @@ ${css}
       <div class="subtitle" data-i18n="practice.subtitle">select language + topic, generate practice.</div>
 
       <div class="section">
-        <div class="form-group">
-          <div class="kicker" data-i18n="practice.language">Language</div>
-          <div class="lang-row" id="langRow"></div>
-        </div>
-
-        <div class="form-group">
-          <div class="kicker" data-i18n="practice.topic">Topic</div>
-          <div class="topic-list" id="topicGrid"></div>
-          <div class="multi-topic-info" id="multiTopicInfo" style="display:none;" data-i18n="practice.multiTopicDesc">Auto-selected based on your progress</div>
+        <div class="form-group" id="sourceToggleGroup">
+          <div class="kicker" data-i18n="practice.sourceCode">Source</div>
+          <div class="mode-toggle" id="sourceToggle">
+            <button class="mode-btn" data-source="ai" data-i18n="practice.sourceAI"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 15H8l-3 6h14l-3-6z"/><circle cx="9" cy="10" r="0.5" fill="currentColor"/><circle cx="15" cy="10" r="0.5" fill="currentColor"/></svg>AI</button>
+            <button class="mode-btn active" data-source="offline" data-i18n="practice.sourceOffline"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>Offline</button>
+          </div>
         </div>
 
         <div class="form-group">
@@ -84,45 +84,59 @@ ${css}
           </div>
         </div>
 
-        <div class="form-group" id="sourceToggleGroup">
-          <div class="kicker" data-i18n="practice.sourceCode">Source</div>
-          <div class="mode-toggle" id="sourceToggle">
-            <button class="mode-btn" data-source="ai" data-i18n="practice.sourceAI"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M16 15H8l-3 6h14l-3-6z"/><circle cx="9" cy="10" r="0.5" fill="currentColor"/><circle cx="15" cy="10" r="0.5" fill="currentColor"/></svg>AI</button>
-            <button class="mode-btn active" data-source="offline" data-i18n="practice.sourceOffline"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6"/><path d="M9 13h6"/><path d="M9 17h4"/></svg>Offline</button>
-          </div>
+        <div class="form-group">
+          <div class="kicker" data-i18n="practice.language">Language</div>
+          <div class="lang-row" id="langRow"></div>
+        </div>
+
+        <div class="form-group">
+          <div class="kicker" data-i18n="practice.topic">Topic</div>
+          <div class="topic-list" id="topicGrid"></div>
+          <div class="multi-topic-info" id="multiTopicInfo" style="display:none;" data-i18n="practice.multiTopicDesc">Auto-selected based on your progress</div>
         </div>
 
         <button class="btn-gen" id="genBtn" aria-label="Generate practice" data-i18n="practice.generate"><svg class="btn-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/><path d="M19 6l.7 1.8L21.5 8.5l-1.8.7L19 11l-.7-1.8L16.5 8.5l1.8-.7L19 6z"/></svg>Generate</button>
       </div>
-    </div>
-
-  <div id="toast" class="toast">
-    <span class="toast-icon" id="toastIcon"></span>
-    <span class="toast-text" id="toastText"></span>
-  </div>
-
-  <div class="practice-topbar" id="practiceTopbar">
-    <button class="topbar-btn topbar-icon-btn" id="topbarBackBtn" title="Back"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 3-6.3"/><path d="M4 4v4h4"/></svg></button>
-    <div class="topbar-title-area">
-      <h3 class="details-title" id="title">&mdash;</h3>
-      <div class="badge-row">
-        <span class="badge" id="langBadge">JAVA</span>
-        <span class="level-badge" id="levelBadge">LVL 1</span>
-        <span class="bug-badge" id="bugFixBadge" style="display:none;" data-i18n="practice.bugFix">BUG FIX</span>
-        <span class="auto-badge" id="autoSelectedBadge" style="display:none;"></span>
+      <div class="panel-footer practice-form-footer" id="practiceFormFooter">
+        <span class="panel-footer-dot"></span>
+        <span id="practiceFormFooterText">Offline • 138 practices</span>
       </div>
     </div>
-    <button class="topbar-btn topbar-icon-btn topbar-btn-chat" id="openChatBtn" title="AI Chat"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 8V6"/><path d="M12 18v-2"/><path d="M8 12H6"/><path d="M18 12h-2"/><path d="M9 6h.01"/><path d="M15 6h.01"/><path d="M9 18h.01"/><path d="M15 18h.01"/><path d="M19 4l.6 1.6L21 6.2l-1.4.6L19 8.4l-.6-1.6L17 6.2l1.4-.6L19 4z"/></svg></button>
-    <button class="topbar-btn topbar-btn-gen topbar-icon-btn" id="topbarGenBtn" title="New Practice"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/><path d="M19 6l.7 1.8L21.5 8.5l-1.8.7L19 11l-.7-1.8L16.5 8.5l1.8-.7L19 6z"/></svg></button>
-    <button class="topbar-btn topbar-ghost" id="ghostModeBtn" title="Ghost Mode" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v4c0 1 .5 2 1 3s1 2 1 3v1h2l1-2h6l1 2h2v-1c0-1 .5-2 1-3s1-2 1-3v-4a8 8 0 0 0-8-8z"/></svg></button>
-  </div>
-  <div class="topbar-progress" id="topbarProgress"><div class="topbar-progress-inner"></div></div>
 
-  <div id="detailsWrap">
-    <div class="section">
+    <div id="toast" class="toast">
+      <span class="toast-icon" id="toastIcon"></span>
+      <span class="toast-text" id="toastText"></span>
+    </div>
+
+    <div class="practice-topbar" id="practiceTopbar">
+      <div class="topbar-main-row">
+        <button class="topbar-btn topbar-btn-labeled topbar-btn-back" id="topbarBackBtn" title="Back" data-i18n-title="practice.back"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/><path d="M21 12H9"/></svg><span class="topbar-btn-label" data-i18n="practice.backShort">Back</span></button>
+        <h3 class="details-title topbar-title" id="title">&mdash;</h3>
+      </div>
+      <div class="topbar-subrow">
+        <div class="badge-row topbar-meta-row">
+          <span class="badge" id="langBadge">JAVA</span>
+          <span class="level-badge" id="levelBadge">LVL 1</span>
+          <span class="bug-badge" id="bugFixBadge" style="display:none;" data-i18n="practice.bugFix">BUG FIX</span>
+          <span class="auto-badge" id="autoSelectedBadge" style="display:none;"></span>
+        </div>
+        <div class="topbar-actions">
+          <span class="result-badge topbar-status-badge" id="resultBadge" style="display:none;"></span>
+          <button class="topbar-btn topbar-btn-labeled topbar-btn-chat" id="openChatBtn" title="AI Chat" data-i18n-title="practice.aiChat"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 8V6"/><path d="M12 18v-2"/><path d="M8 12H6"/><path d="M18 12h-2"/><path d="M9 6h.01"/><path d="M15 6h.01"/><path d="M9 18h.01"/><path d="M15 18h.01"/><path d="M19 4l.6 1.6L21 6.2l-1.4.6L19 8.4l-.6-1.6L17 6.2l1.4-.6L19 4z"/></svg><span class="topbar-btn-label" data-i18n="practice.aiChatShort">Chat</span></button>
+          <button class="topbar-btn topbar-btn-gen topbar-btn-labeled topbar-btn-new" id="topbarGenBtn" title="New Practice" data-i18n-title="practice.newPractice"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/><path d="M19 6l.7 1.8L21.5 8.5l-1.8.7L19 11l-.7-1.8L16.5 8.5l1.8-.7L19 6z"/></svg><span class="topbar-btn-label" data-i18n="practice.newPracticeShort">New</span></button>
+          <button class="topbar-btn topbar-ghost topbar-btn-labeled topbar-btn-ghost" id="ghostModeBtn" title="Ghost Mode" data-i18n-title="practice.ghostMode" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 10h.01M15 10h.01M12 2a8 8 0 0 0-8 8v4c0 1 .5 2 1 3s1 2 1 3v1h2l1-2h6l1 2h2v-1c0-1 .5-2 1-3s1-2 1-3v-4a8 8 0 0 0-8-8z"/></svg><span class="topbar-btn-label" data-i18n="practice.ghostModeShort">Ghost</span></button>
+        </div>
+      </div>
+    </div>
+    <div class="topbar-progress" id="topbarProgress"><div class="topbar-progress-inner"></div></div>
+
+    <div id="practiceDetailPage" class="practice-subpage v5-detail">
+      <div id="detailsWrap">
+        <div class="section">
       <!-- XP Progress Bar -->
       <div class="practice-xp-wrap" id="practiceXpWrap">
         <div class="practice-xp-top">
+          <span class="practice-xp-topic" id="practiceXpTopic">Topic</span>
           <span class="practice-xp-count" id="practiceXpCount">0 / 100 XP</span>
         </div>
         <div class="practice-xp-bar"><div class="practice-xp-fill" id="practiceXpFill" style="width:0%"></div></div>
@@ -165,11 +179,11 @@ ${css}
       <div class="custom-prompt-edit-wrap" id="customPromptEditWrap" style="display:none;">
         <div class="item">
           <div class="item-head">
-            <span class="item-label">Prompt</span>
+            <span class="item-label" data-i18n="custom.promptLabel">Prompt</span>
           </div>
           <div style="display:flex;gap:6px;align-items:flex-start;">
             <textarea class="custom-prompt" id="customPromptEdit" rows="2" maxlength="500" style="flex:1;"></textarea>
-            <button class="btn-run" id="customRegenBtn" style="white-space:nowrap;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/><path d="M19 6l.7 1.8L21.5 8.5l-1.8.7L19 11l-.7-1.8L16.5 8.5l1.8-.7L19 6z"/></svg>Re-generate</button>
+            <button class="btn-run" id="customRegenBtn" style="white-space:nowrap;" data-i18n="custom.regenerate"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/><path d="M19 6l.7 1.8L21.5 8.5l-1.8.7L19 11l-.7-1.8L16.5 8.5l1.8-.7L19 6z"/></svg>Re-generate</button>
           </div>
         </div>
       </div>
@@ -189,11 +203,51 @@ ${css}
           <button class="btn-show-solution" id="quickSolveBtn" aria-label="Quick solve" data-i18n="practice.quickSolve"><svg class="btn-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="8" height="8" rx="2"/><path d="M12 8V6"/><path d="M12 18v-2"/><path d="M8 12H6"/><path d="M18 12h-2"/><path d="M9 6h.01"/><path d="M15 6h.01"/><path d="M9 18h.01"/><path d="M15 18h.01"/><path d="M19 4l.6 1.6L21 6.2l-1.4.6L19 8.4l-.6-1.6L17 6.2l1.4-.6L19 4z"/></svg>Quick Solve</button>
         </div>
         <button class="btn-hint" id="apiPreviewBtn" data-i18n="practice.apiPreview" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>API Preview</button>
-        <div class="cross-lang-wrap" style="position:relative;">
-          <button class="btn-hint" id="crossLangBtn" data-i18n="practice.crossLang" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>See in Another Language</button>
-          <div class="cross-lang-dropdown" id="crossLangDropdown"></div>
+      </div>
+      <div class="test-output-wrap" id="runOutputWrap">
+        <div class="item">
+          <div class="item-head">
+            <span class="item-label" data-i18n="practice.output">Output</span>
+            <span class="test-duration" id="runDuration"></span>
+          </div>
+          <pre class="item-body output-text run-output-text" id="runOutput">&mdash;</pre>
         </div>
-        <div id="altMethodsAnchor"></div>
+      </div>
+        </div>
+      </div>
+      <div class="panel-footer detail-footer" id="detailFooter">
+        <span class="panel-footer-dot"></span>
+        <span id="detailFooterText">Topic • LVL 1</span>
+      </div>
+    </div>
+
+    <div id="practiceJudgePage" class="practice-subpage v5-judge">
+      <div class="section judge-page-section">
+      <div class="output-wrap" id="outputWrap">
+        <div class="result-hero" id="resultHero" style="display:none;">
+          <div class="result-celebrate" id="resultCelebrate"></div>
+          <div class="result-score" id="resultScore">0<span class="result-score-dim">/0</span></div>
+          <div class="result-subtext" id="resultSubtext"></div>
+          <div class="result-progress"><div class="result-progress-fill" id="resultProgressFill" style="width:0%"></div></div>
+        </div>
+        <div class="perf-card" id="perfCard" style="display:none;">
+          <div class="perf-gauge">
+            <svg viewBox="0 0 64 36">
+              <path class="perf-gauge-bg" d="M6 34 A26 26 0 0 1 58 34" fill="none" stroke-width="5" stroke-linecap="round"/>
+              <path class="perf-gauge-fill" id="perfGaugeFill" d="M6 34 A26 26 0 0 1 58 34" fill="none" stroke-width="5" stroke-linecap="round" stroke-dasharray="82" stroke-dashoffset="82"/>
+              <line class="perf-gauge-needle" id="perfNeedle" x1="32" y1="34" x2="32" y2="12" stroke="var(--vscode-foreground)" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="perf-info">
+            <span class="perf-time" id="perfTime">—</span>
+            <span class="perf-label" id="perfLabel"></span>
+          </div>
+        </div>
+        <div id="judgeRewards"></div>
+        <div class="item">
+          <div id="testCasesList" class="test-cases-list"></div>
+          <pre class="item-body output-text" id="output" style="display:none;">&mdash;</pre>
+        </div>
       </div>
 
       <div class="solution-wrap" id="solutionWrap">
@@ -211,40 +265,29 @@ ${css}
         </div>
         <button class="btn-retry" id="retryBtn" data-i18n="practice.trySimilar"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>Try Similar Practice</button>
       </div>
-
-      <div class="output-wrap" id="outputWrap">
-        <div class="perf-card" id="perfCard" style="display:none;">
-          <div class="perf-gauge">
-            <svg viewBox="0 0 64 36">
-              <path class="perf-gauge-bg" d="M6 34 A26 26 0 0 1 58 34" fill="none" stroke-width="5" stroke-linecap="round"/>
-              <path class="perf-gauge-fill" id="perfGaugeFill" d="M6 34 A26 26 0 0 1 58 34" fill="none" stroke-width="5" stroke-linecap="round" stroke-dasharray="82" stroke-dashoffset="82"/>
-              <line class="perf-gauge-needle" id="perfNeedle" x1="32" y1="34" x2="32" y2="12" stroke="var(--vscode-foreground)" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="perf-info">
-            <span class="perf-time" id="perfTime">—</span>
-            <span class="perf-label" id="perfLabel"></span>
-          </div>
-        </div>
-        <div class="item">
-          <div class="item-head">
-            <span class="result-badge" id="resultBadge"></span>
-          </div>
-          <div id="testCasesList" class="test-cases-list"></div>
-          <pre class="item-body output-text" id="output" style="display:none;">&mdash;</pre>
-        </div>
-        <div class="pass-buttons" id="passButtons">
-          <button class="btn-next-practice" id="nextPracticeBtn" data-i18n="practice.next"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>Next</button>
-          <button class="btn-similar" id="similarPracticeBtn" data-i18n="practice.similar"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>Similar</button>
-        </div>
+      <div class="cross-lang-wrap">
+        <button class="btn-hint" id="crossLangBtn" data-i18n="practice.crossLang" style="display:none;"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>See in Another Language</button>
+        <div class="cross-lang-dropdown" id="crossLangDropdown"></div>
       </div>
-
+      <div id="altMethodsAnchor"></div>
+      <div class="pass-buttons" id="passButtons">
+        <button class="btn-next-practice" id="nextPracticeBtn" data-i18n="practice.next"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>Next</button>
+        <button class="btn-similar" id="similarPracticeBtn" data-i18n="practice.similar"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M9 8h6"/><path d="M9 12h6"/><path d="M9 16h4"/></svg>Similar</button>
+      </div>
+      <div class="judge-recovery-actions" id="judgeRecoveryActions">
+        <button class="btn-similar" id="judgeBackBtn" data-i18n="practice.back">Back</button>
+        <button class="btn-judge" id="judgeRetryBtn" data-i18n="practice.retry">Retry</button>
+      </div>
+      <div class="judge-footer" id="judgeFooter" style="display:none;">
+        <span class="judge-footer-dot" id="judgeFooterDot"></span>
+        <span id="judgeFooterText">0/0 passed</span>
+      </div>
+      </div>
     </div>
-  </div>
   </div><!-- /practicePanel -->
 
   <!-- Progress Panel -->
-  <div id="progressPanel" class="panel">
+  <div id="progressPanel" class="panel v5-progress">
     <div class="subtitle" data-i18n="progress.subtitle">smart review system with spaced repetition.</div>
 
     <!-- Streak Banner -->
@@ -267,6 +310,8 @@ ${css}
       <div class="xp-next" id="xpNext">50 XP to next level</div>
     </div>
 
+    <div class="daily-goal-wrap" id="dailyGoal" style="display:none;"></div>
+
     <div class="section">
       <div class="stats-grid">
         <div class="stat-card due">
@@ -287,6 +332,8 @@ ${css}
         </div>
       </div>
     </div>
+
+    <div class="weekly-trend-wrap" id="weeklyTrend" style="display:none;"></div>
 
     <div class="section">
       <div class="kicker" data-i18n="progress.recommendations">WHAT TO PRACTICE NEXT?</div>
@@ -319,16 +366,21 @@ ${css}
       </div>
       <button class="btn-gen" id="reviewDueBtn" style="margin-top:8px;" data-i18n="progress.startReview"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M4 9h16"/><path d="M9.5 14.5a3.5 3.5 0 0 1 5.7-2.6"/><path d="M15.2 11.9H18v-2.8"/><path d="M14.5 15.5a3.5 3.5 0 0 1-5.7 2.6"/><path d="M8.8 18.1H6v2.8"/></svg>Start Review</button>
     </div>
+
+    <div class="progress-footer" id="progressFooter">
+      <span class="progress-footer-dot"></span>
+      <span id="progressFooterText">Level 1 • 0 practices</span>
+    </div>
   </div><!-- /progressPanel -->
 
   <!-- Custom Practice Panel -->
-  <div id="customPanel" class="panel">
+  <div id="customPanel" class="panel v5-custom">
     <!-- Offline overlay for Custom panel -->
     <div id="customOfflineOverlay" class="custom-offline-overlay" style="display:none;">
       <div class="custom-offline-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg></div>
       <div class="custom-offline-title" data-i18n="custom.aiRequired">AI Required</div>
       <div class="custom-offline-desc" data-i18n-html="custom.aiRequiredDesc">Custom practices require an AI provider.<br>Configure an API key in Settings to use this feature.</div>
-      <div class="custom-offline-source">Source: AI</div>
+      <div class="custom-offline-source" id="customOfflineSource">Source: AI</div>
       <!-- When no API key: show Open Settings -->
       <button class="btn-gen custom-offline-settings-btn" id="customGoSettingsBtn" data-i18n="custom.openSettings"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>Open Settings</button>
       <!-- When API key exists but source is offline: show Switch to AI -->
@@ -353,13 +405,23 @@ ${css}
       <div class="kicker" data-i18n="custom.history">My Practices</div>
       <div id="customHistoryList" class="custom-history-list"></div>
     </div>
+    <div class="panel-footer custom-footer" id="customFooter">
+      <span class="panel-footer-dot"></span>
+      <span id="customFooterText">AI Mode</span>
+    </div>
   </div><!-- /customPanel -->
 
   <!-- Settings Panel -->
-  <div id="settingsPanel" class="panel settings-panel">
+  <div id="settingsPanel" class="panel settings-panel v5-settings">
+    <div class="settings-topbar" id="settingsTopbar">
+      <span class="settings-topbar-logo">CODEPRACTICE<span class="settings-topbar-logo-dot">.</span></span>
+      <button class="settings-topbar-close" id="settingsCloseBtn" title="Close" data-i18n-title="settings.close">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+      </button>
+    </div>
     <div class="settings-current-banner" id="currentConfigBanner">
       <div class="banner-dot"></div>
-      <span class="banner-label">Active:</span>
+      <span class="banner-label" data-i18n="settings.active">Active:</span>
       <span class="banner-value" id="bannerProviderName">—</span>
       <span style="opacity:0.5">·</span>
       <span class="banner-value" id="bannerModelName" style="font-weight:500;opacity:0.8">—</span>
@@ -370,11 +432,11 @@ ${css}
         <div class="provider-item" data-provider="groq"><div class="provider-item-icon" style="color:#f97316">G</div><div class="provider-item-info"><div class="provider-item-name">Groq</div><div class="provider-item-desc">100K tokens/day</div></div><span class="provider-item-free">FREE</span></div>
         <div class="provider-item" data-provider="cerebras"><div class="provider-item-icon" style="color:#8b5cf6">C</div><div class="provider-item-info"><div class="provider-item-name">Cerebras</div><div class="provider-item-desc">~1M tokens/day</div></div><span class="provider-item-free">FREE</span></div>
         <div class="provider-item" data-provider="together"><div class="provider-item-icon" style="color:#06b6d4">T</div><div class="provider-item-info"><div class="provider-item-name">Together</div><div class="provider-item-desc">$1 free credit</div></div><span class="provider-item-free">FREE</span></div>
-        <div class="provider-item" data-provider="openrouter"><div class="provider-item-icon" style="color:#ec4899">O</div><div class="provider-item-info"><div class="provider-item-name">OpenRouter</div><div class="provider-item-desc">Free tier available</div></div><span class="provider-item-free">FREE</span></div>
-        <div class="provider-item" data-provider="gemini"><div class="provider-item-icon" style="color:#3b82f6">G</div><div class="provider-item-info"><div class="provider-item-name">Gemini</div><div class="provider-item-desc">Free tier available</div></div><span class="provider-item-free">FREE</span></div>
-        <div class="provider-item" data-provider="openai"><div class="provider-item-icon" style="color:#10b981">O</div><div class="provider-item-info"><div class="provider-item-name">OpenAI</div><div class="provider-item-desc">Pay-as-you-go</div></div></div>
-        <div class="provider-item" data-provider="claude"><div class="provider-item-icon" style="color:#d97706">C</div><div class="provider-item-info"><div class="provider-item-name">Claude</div><div class="provider-item-desc">Pay-as-you-go</div></div></div>
-        <div class="provider-item" data-provider="local"><div class="provider-item-icon" style="color:#6b7280">L</div><div class="provider-item-info"><div class="provider-item-name" data-i18n="settings.local">Local</div><div class="provider-item-desc">LM Studio</div></div></div>
+        <div class="provider-item" data-provider="openrouter"><div class="provider-item-icon" style="color:#ec4899">O</div><div class="provider-item-info"><div class="provider-item-name">OpenRouter</div><div class="provider-item-desc">Multiple free models</div></div><span class="provider-item-free">FREE</span></div>
+        <div class="provider-item" data-provider="gemini"><div class="provider-item-icon" style="color:#3b82f6">G</div><div class="provider-item-info"><div class="provider-item-name">Gemini</div><div class="provider-item-desc">Free tier (region dependent)</div></div><span class="provider-item-free">FREE</span></div>
+        <div class="provider-item" data-provider="openai"><div class="provider-item-icon" style="color:#10b981">O</div><div class="provider-item-info"><div class="provider-item-name">OpenAI</div><div class="provider-item-desc">GPT-4.1 Mini $0.40/1M</div></div></div>
+        <div class="provider-item" data-provider="claude"><div class="provider-item-icon" style="color:#d97706">C</div><div class="provider-item-info"><div class="provider-item-name">Claude</div><div class="provider-item-desc">Sonnet 4.6 $3/1M</div></div></div>
+        <div class="provider-item" data-provider="local"><div class="provider-item-icon" style="color:#6b7280">L</div><div class="provider-item-info"><div class="provider-item-name" data-i18n="settings.local">Local</div><div class="provider-item-desc">LM Studio / endpoint</div></div></div>
       </div>
     </div>
 
@@ -537,9 +599,12 @@ ${css}
     </div>
 
     <button class="btn-save-settings" id="saveSettingsBtn" data-i18n="settings.save"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Save Settings</button>
-    <div class="settings-saved" id="settingsSaved" data-i18n="settings.saved">Settings saved!</div>
 
     <button class="btn-reset-progress" id="resetProgressBtn" data-i18n="settings.resetProgress"><svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>Reset All Progress</button>
+    <div class="panel-footer settings-footer" id="settingsFooter">
+      <span class="panel-footer-dot"></span>
+      <span id="settingsFooterText">Groq • GPT-OSS 120B</span>
+    </div>
   </div><!-- /settingsPanel -->
 
   <script nonce="${nonce}" src="${scriptUri}"></script>

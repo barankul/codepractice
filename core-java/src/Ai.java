@@ -3,25 +3,26 @@ import java.net.http.*;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+// AIプロバイダーへのリクエスト処理
 public class Ai {
 
-    // Environment variables for AI configuration
     private static final String PROVIDER = System.getenv().getOrDefault("CODETEACHER_AI_PROVIDER", "local");
     private static final String UI_LANG = System.getenv().getOrDefault("CODETEACHER_UI_LANG", "en");
 
-    // Get language instruction for AI prompts
+    // UI言語に応じたAI指示文
     public static String getLangInstruction() {
         if ("ja".equals(UI_LANG)) return "You MUST write all CONTENT in Japanese (日本語) — task descriptions, hints, explanations, comments. But KEEP the field LABELS in English exactly as specified (TITLE:, TASK:, HINT:, EXPECTED_OUTPUT:, TEST_CASES:, etc.). Only code syntax stays in English. This is mandatory.";
         if ("tr".equals(UI_LANG)) return "You MUST write all CONTENT in Turkish (Türkçe) — task descriptions, hints, explanations, comments. But KEEP the field LABELS in English exactly as specified (TITLE:, TASK:, HINT:, EXPECTED_OUTPUT:, TEST_CASES:, etc.). Only code syntax stays in English. This is mandatory.";
         return "";
     }
 
-    // Get language prefix for prompt start (strongest position)
+    // プロンプト先頭に付ける言語指定
     public static String getLangPrefix() {
         if ("ja".equals(UI_LANG)) return "[LANGUAGE: JAPANESE] Write all content in Japanese (日本語). Keep field labels (TITLE:, TASK:, HINT:, etc.) in English.\n\n";
         if ("tr".equals(UI_LANG)) return "[LANGUAGE: TURKISH] Write all content in Turkish (Türkçe). Keep field labels (TITLE:, TASK:, HINT:, etc.) in English.\n\n";
         return "";
     }
+
     private static final String LOCAL_ENDPOINT = System.getenv().getOrDefault("CODETEACHER_AI_ENDPOINT",
             "http://127.0.0.1:1234/v1/chat/completions");
     private static final String ENDPOINT_API_KEY = System.getenv().getOrDefault("CODETEACHER_ENDPOINT_API_KEY", "");
@@ -31,13 +32,11 @@ public class Ai {
     private static final String GROQ_API_KEY = System.getenv().getOrDefault("CODETEACHER_GROQ_API_KEY", "");
     private static final String GROQ_MODEL = System.getenv().getOrDefault("CODETEACHER_GROQ_MODEL", "openai/gpt-oss-120b");
     private static final String GROQ_ENDPOINT = "https://api.groq.com/openai/v1/chat/completions";
-
-    // Gemini configuration
     private static final String GEMINI_API_KEY = System.getenv().getOrDefault("CODETEACHER_GEMINI_API_KEY", "");
     private static final String GEMINI_MODEL = System.getenv().getOrDefault("CODETEACHER_GEMINI_MODEL", "gemini-2.5-flash");
 
+    // AIにリクエストを送る
     public static String ask(String userPrompt) throws Exception {
-        // Use Gemini if provider is gemini
         if ("gemini".equalsIgnoreCase(PROVIDER)) {
             return askGemini(userPrompt);
         }
@@ -47,7 +46,7 @@ public class Ai {
                 .connectTimeout(Duration.ofSeconds(10))
                 .build();
 
-        // Determine endpoint and model based on provider
+        // プロバイダーごとにエンドポイントとモデルを決める
         String endpoint;
         String model;
         String authHeader = null;
@@ -81,7 +80,7 @@ public class Ai {
             model = AI_MODEL.isEmpty() ? "nvidia/nemotron-3-super-120b-a12b:free" : AI_MODEL;
             authHeader = "Bearer " + ENDPOINT_API_KEY;
         } else {
-            // local / custom endpoint
+            // ローカルエンドポイント
             endpoint = LOCAL_ENDPOINT;
             model = ENDPOINT_MODEL.isEmpty() ? "yi-coder-9b-chat" : ENDPOINT_MODEL;
             if (!ENDPOINT_API_KEY.isEmpty()) {
@@ -104,7 +103,6 @@ public class Ai {
                 .timeout(Duration.ofSeconds(60))
                 .header("Content-Type", "application/json");
 
-        // Add Authorization header for Groq
         if (authHeader != null) {
             reqBuilder.header("Authorization", authHeader);
         }
@@ -122,7 +120,7 @@ public class Ai {
         return res.body();
     }
 
-    // Gemini API has different format
+    // Geminiは別フォーマット
     private static String askGemini(String userPrompt) throws Exception {
         if (GEMINI_API_KEY.isEmpty()) {
             throw new Exception("Gemini API key not set");
@@ -136,7 +134,6 @@ public class Ai {
         String endpoint = "https://generativelanguage.googleapis.com/v1beta/models/"
                 + GEMINI_MODEL + ":generateContent?key=" + GEMINI_API_KEY;
 
-        // Gemini uses different request format
         String systemPrompt = getLangInstruction() + " You are a coding exercise generator. Generate COMPLETE working code but mark the lines student should write with >>> prefix. Do NOT use Scanner or user input. Use hardcoded test data.";
         String fullPrompt = systemPrompt + "\n\n" + userPrompt;
 
@@ -155,21 +152,18 @@ public class Ai {
 
         HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
 
-        // Check for error status
         if (res.statusCode() != 200) {
             throw new Exception("Gemini API error: " + res.statusCode() + " - " + res.body());
         }
 
-        // Convert Gemini response to OpenAI-like format for compatibility
+        // Geminiのレスポンスを OpenAI互換に変換
         String body = res.body();
         String text = extractGeminiContent(body);
-        // Return in OpenAI-compatible format
         return "{\"choices\":[{\"message\":{\"content\":\"" + escape(text) + "\"}}]}";
     }
 
-    // Extract text from Gemini response
+    // Geminiレスポンスからテキスト抽出
     private static String extractGeminiContent(String rawJson) {
-        // Look for "text": in Gemini response
         String key = "\"text\":";
         int keyPos = rawJson.indexOf(key);
         if (keyPos == -1) return "NO_CONTENT_FOUND";
@@ -197,7 +191,6 @@ public class Ai {
         return unescapeUnicode(content);
     }
 
-    // Unescape Unicode sequences like \u003c to <
     private static String unescapeUnicode(String s) {
         return s
             .replace("\\u003c", "<")
@@ -208,28 +201,24 @@ public class Ai {
             .replace("\\u0027", "'");
     }
 
+    // OpenAIフォーマットからcontentを抽出（reasoningモデル対応）
     public static String extractContent(String rawJson) {
-        // For reasoning models (gpt-oss-120b etc.), "reasoning" field may appear before "content".
-        // We need to find the "content" that's inside the "message" object, not inside "reasoning".
-        // Strategy: find "message" first, then find "content" after it.
         String key = "\"content\":";
         int searchFrom = 0;
 
-        // Try to locate "message" object first to skip "reasoning" field
+        // "message"を先に見つけて"reasoning"フィールドをスキップ
         int messagePos = rawJson.indexOf("\"message\"");
         if (messagePos >= 0) {
             searchFrom = messagePos;
         }
 
-        // Find "content" key after "message" — but skip "reasoning_content" if present
+        // "reasoning_content"じゃない"content"を探す
         int keyPos = -1;
         int pos = searchFrom;
         while (pos < rawJson.length()) {
             int found = rawJson.indexOf(key, pos);
             if (found == -1) break;
-            // Make sure this isn't "reasoning_content" — check char before "content"
             if (found > 0 && rawJson.charAt(found - 1) != '"') {
-                // Check it's not part of "reasoning_content":
                 int checkStart = Math.max(0, found - 20);
                 String before = rawJson.substring(checkStart, found);
                 if (!before.contains("reasoning")) {
@@ -244,7 +233,6 @@ public class Ai {
         }
 
         if (keyPos == -1) {
-            // Fallback: just find first "content":
             keyPos = rawJson.indexOf(key);
         }
         if (keyPos == -1) return "NO_CONTENT_FOUND";
@@ -252,11 +240,9 @@ public class Ai {
         int firstQuote = rawJson.indexOf("\"", keyPos + key.length());
         if (firstQuote == -1) return "NO_OPEN_QUOTE";
 
-        // Handle null content: "content": null
+        // content: null の場合はreasoningから取る
         String afterKey = rawJson.substring(keyPos + key.length()).trim();
         if (afterKey.startsWith("null")) {
-            // Reasoning model may put actual text in "reasoning" and null in "content"
-            // Try to extract from "reasoning" field instead
             int reasoningPos = rawJson.indexOf("\"reasoning\":");
             if (reasoningPos >= 0) {
                 return extractStringValue(rawJson, reasoningPos + "\"reasoning\":".length());
@@ -267,7 +253,7 @@ public class Ai {
         return extractStringValue(rawJson, keyPos + key.length());
     }
 
-    /** Extract a JSON string value starting from the given position */
+    // JSON文字列値を抽出
     private static String extractStringValue(String json, int fromPos) {
         int firstQuote = json.indexOf("\"", fromPos);
         if (firstQuote == -1) return "NO_OPEN_QUOTE";

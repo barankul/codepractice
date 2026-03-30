@@ -210,7 +210,7 @@ Rules:
     let starterCode = codeMatch ? codeMatch[1].trim() : "";
 
     if (!starterCode || !meta.task) {
-      throw new Error("Could not generate a valid practice from this request.");
+      throw new Error(t("msg.chatInvalidPractice"));
     }
 
     if (lang === "Java") {
@@ -264,14 +264,14 @@ Rules:
 
     this.chatPanel = vscode.window.createWebviewPanel(
       "codepracticeChat",
-      "AI Chat",
+      t("practice.aiChat"),
       vscode.ViewColumn.Beside,
       { enableScripts: true, retainContextWhenHidden: true }
     );
 
-    const task = currentPractice?.task || "No practice loaded";
+    const task = currentPractice?.task || t("msg.noPractice");
     const lang = currentPractice?.lang || "Java";
-    const title = currentPractice?.title || `${lang} Practice`;
+    const title = currentPractice?.title || `${lang} ${t("tab.practice")}`;
 
     // Start a new session for this practice
     this.startNewSession(currentPractice);
@@ -840,7 +840,7 @@ function getChatPanelHtml(title: string, task: string, lang: string, nonce: stri
       </div>
     </div>
 
-    <button class="history-toggle" id="historyToggle" title="Toggle history">&#x25C0;</button>
+    <button class="history-toggle" id="historyToggle" title="${escapeHtml(chatT["chat.toggleHistory"])}">&#x25C0;</button>
 
     <!-- Chat area -->
     <div class="chat-area">

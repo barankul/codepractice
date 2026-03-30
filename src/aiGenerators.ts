@@ -205,6 +205,238 @@ function normalizeAlternativeMethodFingerprint(code: string): string {
     .trim();
 }
 
+function buildStudentAlternativeMethod(currentCode: string): AlternativeMethod {
+  return {
+    name: "Student's Approach",
+    code: cleanAlternativeMethodCode(currentCode),
+    explanation: "Baseline implementation using the current solution structure.",
+    speedPercent: 100,
+  };
+}
+
+function normalizeAlternativeMethodName(rawName: string, fallbackIndex: number): string {
+  const cleaned = (rawName || "")
+    .replace(/^[#*\-\d.\s]+/, "")
+    .replace(/^(name|method|approach)\s*[:\-]\s*/i, "")
+    .replace(/[`"'[\]{}]/g, "")
+    .trim();
+  return cleaned || `Alternative Method ${fallbackIndex}`;
+}
+
+function fallbackAlternativeMethodExplanation(uiLang: string): string {
+  if (uiLang === "ja") {
+    return "同じ課題を別の形で解くアプローチです。元の解法との違いを見比べてください。";
+  }
+  if (uiLang === "tr") {
+    return "Bu, aynı problemi farklı bir yaklaşımla çözer. Ana çözümle farklarını karşılaştır.";
+  }
+  return "This solves the same task with a different approach. Compare it with the original solution.";
+}
+
+function extractJsonPayload(rawResponse: string, openingChar: "[" | "{"): string {
+  const trimmed = rawResponse.trim();
+  if (trimmed.startsWith(openingChar)) {
+    return trimmed;
+  }
+  const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenceMatch) {
+    return fenceMatch[1].trim();
+  }
+  const closingChar = openingChar === "[" ? "]" : "}";
+  const first = trimmed.indexOf(openingChar);
+  const last = trimmed.lastIndexOf(closingChar);
+  if (first !== -1 && last > first) {
+    return trimmed.slice(first, last + 1);
+  }
+  return trimmed;
+}
+
+function escapeJsonStringControlChars(jsonText: string): string {
+  let inString = false;
+  let escape = false;
+  const out: string[] = [];
+  for (let i = 0; i < jsonText.length; i++) {
+    const ch = jsonText[i];
+    if (escape) {
+      out.push(ch);
+      escape = false;
+      continue;
+    }
+    if (ch === "\\") {
+      out.push(ch);
+      escape = true;
+      continue;
+    }
+    if (ch === "\"") {
+      out.push(ch);
+      inString = !inString;
+      continue;
+    }
+    if (inString && ch === "\n") {
+      out.push("\\n");
+      continue;
+    }
+    if (inString && ch === "\r") {
+      continue;
+    }
+    if (inString && ch === "\t") {
+      out.push("\\t");
+      continue;
+    }
+    out.push(ch);
+  }
+  return out.join("").replace(/,\s*([}\]])/g, "$1");
+}
+
+function coerceAlternativeMethods(candidate: any, studentMethod: AlternativeMethod): AlternativeMethod[] {
+  const rawMethods = Array.isArray(candidate)
+    ? candidate
+    : Array.isArray(candidate?.methods)
+      ? candidate.methods
+      : [];
+
+  const parsedMethods = rawMethods
+    .filter((method: any) => method && typeof method === "object" && typeof method.code === "string" && method.code.trim().length > 0)
+    .map((method: any, index: number) => {
+      const explanation = String(method.explanation || "").replaceAll("\\n", "\n").trim();
+      return {
+        name: normalizeAlternativeMethodName(String(method.name || ""), index + 1),
+        code: cleanAlternativeMethodCode(method.code || ""),
+        explanation,
+        speedPercent: Number(method.speedPercent) || 100,
+      };
+    });
+
+  const seen = new Set<string>([normalizeAlternativeMethodFingerprint(studentMethod.code)]);
+  const dedupedOthers = parsedMethods.filter((method: AlternativeMethod) => {
+    const fingerprint = normalizeAlternativeMethodFingerprint(method.code);
+    if (!fingerprint || seen.has(fingerprint)) {
+      return false;
+    }
+    seen.add(fingerprint);
+    return true;
+  });
+
+  return [studentMethod, ...dedupedOthers].slice(0, 4);
+}
+
+function extractAlternativeMethodsFromFences(
+  rawResponse: string,
+  studentMethod: AlternativeMethod,
+  uiLang: string
+): AlternativeMethod[] {
+  const matches = Array.from(rawResponse.matchAll(/```[\w#+-]*\n?([\s\S]*?)```/g));
+  if (matches.length === 0) {
+    return [studentMethod];
+  }
+
+  const seen = new Set<string>([normalizeAlternativeMethodFingerprint(studentMethod.code)]);
+  const methods: AlternativeMethod[] = [studentMethod];
+
+  for (let index = 0; index < matches.length; index++) {
+    const match = matches[index];
+    const code = cleanAlternativeMethodCode(match[1] || "");
+    const fingerprint = normalizeAlternativeMethodFingerprint(code);
+    if (!fingerprint || seen.has(fingerprint)) {
+      continue;
+    }
+
+    const beforeSlice = rawResponse.slice(Math.max(0, (match.index || 0) - 200), match.index || 0);
+    const nextIndex = index + 1 < matches.length ? (matches[index + 1].index || rawResponse.length) : rawResponse.length;
+    const afterSlice = rawResponse.slice((match.index || 0) + match[0].length, Math.min(nextIndex, (match.index || 0) + match[0].length + 220));
+
+    const beforeLines = beforeSlice
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean);
+
+    const nameCandidate = beforeLines.length > 0 ? beforeLines[beforeLines.length - 1] : "";
+    const explanationCandidate = afterSlice
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(line => line && !line.startsWith("```"))
+      .join(" ")
+      .replace(/\s+/g, " ")
+      .trim();
+
+    methods.push({
+      name: normalizeAlternativeMethodName(nameCandidate, methods.length),
+      code,
+      explanation: explanationCandidate || fallbackAlternativeMethodExplanation(uiLang),
+      speedPercent: 100,
+    });
+    seen.add(fingerprint);
+
+    if (methods.length >= 4) {
+      break;
+    }
+  }
+
+  return methods;
+}
+
+export function parseAlternativeMethodsResponse(
+  rawResponse: string,
+  currentCode: string,
+  uiLang = "en"
+): AlternativeMethod[] {
+  const studentMethod = buildStudentAlternativeMethod(currentCode);
+  const jsonPayload = extractJsonPayload(rawResponse, "[");
+
+  try {
+    const parsed = JSON.parse(jsonPayload);
+    const methods = coerceAlternativeMethods(parsed, studentMethod);
+    if (methods.length > 1) {
+      return methods;
+    }
+  } catch (parseErr: any) {
+    console.warn("[CodePractice] Alt methods JSON parse failed:", parseErr?.message, "Raw:", jsonPayload.slice(0, 200));
+  }
+
+  try {
+    const repaired = JSON.parse(escapeJsonStringControlChars(jsonPayload));
+    const methods = coerceAlternativeMethods(repaired, studentMethod);
+    if (methods.length > 1) {
+      return methods;
+    }
+  } catch (repairErr: any) {
+    console.warn("[CodePractice] Alt methods repaired JSON parse failed:", repairErr?.message);
+  }
+
+  const extractedFromFences = extractAlternativeMethodsFromFences(rawResponse, studentMethod, uiLang);
+  if (extractedFromFences.length > 1) {
+    return extractedFromFences;
+  }
+
+  return [studentMethod];
+}
+
+async function repairAlternativeMethodsResponse(
+  lang: string,
+  task: string,
+  currentCode: string,
+  rawResponse: string
+): Promise<AlternativeMethod[]> {
+  const repairSystemPrompt =
+    "You repair malformed AI responses for a coding practice app. " +
+    "Return ONLY a valid JSON array. " +
+    "Each item must have: name, code, explanation, speedPercent. " +
+    "Do not include markdown. Do not include commentary.";
+
+  const repairUserPrompt =
+    `LANGUAGE: ${lang}\n` +
+    `TASK: ${task}\n\n` +
+    `CURRENT CODE:\n${currentCode}\n\n` +
+    "The content below was meant to contain alternative solutions. " +
+    "Extract ONLY real alternative methods from it and rewrite them as a valid JSON array. " +
+    "If the student's original approach appears, you may include it, but prioritize actual alternatives. " +
+    "If there is only one usable alternative, return an array with that one object.\n\n" +
+    `RAW RESPONSE:\n${rawResponse}`;
+
+  const repairedRaw = await makeAiRequest(repairSystemPrompt, repairUserPrompt);
+  return parseAlternativeMethodsResponse(repairedRaw, currentCode, getResponseLang());
+}
+
 /**
  * Generate alternative ways to solve a practice exercise.
  * Returns 2-4 methods with code, explanation, and relative speed comparison.
@@ -214,13 +446,6 @@ export async function generateAlternativeMethods(
   task: string,
   currentCode: string
 ): Promise<AlternativeMethod[]> {
-  const studentMethod: AlternativeMethod = {
-    name: "Student's Approach",
-    code: cleanAlternativeMethodCode(currentCode),
-    explanation: "Baseline implementation using the current solution structure.",
-    speedPercent: 100,
-  };
-
   const systemPrompt =
     "You are a senior developer showing different ways to solve a coding exercise. " +
     "Return ONLY a JSON array of 2-4 alternative methods. Each object has: " +
@@ -245,59 +470,21 @@ export async function generateAlternativeMethods(
     "Return JSON array: [{ name, code, explanation, speedPercent }, ...]";
 
   const rawResponse = await makeAiRequest(systemPrompt, userPrompt);
-
-  // Extract JSON array
-  const trimmed = rawResponse.trim();
-  let jsonStr = trimmed;
-  if (!trimmed.startsWith("[")) {
-    const fenceMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fenceMatch) {
-      jsonStr = fenceMatch[1].trim();
-    } else {
-      const first = trimmed.indexOf("[");
-      const last = trimmed.lastIndexOf("]");
-      if (first !== -1 && last > first) {
-        jsonStr = trimmed.slice(first, last + 1);
-      }
-    }
+  const parsed = parseAlternativeMethodsResponse(rawResponse, currentCode, getResponseLang());
+  if (parsed.length > 1) {
+    return parsed;
   }
 
   try {
-    const parsed = JSON.parse(jsonStr);
-    if (Array.isArray(parsed)) {
-      const methods = parsed
-        .filter((m: any) => m && typeof m === "object" && typeof m.code === "string" && m.code.trim().length > 0)
-        .map((m: any) => {
-          let explanation = (m.explanation || "");
-          explanation = explanation.replaceAll("\\n", "\n");
-          return {
-            name: typeof m.name === "string" ? m.name : "Method",
-            code: cleanAlternativeMethodCode(m.code || ""),
-            explanation: explanation.trim(),
-            speedPercent: Number(m.speedPercent) || 100,
-          };
-        });
-      if (methods.length > 0) {
-        const seen = new Set<string>([normalizeAlternativeMethodFingerprint(studentMethod.code)]);
-        const dedupedOthers = methods.filter(method => {
-          const fingerprint = normalizeAlternativeMethodFingerprint(method.code);
-          if (!fingerprint || seen.has(fingerprint)) {
-            return false;
-          }
-          seen.add(fingerprint);
-          return true;
-        });
-        return [studentMethod, ...dedupedOthers].slice(0, 4);
-      }
+    const repaired = await repairAlternativeMethodsResponse(lang, task, currentCode, rawResponse);
+    if (repaired.length > 1) {
+      return repaired;
     }
-  } catch (parseErr: any) {
-    console.warn("[CodePractice] Alt methods JSON parse failed:", parseErr?.message, "Raw:", jsonStr.slice(0, 200));
+  } catch (repairErr: any) {
+    console.warn("[CodePractice] Alt methods repair request failed:", repairErr?.message);
   }
 
-  return [
-    studentMethod,
-    { name: "Error", code: rawResponse, explanation: "Could not parse response", speedPercent: 100 }
-  ];
+  return parsed;
 }
 
 // Cross-language translation result
@@ -538,15 +725,23 @@ STARTER CODE:
 ${starterCode}
 \`\`\`
 
-Create a DIFFERENT but SIMILAR example that teaches the same concept.
-- Use DIFFERENT variable names, method names, numbers, and context
+Create a GUIDED example that stays VERY CLOSE to the student's actual operation and pattern.
+- Keep the SAME core technique and algorithmic shape as the student's task
+- Use DIFFERENT variable names, values, and surface context only
 - The example should show a COMPLETED solution so the student can learn the pattern
-- Do NOT solve the student's actual problem — give them a different one
+- Do NOT switch to a different operation just because it is in the same broad topic
 
-For example:
-- If student's task is "find max in array", your example could be "find min in array" or "find sum of array"
-- If student's task is "reverse a string", your example could be "check if string is palindrome"
-- Use different names like: scores→prices, students→employees, sum→total, findMax→findSmallest
+STRICT EXAMPLES:
+- If the student's task is "swap the first and last elements", your example must ALSO be a swap-first-and-last style problem in a different context
+- If the student's task is "find average", your example must ALSO be an average-style problem
+- If the student's task is "find max", your example must stay a max/min/extreme-value style problem
+- If the student's task is "reverse a string", your example can be reversing a different string or array, but NOT an unrelated task like averaging values
+
+BAD examples that are NOT allowed:
+- swap → average
+- reverse → palindrome check
+- max → sum
+- count even numbers → sort array
 
 Return EXACTLY in this format:
 EXAMPLE_TASK:
@@ -561,7 +756,7 @@ EXPLANATION:
 [2-3 sentences explaining the pattern/technique used. Help the student see how to apply this to their own problem without giving the answer.]${langNote}`;
 
   const content = await makeAiRequest(
-    "You are a coding teacher. Create a similar but different example to teach a concept. Do NOT solve the student's problem directly.",
+    "You are a coding teacher. Create a guided example that keeps the SAME core operation and pattern as the student's problem. Do NOT drift to a different task type.",
     prompt
   );
 
@@ -693,19 +888,19 @@ export async function explainSelectedCode(): Promise<void> {
 
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    vscode.window.showWarningMessage("No active editor");
+    vscode.window.showWarningMessage(t("msg.noActiveEditor"));
     return;
   }
 
   const selection = editor.selection;
   if (selection.isEmpty) {
-    vscode.window.showWarningMessage("Select some code first");
+    vscode.window.showWarningMessage(t("msg.selectCodeFirst"));
     return;
   }
 
   const selectedText = editor.document.getText(selection);
   if (!selectedText.trim()) {
-    vscode.window.showWarningMessage("Selection is empty");
+    vscode.window.showWarningMessage(t("msg.selectionEmpty"));
     return;
   }
 
@@ -717,7 +912,7 @@ export async function explainSelectedCode(): Promise<void> {
   else if (fileName.endsWith(".sql")) lang = "SQL";
   else if (fileName.endsWith(".py")) lang = "Python";
 
-  const statusItem = vscode.window.setStatusBarMessage("$(loading~spin) Explaining code...");
+  const statusItem = vscode.window.setStatusBarMessage("$(loading~spin) " + t("panel.explainTitle") + "...");
 
   try {
     const prompt = `Explain this ${lang} code and show how to use it.
@@ -764,13 +959,13 @@ Rules:
 
     const panel = vscode.window.createWebviewPanel(
       "codeExplanation",
-      "Code Explanation",
+      t("panel.explainTitle"),
       vscode.ViewColumn.Beside,
       { enableScripts: false }
     );
 
     const exampleSection = exampleCode ? `
-  <h3>Example Usage</h3>
+  <h3>${escapeHtml(t("panel.exampleUsage"))}</h3>
   <pre class="example">${escapeHtml(exampleCode)}</pre>` : "";
 
     panel.webview.html = `<!DOCTYPE html>
@@ -822,7 +1017,7 @@ Rules:
   </style>
 </head>
 <body>
-  <h2>Code Explanation</h2>
+  <h2>${escapeHtml(t("panel.explainTitle"))}</h2>
   <div class="lang">${lang}</div>
   <pre class="code">${escapeHtml(selectedText)}</pre>
   <div class="explanation">${escapeHtml(explanationText)}</div>
@@ -832,8 +1027,8 @@ Rules:
 
   } catch (e: any) {
     const msg = e?.message ?? String(e);
-    const friendly = msg.length > 80 ? "An error occurred. Check your AI provider settings." : msg;
-    vscode.window.showErrorMessage("Failed to explain code: " + friendly);
+    const friendly = msg.length > 80 ? t("msg.genericAiSettingsError") : msg;
+    vscode.window.showErrorMessage(t("msg.failedExplainCode") + " " + friendly);
   } finally {
     statusItem.dispose();
   }

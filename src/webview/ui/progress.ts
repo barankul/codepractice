@@ -6,6 +6,27 @@ import { post } from "../vscodeApi";
 import { renderLangButtons, renderTopics } from "./langTopics";
 import type { ProgressStats, Recommendation, TopicStat } from "../../shared/protocol";
 
+function getPracticeWord(): string {
+  const lang = state.currentUiLang;
+  if (lang === "ja") return "\u554f";
+  if (lang === "tr") return "al\u0131\u015ft\u0131rma";
+  return "practices";
+}
+
+function getUiLocale(): string {
+  if (state.currentUiLang === "ja") return "ja-JP";
+  if (state.currentUiLang === "tr") return "tr-TR";
+  return "en-US";
+}
+
+function formatWeeklyDay(dateText: string): string {
+  const parsed = new Date(`${dateText}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) {
+    return dateText.slice(5);
+  }
+  return parsed.toLocaleDateString(getUiLocale(), { weekday: "short" });
+}
+
 export function renderProgressStats(stats: ProgressStats): void {
   if (!stats) return;
   state.progressStats = stats;
@@ -19,13 +40,15 @@ export function renderProgressStats(stats: ProgressStats): void {
   // Streak
   const streak = stats.currentStreak || 0;
   if (dom.streakBanner) {
-    if (streak > 0) {
-      dom.streakBanner.classList.add("show");
-      if (dom.streakCount) dom.streakCount.textContent = streak + " " + t("progress.dayStreak");
-      if (dom.streakBest && stats.bestStreak) dom.streakBest.textContent = t("progress.best") + " " + stats.bestStreak;
-    } else {
-      dom.streakBanner.classList.remove("show");
+    dom.streakBanner.classList.add("show");
+    if (dom.streakCount) dom.streakCount.textContent = String(streak);
+    const streakLabel = document.querySelector("#streakBanner .streak-label") as HTMLElement | null;
+    if (streakLabel) {
+      streakLabel.textContent = stats.bestStreak
+        ? `${t("progress.dayStreak")} • ${t("progress.best")}: ${stats.bestStreak}`
+        : t("progress.dayStreak");
     }
+    if (dom.streakBest) dom.streakBest.textContent = "";
   }
 
   // XP Level
@@ -43,27 +66,19 @@ export function renderProgressStats(stats: ProgressStats): void {
   if (xpLevel) xpLevel.textContent = t("progress.level") + " " + level;
   if (xpCount) xpCount.textContent = xpInLevel + " / " + xpPerLevel + " " + t("progress.xp");
   if (xpNext) xpNext.textContent = (xpPerLevel - xpInLevel) + " " + t("progress.xpToNext");
+  const progressFooterText = document.getElementById("progressFooterText");
+  if (progressFooterText) {
+    progressFooterText.textContent = `${t("progress.level")} ${level} \u2022 ${stats.totalPractices || 0} ${getPracticeWord()}`;
+  }
 
-  // Daily Goal
-  renderDailyGoal(stats.dailyGoal);
+  const dailyGoal = document.getElementById("dailyGoal");
+  if (dailyGoal) {
+    dailyGoal.style.display = "none";
+    dailyGoal.innerHTML = "";
+  }
 
   // Weekly Trend
   renderWeeklyTrend(stats.weeklyTrend);
-}
-
-function renderDailyGoal(goal?: { target: number; completed: number; date: string }): void {
-  const container = document.getElementById("dailyGoal");
-  if (!container) { return; }
-  if (!goal) { container.style.display = "none"; return; }
-
-  container.style.display = "";
-  const pct = Math.min(100, Math.round((goal.completed / goal.target) * 100));
-  const done = goal.completed >= goal.target;
-
-  container.innerHTML = `
-    <div class="daily-goal-label">${done ? "Goal reached!" : goal.completed + " / " + goal.target + " today"}</div>
-    <div class="daily-goal-bar"><div class="daily-goal-fill${done ? " complete" : ""}" style="width:${pct}%"></div></div>
-  `;
 }
 
 function renderWeeklyTrend(trend?: { date: string; practices: number; passRate: number }[]): void {
@@ -77,11 +92,9 @@ function renderWeeklyTrend(trend?: { date: string; practices: number; passRate: 
   let html = '<div class="weekly-trend-label">' + t("progress.weeklyTrend") + '</div><div class="weekly-bars">';
   for (const day of trend) {
     const h = Math.round((day.practices / maxP) * 40);
-    const dayLabel = day.date.slice(5); // MM-DD
     const color = day.passRate >= 80 ? "var(--good)" : day.passRate >= 50 ? "var(--warn)" : "var(--bad)";
-    html += `<div class="weekly-bar-col" title="${day.date}: ${day.practices} practices, ${day.passRate}% pass">`;
-    html += `<div class="weekly-bar" style="height:${Math.max(2, h)}px;background:${day.practices > 0 ? color : "var(--card-border)"}"></div>`;
-    html += `<div class="weekly-day">${dayLabel}</div></div>`;
+    const dayLabel = formatWeeklyDay(day.date);
+    html += `<div class="weekly-bar" title="${dayLabel}: ${day.practices} ${getPracticeWord()}, ${day.passRate}% ${t("progress.passRate")}" style="height:${Math.max(3, h)}px;background:${day.practices > 0 ? color : "var(--card-border)"}"></div>`;
   }
   html += "</div>";
   container.innerHTML = html;
@@ -112,7 +125,7 @@ export function renderRecommendations(recs: Recommendation[]): void {
     info.className = "rec-info";
     const topic = document.createElement("div");
     topic.className = "rec-topic";
-    topic.textContent = rec.lang + " - " + rec.topic;
+    topic.textContent = rec.lang + " • " + rec.topic;
     const reason = document.createElement("div");
     reason.className = "rec-reason";
     reason.textContent = typeReasons[rec.type] || rec.reason || "";
@@ -141,7 +154,7 @@ export function renderRecommendations(recs: Recommendation[]): void {
 export function renderTopicProgress(topics: TopicStat[]): void {
   if (!dom.topicProgressList) return;
   if (!topics || topics.length === 0) {
-    dom.topicProgressList.innerHTML = '<div class="topic-progress-item"><span class="topic-progress-name">No data yet</span><div class="topic-progress-bar"><div class="topic-progress-fill" style="width: 0%"></div></div><span class="topic-progress-pct">0%</span></div>';
+    dom.topicProgressList.innerHTML = '<div class="topic-progress-item"><span class="topic-progress-name">' + t("progress.noDataInline") + '</span><div class="topic-progress-bar"><div class="topic-progress-fill" style="width: 0%"></div></div><span class="topic-progress-pct">0%</span></div>';
     return;
   }
   state.topicStats = topics;
@@ -150,23 +163,21 @@ export function renderTopicProgress(topics: TopicStat[]): void {
   topics.forEach(tp => {
     const div = document.createElement("div");
     const ret = Math.round(tp.averageRetention);
-    const heat = ret >= 80 ? "hot" : ret >= 50 ? "warm" : "cold";
-    div.className = "topic-progress-item topic-heat-" + heat;
-    const dot = document.createElement("span");
-    dot.className = "topic-heat-dot";
+    div.className = "topic-progress-item";
+    div.title = `${tp.lang} • ${tp.topic}`;
     const name = document.createElement("span");
     name.className = "topic-progress-name";
-    name.textContent = tp.lang + " - " + tp.topic;
+    name.textContent = tp.topic;
     const bar = document.createElement("div");
     bar.className = "topic-progress-bar";
     const fill = document.createElement("div");
     fill.className = "topic-progress-fill";
     fill.style.width = ret + "%";
+    fill.style.background = ret >= 80 ? "var(--good)" : ret >= 50 ? "var(--accent)" : "var(--warn)";
     bar.appendChild(fill);
     const pct = document.createElement("span");
     pct.className = "topic-progress-pct";
     pct.textContent = ret + "%";
-    div.appendChild(dot);
     div.appendChild(name);
     div.appendChild(bar);
     div.appendChild(pct);

@@ -10,6 +10,8 @@ export const dom = {
   topicGrid: el("topicGrid"),
   genBtn: el("genBtn") as HTMLButtonElement | null,
   practiceForm: el("practiceForm"),
+  practiceDetailPage: el("practiceDetailPage"),
+  practiceJudgePage: el("practiceJudgePage"),
   practiceTopbar: el("practiceTopbar"),
   topbarBackBtn: el("topbarBackBtn") as HTMLButtonElement | null,
   topbarGenBtn: el("topbarGenBtn") as HTMLButtonElement | null,
@@ -38,12 +40,19 @@ export const dom = {
   // Run / Judge
   runBtn: el("runBtn") as HTMLButtonElement | null,
   judgeBtn: el("judgeBtn") as HTMLButtonElement | null,
+  runOutputWrap: el("runOutputWrap"),
+  runOutputEl: el("runOutput"),
+  runDuration: el("runDuration"),
 
   // Output
   outputWrap: el("outputWrap"),
   outputEl: el("output"),
   testCasesList: el("testCasesList"),
   resultBadge: el("resultBadge"),
+  judgeRewards: el("judgeRewards"),
+  judgeFooter: el("judgeFooter"),
+  judgeFooterText: el("judgeFooterText"),
+  judgeFooterDot: el("judgeFooterDot"),
 
   // Perf card
   perfCard: el("perfCard"),
@@ -59,11 +68,16 @@ export const dom = {
   nextPracticeBtn: el("nextPracticeBtn") as HTMLButtonElement | null,
   similarPracticeBtn: el("similarPracticeBtn") as HTMLButtonElement | null,
   passButtons: el("passButtons"),
+  judgeBackBtn: el("judgeBackBtn") as HTMLButtonElement | null,
+  judgeRetryBtn: el("judgeRetryBtn") as HTMLButtonElement | null,
+  judgeRecoveryActions: el("judgeRecoveryActions"),
 
   // Level / XP
   levelBadge: el("levelBadge"),
   practiceXpFill: el("practiceXpFill"),
   practiceXpCount: el("practiceXpCount"),
+  practiceXpTopic: el("practiceXpTopic"),
+  detailFooterText: el("detailFooterText"),
 
   // Chat
   openChatBtn: el("openChatBtn") as HTMLButtonElement | null,
@@ -99,8 +113,13 @@ export const dom = {
   settingsPanel: el("settingsPanel"),
   saveSettingsBtn: el("saveSettingsBtn") as HTMLButtonElement | null,
   settingsSavedMsg: el("settingsSaved"),
+  settingsCloseBtn: el("settingsCloseBtn") as HTMLButtonElement | null,
+  settingsFooterText: el("settingsFooterText"),
+  practiceFormFooterText: el("practiceFormFooterText"),
+  customFooterText: el("customFooterText"),
 
   // UI language
+  uiLangSwitch: el("uiLangSwitch"),
   uiLangSelect: el("uiLangSelect") as HTMLSelectElement | null,
 
   // Alt methods / Cross-lang

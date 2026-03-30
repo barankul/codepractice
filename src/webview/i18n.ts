@@ -34,4 +34,16 @@ export function applyTranslations(): void {
     const val = t(key);
     if (val && val !== key) (el as HTMLInputElement).placeholder = val;
   });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    const key = el.getAttribute("data-i18n-title");
+    if (!key) return;
+    const val = t(key);
+    if (val && val !== key) (el as HTMLElement).title = val;
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach(el => {
+    const key = el.getAttribute("data-i18n-aria-label");
+    if (!key) return;
+    const val = t(key);
+    if (val && val !== key) (el as HTMLElement).setAttribute("aria-label", val);
+  });
 }

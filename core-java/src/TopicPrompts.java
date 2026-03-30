@@ -2,15 +2,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
+// トピック別のオフラインプロンプト（レベル1〜5）
 public class TopicPrompts {
 
     private static final Map<String, String[]> PROMPTS = new HashMap<>();
     private static final Random random = new Random();
 
     static {
-        // ============ ARRAY ============
+        // ── Array ──
         PROMPTS.put("Array", new String[]{
-            // Level 1 - Tek satir
             "TITLE: Array Element Access\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -24,7 +24,6 @@ public class TopicPrompts {
             "TASK: Get the third element from array\n" +
             "OUTPUT: Third element: 30",
 
-            // Level 2 - Basit loop
             "TITLE: Array Sum\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -41,7 +40,6 @@ public class TopicPrompts {
             "TASK: Write a for-each loop to sum all elements\n" +
             "OUTPUT: Sum: 50",
 
-            // Level 3 - Loop + condition
             "TITLE: Count Even Numbers\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -60,7 +58,6 @@ public class TopicPrompts {
             "TASK: Count how many even numbers are in the array\n" +
             "OUTPUT: Even count: 3",
 
-            // Level 4 - Find max/min
             "TITLE: Find Maximum\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -79,7 +76,6 @@ public class TopicPrompts {
             "TASK: Find the maximum value in the array\n" +
             "OUTPUT: Max: 45",
 
-            // Level 5 - Reverse array
             "TITLE: Reverse Array\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -99,9 +95,8 @@ public class TopicPrompts {
             "OUTPUT: Reversed: 5 4 3 2 1"
         });
 
-        // ============ ARRAYLIST ============
+        // ── ArrayList ──
         PROMPTS.put("ArrayList", new String[]{
-            // Level 1
             "TITLE: Add Element\n" +
             "```java\n" +
             "import java.util.ArrayList;\n" +
@@ -116,7 +111,6 @@ public class TopicPrompts {
             "TASK: Add the string \"Hello\" to the ArrayList\n" +
             "OUTPUT: [Hello]",
 
-            // Level 2
             "TITLE: ArrayList Sum\n" +
             "```java\n" +
             "import java.util.ArrayList;\n" +
@@ -135,7 +129,6 @@ public class TopicPrompts {
             "TASK: Calculate sum of all elements using for-each loop\n" +
             "OUTPUT: Sum: 60",
 
-            // Level 3
             "TITLE: Remove Negatives\n" +
             "```java\n" +
             "import java.util.ArrayList;\n" +
@@ -155,7 +148,6 @@ public class TopicPrompts {
             "TASK: Remove all negative numbers from the list\n" +
             "OUTPUT: [5, 8]",
 
-            // Level 4
             "TITLE: Find Duplicates\n" +
             "```java\n" +
             "import java.util.ArrayList;\n" +
@@ -178,7 +170,6 @@ public class TopicPrompts {
             "TASK: Find all duplicate values in the list\n" +
             "OUTPUT: Duplicates: [1, 2]",
 
-            // Level 5
             "TITLE: Merge Sorted Lists\n" +
             "```java\n" +
             "import java.util.ArrayList;\n" +
@@ -204,9 +195,8 @@ public class TopicPrompts {
             "OUTPUT: [1, 2, 3, 4, 5, 6]"
         });
 
-        // ============ HASHMAP ============
+        // ── HashMap ──
         PROMPTS.put("HashMap", new String[]{
-            // Level 1
             "TITLE: Put and Get\n" +
             "```java\n" +
             "import java.util.HashMap;\n" +
@@ -221,7 +211,6 @@ public class TopicPrompts {
             "TASK: Add Ali with age 25 to the HashMap\n" +
             "OUTPUT: Ali's age: 25",
 
-            // Level 2
             "TITLE: Iterate HashMap\n" +
             "```java\n" +
             "import java.util.HashMap;\n" +
@@ -239,7 +228,6 @@ public class TopicPrompts {
             "TASK: Print all key-value pairs using keySet()\n" +
             "OUTPUT: Math: 90\\nEnglish: 85",
 
-            // Level 3
             "TITLE: Word Frequency\n" +
             "```java\n" +
             "import java.util.HashMap;\n" +
@@ -257,7 +245,6 @@ public class TopicPrompts {
             "TASK: Count frequency of each word\n" +
             "OUTPUT: {banana=2, apple=3, cherry=1}",
 
-            // Level 4
             "TITLE: Find Max Value Key\n" +
             "```java\n" +
             "import java.util.HashMap;\n" +
@@ -280,7 +267,6 @@ public class TopicPrompts {
             "TASK: Find the key with maximum value\n" +
             "OUTPUT: Winner: Veli",
 
-            // Level 5
             "TITLE: Group By First Letter\n" +
             "```java\n" +
             "import java.util.HashMap;\n" +
@@ -304,9 +290,8 @@ public class TopicPrompts {
             "OUTPUT: {A=[Ali, Ayse], B=[Berk, Burak], C=[Can]}"
         });
 
-        // ============ HASHSET ============
+        // ── HashSet ──
         PROMPTS.put("HashSet", new String[]{
-            // Level 1
             "TITLE: Add to Set\n" +
             "```java\n" +
             "import java.util.HashSet;\n" +
@@ -322,7 +307,6 @@ public class TopicPrompts {
             "TASK: Add Red and Blue to the HashSet\n" +
             "OUTPUT: 2",
 
-            // Level 2
             "TITLE: Remove Duplicates\n" +
             "```java\n" +
             "import java.util.HashSet;\n" +
@@ -341,7 +325,6 @@ public class TopicPrompts {
             "TASK: Add all numbers to set to remove duplicates\n" +
             "OUTPUT: Unique: 4",
 
-            // Level 3
             "TITLE: Find Common Elements\n" +
             "```java\n" +
             "import java.util.HashSet;\n" +
@@ -364,7 +347,6 @@ public class TopicPrompts {
             "TASK: Find elements that exist in both arrays\n" +
             "OUTPUT: Common: [4, 5]",
 
-            // Level 4
             "TITLE: First Non-Repeating\n" +
             "```java\n" +
             "import java.util.HashSet;\n" +
@@ -389,7 +371,6 @@ public class TopicPrompts {
             "TASK: Find the first non-repeating number\n" +
             "OUTPUT: First unique: 5",
 
-            // Level 5
             "TITLE: Symmetric Difference\n" +
             "```java\n" +
             "import java.util.HashSet;\n" +
@@ -414,9 +395,8 @@ public class TopicPrompts {
             "OUTPUT: [1, 4]"
         });
 
-        // ============ STRING ============
+        // ── String ──
         PROMPTS.put("String", new String[]{
-            // Level 1
             "TITLE: String Length\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -430,7 +410,6 @@ public class TopicPrompts {
             "TASK: Get the length of the string\n" +
             "OUTPUT: Length: 11",
 
-            // Level 2
             "TITLE: Count Vowels\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -448,7 +427,6 @@ public class TopicPrompts {
             "TASK: Count vowels in the string\n" +
             "OUTPUT: Vowels: 3",
 
-            // Level 3
             "TITLE: Reverse String\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -465,7 +443,6 @@ public class TopicPrompts {
             "TASK: Reverse the string\n" +
             "OUTPUT: olleH",
 
-            // Level 4
             "TITLE: Is Palindrome\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -485,7 +462,6 @@ public class TopicPrompts {
             "TASK: Check if string is palindrome\n" +
             "OUTPUT: Palindrome",
 
-            // Level 5
             "TITLE: Compress String\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -509,9 +485,8 @@ public class TopicPrompts {
             "OUTPUT: a3b2c4"
         });
 
-        // ============ METHODS ============
+        // ── Methods ──
         PROMPTS.put("Methods", new String[]{
-            // Level 1
             "TITLE: Simple Method\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -527,7 +502,6 @@ public class TopicPrompts {
             "TASK: Create a method that prints Hello!\n" +
             "OUTPUT: Hello!",
 
-            // Level 2
             "TITLE: Method with Return\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -544,7 +518,6 @@ public class TopicPrompts {
             "TASK: Create add method that returns sum of two numbers\n" +
             "OUTPUT: Sum: 8",
 
-            // Level 3
             "TITLE: Array Parameter\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -563,7 +536,6 @@ public class TopicPrompts {
             "TASK: Create method that calculates average of array\n" +
             "OUTPUT: Average: 3.0",
 
-            // Level 4
             "TITLE: Recursive Factorial\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -580,7 +552,6 @@ public class TopicPrompts {
             "TASK: Create recursive factorial method\n" +
             "OUTPUT: 5! = 120",
 
-            // Level 5
             "TITLE: Multiple Methods\n" +
             "```java\n" +
             "public class Practice {\n" +
@@ -613,27 +584,20 @@ public class TopicPrompts {
         });
     }
 
-    /**
-     * Get a specific prompt for a topic and level
-     */
+    // 指定トピック・レベルのプロンプトを返す
     public static String getPrompt(String topic, int level) {
         String[] prompts = PROMPTS.get(topic);
-        if (prompts == null) {
-            return null; // Topic not found, use generic prompt
-        }
+        if (prompts == null) return null;
 
-        // Clamp level to valid range
         int index = Math.max(0, Math.min(level - 1, prompts.length - 1));
         return prompts[index];
     }
 
-    // Store variations for SIMILAR practice (different fixed values)
+    // SIMILAR練習用のバリエーション（値違い）
     private static final Map<String, String[][]> VARIATIONS = new HashMap<>();
 
     static {
-        // Array variations for SIMILAR
         VARIATIONS.put("Array", new String[][]{
-            // Level 2 variations (Sum)
             {
                 "TITLE: Array Sum\n```java\npublic class Practice {\n    public static void main(String[] args) {\n        int[] nums = {5, 10, 15, 20};\n        int sum = 0;\n>>>     for (int n : nums) {\n>>>         sum += n;\n>>>     }\n        System.out.println(\"Sum: \" + sum);\n    }\n}\n```\nTASK: Write a for-each loop to sum all elements\nOUTPUT: Sum: 50",
                 "TITLE: Array Sum\n```java\npublic class Practice {\n    public static void main(String[] args) {\n        int[] nums = {3, 7, 12, 8};\n        int sum = 0;\n>>>     for (int n : nums) {\n>>>         sum += n;\n>>>     }\n        System.out.println(\"Sum: \" + sum);\n    }\n}\n```\nTASK: Write a for-each loop to sum all elements\nOUTPUT: Sum: 30",
@@ -643,13 +607,10 @@ public class TopicPrompts {
         });
     }
 
-    /**
-     * Get a different variation for SIMILAR practice
-     */
+    // バリエーションからランダムに返す
     public static String getVariation(String topic, int level) {
         String[][] topicVariations = VARIATIONS.get(topic);
         if (topicVariations == null || level < 1 || level > topicVariations.length) {
-            // No variations, return normal prompt
             return getPrompt(topic, level);
         }
 
@@ -658,21 +619,14 @@ public class TopicPrompts {
             return getPrompt(topic, level);
         }
 
-        // Pick random variation
         int idx = random.nextInt(levelVariations.length);
         return levelVariations[idx];
     }
 
-    /**
-     * Check if we have a custom prompt for this topic
-     */
     public static boolean hasPrompt(String topic) {
         return PROMPTS.containsKey(topic);
     }
 
-    /**
-     * Get all available topics
-     */
     public static String[] getTopics() {
         return PROMPTS.keySet().toArray(new String[0]);
     }

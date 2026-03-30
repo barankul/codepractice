@@ -54,7 +54,7 @@ export function renderCustomHistory(): void {
     const del = document.createElement("button");
     del.className = "custom-history-item-delete";
     del.textContent = "\u00d7";
-    del.title = "Delete";
+    del.title = t("common.delete");
     del.onclick = (e) => {
       e.stopPropagation();
       post({ type: "deleteCustomPractice", id: cp.id });

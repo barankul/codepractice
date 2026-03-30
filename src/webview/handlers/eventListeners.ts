@@ -1,20 +1,23 @@
 // Event listeners — all button click handlers
 import { state } from "../state";
 import { dom } from "../dom";
-import { t, applyTranslations } from "../i18n";
+import { t } from "../i18n";
 import { post } from "../vscodeApi";
 import { showLoading, showToast } from "../ui/loading";
-import { renderLangButtons, renderTopics, updateCodeSizeGroupVisibility, updateSourceToggle } from "../ui/langTopics";
+import { renderLangButtons, renderTopics, syncSegmentedToggle, updateCodeSizeGroupVisibility, updateSourceToggle } from "../ui/langTopics";
 import { renderCustomLangButtons } from "../ui/custom";
 import { showProviderConfig, updateConfigBanner, updateOfflineIndicators, isCurrentlyOffline, collectSettings } from "../ui/settings";
+import { applyUiLanguage } from "../ui/uiLanguage";
+import { showPracticeView } from "../practiceView";
 
 export function initEventListeners(): void {
   // UI language selector
-  if (dom.uiLangSelect) {
-    dom.uiLangSelect.addEventListener("change", () => {
-      state.currentUiLang = dom.uiLangSelect!.value;
-      applyTranslations();
-      post({ type: "setUiLang", lang: state.currentUiLang });
+  if (dom.uiLangSwitch) {
+    dom.uiLangSwitch.addEventListener("click", (event) => {
+      const target = (event.target as HTMLElement).closest(".ui-lang-pill") as HTMLButtonElement | null;
+      if (!target?.dataset.lang) return;
+      if (target.dataset.lang === state.currentUiLang) return;
+      applyUiLanguage(target.dataset.lang);
     });
   }
 
@@ -27,6 +30,7 @@ export function initEventListeners(): void {
       const panelId = (tab as HTMLElement).dataset.tab + "Panel";
       const panel = document.getElementById(panelId);
       if (panel) panel.classList.add("active");
+      document.body.classList.remove("practice-focus-mode", "settings-focus-mode");
       if ((tab as HTMLElement).dataset.tab === "progress") post({ type: "getProgress" });
       if ((tab as HTMLElement).dataset.tab === "custom") post({ type: "getCustomPractices" });
     });
@@ -47,9 +51,11 @@ export function initEventListeners(): void {
   // Top bar: Back button
   if (dom.topbarBackBtn) {
     dom.topbarBackBtn.addEventListener("click", () => {
-      if (dom.practiceForm) dom.practiceForm.style.display = "block";
-      if (dom.practiceTopbar) dom.practiceTopbar.style.display = "none";
-      if (dom.detailsWrap) dom.detailsWrap.style.display = "none";
+      if (state.practiceView === "judge") {
+        showPracticeView("detail");
+      } else {
+        showPracticeView("form");
+      }
     });
   }
 
@@ -146,6 +152,21 @@ export function initEventListeners(): void {
     });
   }
 
+  if (dom.judgeBackBtn) {
+    dom.judgeBackBtn.addEventListener("click", () => {
+      showPracticeView("detail");
+    });
+  }
+
+  if (dom.judgeRetryBtn) {
+    dom.judgeRetryBtn.addEventListener("click", () => {
+      if (dom.runBtn) dom.runBtn.disabled = true;
+      if (dom.judgeBtn) dom.judgeBtn.disabled = true;
+      state.currentLoadingAction = "judge";
+      post({ type: "judge" });
+    });
+  }
+
   // Hint toggle
   if (dom.hintToggle) {
     dom.hintToggle.addEventListener("click", () => {
@@ -230,7 +251,7 @@ export function initEventListeners(): void {
   if (dom.customGenBtn) {
     dom.customGenBtn.addEventListener("click", () => {
       const prompt = (dom.customPromptInput ? dom.customPromptInput.value : "").trim();
-      if (!prompt) { showToast("error", "Please describe what you want to practice"); return; }
+      if (!prompt) { showToast("error", t("msg.describePrompt")); return; }
       state.currentLoadingAction = "generate";
       post({ type: "generateCustom", prompt, lang: state.customLang });
     });
@@ -246,6 +267,8 @@ export function initEventListeners(): void {
       const settingsPanel = document.getElementById("settingsPanel");
       if (settingsTab) settingsTab.classList.add("active");
       if (settingsPanel) settingsPanel.classList.add("active");
+      document.body.classList.remove("practice-focus-mode");
+      document.body.classList.add("settings-focus-mode");
     });
   }
 
@@ -266,6 +289,7 @@ export function initEventListeners(): void {
       const customPanel = document.getElementById("customPanel");
       if (customTab) customTab.classList.add("active");
       if (customPanel) customPanel.classList.add("active");
+      document.body.classList.remove("practice-focus-mode", "settings-focus-mode");
       post({ type: "getCustomPractices" });
     });
   }
@@ -276,7 +300,7 @@ export function initEventListeners(): void {
     customRegenBtn.addEventListener("click", () => {
       const cpEdit = document.getElementById("customPromptEdit") as HTMLTextAreaElement | null;
       const newPrompt = cpEdit ? cpEdit.value.trim() : "";
-      if (!newPrompt) { showToast("error", "Please describe what you want to practice"); return; }
+      if (!newPrompt) { showToast("error", t("msg.describePrompt")); return; }
       state._customPrompt = newPrompt;
       state.currentLoadingAction = "generate";
       post({ type: "generateCustom", prompt: newPrompt, lang: state._customModeLang });
@@ -291,15 +315,29 @@ export function initEventListeners(): void {
       document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
       if (!isActive) {
         dom.settingsPanel?.classList.add("active");
+        document.body.classList.remove("practice-focus-mode");
+        document.body.classList.add("settings-focus-mode");
       } else {
         document.querySelector('.tab[data-tab="practice"]')?.classList.add("active");
         dom.practicePanel?.classList.add("active");
+        document.body.classList.remove("settings-focus-mode");
+        document.body.classList.toggle("practice-focus-mode", state.practiceView !== "form");
       }
     });
   }
 
+  if (dom.settingsCloseBtn) {
+    dom.settingsCloseBtn.addEventListener("click", () => {
+      document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      document.querySelector('.tab[data-tab="practice"]')?.classList.add("active");
+      dom.practicePanel?.classList.add("active");
+      document.body.classList.remove("settings-focus-mode");
+      document.body.classList.toggle("practice-focus-mode", state.practiceView !== "form");
+    });
+  }
+
   // Provider cards
-  document.querySelectorAll(".provider-card").forEach(card => {
+  document.querySelectorAll(".provider-card, .provider-item").forEach(card => {
     card.addEventListener("click", () => {
       showProviderConfig((card as HTMLElement).dataset.provider || "");
     });
@@ -354,6 +392,7 @@ export function initEventListeners(): void {
       document.querySelectorAll("#modeToggle .mode-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.selectedMode = ((btn as HTMLElement).dataset.mode || "practice") as "practice" | "bugfix";
+      syncSegmentedToggle("modeToggle");
       updateCodeSizeGroupVisibility();
     });
   });
@@ -364,6 +403,7 @@ export function initEventListeners(): void {
       document.querySelectorAll("#codeSizeToggle .mode-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.selectedCodeSize = ((btn as HTMLElement).dataset.size || "snippet") as "snippet" | "codebase";
+      syncSegmentedToggle("codeSizeToggle");
     });
   });
 
@@ -373,26 +413,30 @@ export function initEventListeners(): void {
       document.querySelectorAll("#sourceToggle .mode-btn").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       state.selectedSource = ((btn as HTMLElement).dataset.source || "offline") as "ai" | "offline";
+      syncSegmentedToggle("sourceToggle");
       updateOfflineIndicators();
       updateSourceToggle();
     });
   });
 
+  syncSegmentedToggle("sourceToggle");
+  syncSegmentedToggle("modeToggle");
+  syncSegmentedToggle("codeSizeToggle");
+
   // Cross-language dropdown
   if (dom.crossLangBtn && dom.crossLangDropdown) {
     dom.crossLangBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const isOpen = dom.crossLangDropdown!.classList.contains("show");
-      if (!isOpen) {
-        const rect = dom.crossLangBtn!.getBoundingClientRect();
-        dom.crossLangDropdown!.style.position = "fixed";
-        dom.crossLangDropdown!.style.left = rect.left + "px";
-        dom.crossLangDropdown!.style.bottom = (window.innerHeight - rect.top + 4) + "px";
-        dom.crossLangDropdown!.style.top = "auto";
-      }
-      dom.crossLangDropdown!.classList.toggle("show");
+      const show = !dom.crossLangDropdown!.classList.contains("show");
+      dom.crossLangDropdown!.classList.toggle("show", show);
+      dom.crossLangBtn!.classList.toggle("expanded", show);
+      dom.crossLangBtn!.setAttribute("aria-expanded", String(show));
     });
-    document.addEventListener("click", () => { dom.crossLangDropdown!.classList.remove("show"); });
+    document.addEventListener("click", () => {
+      dom.crossLangDropdown!.classList.remove("show");
+      dom.crossLangBtn!.classList.remove("expanded");
+      dom.crossLangBtn!.setAttribute("aria-expanded", "false");
+    });
     dom.crossLangDropdown.addEventListener("click", (e) => { e.stopPropagation(); });
   }
 

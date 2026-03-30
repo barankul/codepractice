@@ -1,5 +1,5 @@
+// JSON文字列のエスケープ
 public class Json {
-    // JSON string için escape
     public static String quote(String s) {
         if (s == null) return "null";
         return "\"" + s

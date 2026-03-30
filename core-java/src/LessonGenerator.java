@@ -1,10 +1,7 @@
-/**
- * Generates structured lessons for learning a programming language from scratch.
- * Each language has a curriculum with progressive topics.
- */
+// レッスン形式の練習問題を生成する（カリキュラム順）
 public class LessonGenerator {
 
-    // Curriculum definitions for each language
+    // 各言語のカリキュラム定義
     private static final String[][] JAVA_CURRICULUM = {
         {"1", "Variables", "Learn how to store data using variables"},
         {"2", "Data Types", "Understanding int, String, boolean, double"},
@@ -121,7 +118,7 @@ public class LessonGenerator {
         String topic = lesson[1];
         String description = lesson[2];
 
-        // Get previous topics for context
+        // 前のトピックをコンテキストとして渡す
         StringBuilder previousTopics = new StringBuilder();
         for (int i = 0; i < lessonNum - 1; i++) {
             if (i > 0) previousTopics.append(", ");
@@ -181,7 +178,6 @@ public class LessonGenerator {
         String[] lesson = curriculum[lessonNum - 1];
         String topic = lesson[1];
 
-        // Build practice prompt
         String prompt = buildPracticePrompt(lang, topic, lessonNum);
 
         String raw = Ai.ask(prompt);

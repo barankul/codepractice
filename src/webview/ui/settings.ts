@@ -23,6 +23,37 @@ const keyFields: Record<string, string> = {
   openrouter: "settingsOpenrouterKey", local: "settingsLocalKey",
 };
 
+function getOfflinePracticeFooterText(): string {
+  if (state.currentUiLang === "ja") return "\u30aa\u30d5\u30e9\u30a4\u30f3 \u2022 138 \u554f";
+  if (state.currentUiLang === "tr") return "\u00c7evrimd\u0131\u015f\u0131 \u2022 138 al\u0131\u015ft\u0131rma";
+  return "Offline • 138 practices";
+}
+
+function getAiModeFooterText(): string {
+  if (state.currentUiLang === "ja") return "AI \u30e2\u30fc\u30c9";
+  if (state.currentUiLang === "tr") return "AI Modu";
+  return "AI Mode";
+}
+
+function updatePanelFooters(provider: string): void {
+  if (dom.practiceFormFooterText) {
+    const usingOffline = isCurrentlyOffline() || state.selectedSource === "offline";
+    dom.practiceFormFooterText.textContent = usingOffline
+      ? getOfflinePracticeFooterText()
+      : `${providerDisplayNames[provider] || provider} • ${getAiModeFooterText()}`;
+  }
+  if (dom.customFooterText) {
+    dom.customFooterText.textContent = getAiModeFooterText();
+  }
+  if (dom.settingsFooterText) {
+    if (isCurrentlyOffline()) {
+      dom.settingsFooterText.textContent = getOfflinePracticeFooterText();
+    } else {
+      dom.settingsFooterText.textContent = `${providerDisplayNames[provider] || provider} • ${getSelectedModelLabel(provider)}`;
+    }
+  }
+}
+
 export function showProviderConfig(provider: string): void {
   state.currentProvider = provider;
   document.querySelectorAll(".provider-item").forEach(c =>
@@ -64,11 +95,23 @@ export function updateOfflineIndicators(): void {
   const customSettingsBtn = document.getElementById("customGoSettingsBtn");
   const customSwitchBtn = document.getElementById("customSwitchAiBtn");
   const customOfflineDesc = customOverlay ? customOverlay.querySelector(".custom-offline-desc") : null;
+  const customOfflineSource = document.getElementById("customOfflineSource");
+  const customPromptInput = document.getElementById("customPromptInput") as HTMLTextAreaElement | null;
+  const customGenBtn = document.getElementById("customGenBtn") as HTMLButtonElement | null;
 
-  if (customOverlay) (customOverlay as HTMLElement).style.display = offline ? "flex" : "none";
-  if (customForm) (customForm as HTMLElement).style.display = offline ? "none" : "";
-  if (customSubtitle) (customSubtitle as HTMLElement).style.display = offline ? "none" : "";
-  if (customHistory) (customHistory as HTMLElement).style.display = offline ? "none" : "";
+  if (customOverlay) {
+    (customOverlay as HTMLElement).style.display = offline ? "flex" : "none";
+    customOverlay.classList.toggle("inline-banner", offline);
+  }
+  if (customForm) (customForm as HTMLElement).style.display = "";
+  if (customSubtitle) (customSubtitle as HTMLElement).style.display = "";
+  if (customHistory) (customHistory as HTMLElement).style.display = "";
+  if (customPromptInput) {
+    customPromptInput.disabled = offline;
+    customPromptInput.placeholder = offline ? t("custom.aiRequired") : t("custom.prompt");
+  }
+  if (customGenBtn) customGenBtn.disabled = offline;
+  document.getElementById("customPanel")?.classList.toggle("custom-ai-required", offline);
 
   const noApiKey = isCurrentlyOffline();
   const hasKeyButOffline = !noApiKey && state.selectedSource === "offline";
@@ -79,15 +122,20 @@ export function updateOfflineIndicators(): void {
   } else if (customOfflineDesc && noApiKey) {
     customOfflineDesc.innerHTML = t("custom.aiRequiredDesc");
   }
+  if (customOfflineSource) {
+    customOfflineSource.textContent = `${t("practice.sourceCode")}: ${t("practice.sourceAI")}`;
+  }
 
   // AI Chat button
   const chatBtn = document.getElementById("openChatBtn") as HTMLButtonElement | null;
   if (chatBtn) {
     chatBtn.disabled = offline;
-    chatBtn.title = offline ? "AI Chat (requires AI provider)" : "AI Chat";
+    chatBtn.title = offline ? t("settings.aiChatRequiresProvider") : t("practice.aiChat");
     chatBtn.style.opacity = offline ? "0.4" : "";
     chatBtn.style.cursor = offline ? "not-allowed" : "";
   }
+
+  updatePanelFooters(state.currentProvider || DEFAULT_AI_PROVIDER);
 }
 
 export function updateConfigBanner(provider: string): void {
@@ -95,15 +143,14 @@ export function updateConfigBanner(provider: string): void {
   const bm = document.getElementById("bannerModelName");
   const offline = isCurrentlyOffline();
   if (offline) {
-    if (bn) bn.textContent = "Offline Mode";
-    if (bm) bm.textContent = "140+ built-in practices";
+    if (bn) bn.textContent = t("settings.offlineMode");
+    if (bm) bm.textContent = t("settings.builtInPractices");
   } else {
     if (bn) bn.textContent = providerDisplayNames[provider] || provider;
     if (bm) bm.textContent = getSelectedModelLabel(provider);
   }
-  document.querySelectorAll(".provider-item").forEach(c =>
-    (c as HTMLElement).classList.toggle("saved", (c as HTMLElement).dataset.provider === provider));
   updateOfflineIndicators();
+  updatePanelFooters(provider);
 }
 
 export function loadSettingsUI(s: AiSettings): void {

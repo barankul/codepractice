@@ -1,6 +1,6 @@
+// バグ修正の練習問題を生成する
 public class DebugMain {
     public static void main(String[] args) throws Exception {
-        // args: <Language> <Topic>
         if (args.length < 2) {
             System.out.println("{\"error\":\"Usage: <Language> <Topic>\"}");
             return;
@@ -9,7 +9,6 @@ public class DebugMain {
         String lang = args[0];
         String topic = args[1];
 
-        // Get level from environment
         int level = 1;
         try {
             level = Integer.parseInt(System.getenv().getOrDefault("CODETEACHER_LEVEL", "1"));
@@ -17,7 +16,7 @@ public class DebugMain {
             level = 1;
         }
 
-        // Build difficulty description based on level
+        // レベルに応じたバグの難しさ
         String bugDifficulty;
         if (level == 1) {
             bugDifficulty = "simple typo or off-by-one error";
@@ -47,7 +46,7 @@ public class DebugMain {
             "- Keep code under 30 lines\n" +
             "No extra commentary.";
 
-        // File extension based on language
+        // 言語に合わせた拡張子
         String filename;
         if (lang.equalsIgnoreCase("TypeScript")) {
             filename = "Practice.ts";
@@ -57,14 +56,12 @@ public class DebugMain {
             filename = "Practice.java";
         }
 
-        // Get AI response
         String raw = Ai.ask(prompt);
         String text = Ai.extractContent(raw);
 
         String code = Extract.firstCodeBlock(text);
         if (code == null) code = "// NO_CODE_BLOCK_FOUND\n";
 
-        // JSON output
         String json =
             "{"
           + "\"filename\":" + Json.quote(filename) + ","

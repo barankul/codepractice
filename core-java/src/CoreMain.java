@@ -1,73 +1,55 @@
+// 練習問題の生成エントリポイント
 public class CoreMain {
 
-    // Fix common AI mistakes (Java-specific)
+    // AIが出すJavaのよくあるミスを直す
     private static String fixJavaMistakes(String code) {
-        // Remove Scanner import
         code = code.replaceAll("import java\\.util\\.Scanner;\\n?", "");
-
-        // Remove Scanner lines
         code = code.replaceAll(".*Scanner.*=.*new Scanner.*\\n?", "");
         code = code.replaceAll(".*scanner\\..*\\n?", "");
         code = code.replaceAll(".*Scanner\\..*\\n?", "");
-
-        // Fix class name to Practice
         code = code.replaceAll("public class \\w+", "public class Practice");
-
-        // Fix: AI sometimes puts static methods INSIDE main() — move them before main()
         code = extractMethodsFromMain(code);
-
         return code;
     }
 
-    /**
-     * Find static/non-main methods defined inside main() body and move them
-     * to class level (before main). Uses brace-depth tracking.
-     */
+    // main()の中に間違って定義されたメソッドをクラスレベルに移動
     private static String extractMethodsFromMain(String code) {
-        // Find main method opening brace
         int mainIdx = code.indexOf("public static void main");
         if (mainIdx < 0) return code;
 
-        // Find the opening brace of main
         int mainBrace = code.indexOf('{', mainIdx);
         if (mainBrace < 0) return code;
 
-        // Scan inside main body for method declarations
-        // A method inside main looks like: [public] [static] returnType methodName(params) {
         java.util.regex.Pattern methodPat = java.util.regex.Pattern.compile(
             "^\\s*(public\\s+)?(static\\s+)(\\w+(?:\\[\\])?\\s+)(\\w+)(\\s*\\([^)]*\\)\\s*\\{)",
             java.util.regex.Pattern.MULTILINE
         );
 
-        // Track depth to know we're inside main
         StringBuilder extracted = new StringBuilder();
         boolean changed = false;
 
-        // We need to repeatedly find and extract methods since positions shift
+        // 位置がずれるので毎回再スキャン（最大5回）
         for (int pass = 0; pass < 5; pass++) {
             java.util.regex.Matcher m = methodPat.matcher(code);
             boolean found = false;
 
             while (m.find()) {
-                // Skip the main method declaration itself
                 String methodName = m.group(4);
                 if (methodName.equals("main")) continue;
 
-                // Check this match is INSIDE main (after main's opening brace)
                 int matchPos = m.start();
                 int currentMainBrace = code.indexOf('{', code.indexOf("public static void main"));
                 if (matchPos <= currentMainBrace) continue;
 
-                // Verify we're inside main by checking brace depth
+                // main内かどうかを波括弧の深さで判定
                 int depth = 0;
-                boolean insideMain = false;
                 for (int i = currentMainBrace; i < matchPos; i++) {
                     if (code.charAt(i) == '{') depth++;
                     else if (code.charAt(i) == '}') depth--;
                 }
-                if (depth < 1) continue; // not inside main
+                if (depth < 1) continue;
 
-                // Extract the full method (match braces to find end)
+                // メソッド全体を波括弧で追跡して抽出
                 int braceCount = 0;
                 int methodEnd = -1;
                 for (int i = matchPos; i < code.length(); i++) {
@@ -79,10 +61,8 @@ public class CoreMain {
                 }
                 if (methodEnd < 0) continue;
 
-                // Get the method text, strip >>> markers, ensure class-level indentation
                 String method = code.substring(matchPos, methodEnd).trim();
-                method = method.replace(">>>", "   "); // preserve alignment
-                // Re-indent to 4 spaces (class level)
+                method = method.replace(">>>", "   ");
                 String[] methodLines = method.split("\n");
                 StringBuilder indented = new StringBuilder();
                 for (String line : methodLines) {
@@ -90,19 +70,17 @@ public class CoreMain {
                 }
                 extracted.append("\n").append(indented);
 
-                // Remove from original position (including trailing newline)
                 int removeEnd = methodEnd;
                 while (removeEnd < code.length() && code.charAt(removeEnd) == '\n') removeEnd++;
                 code = code.substring(0, matchPos) + code.substring(removeEnd);
                 changed = true;
                 found = true;
-                break; // restart scan since positions shifted
+                break;
             }
             if (!found) break;
         }
 
         if (changed && extracted.length() > 0) {
-            // Insert extracted methods before main
             int insertPos = code.indexOf("public static void main");
             code = code.substring(0, insertPos) + extracted.toString() + "\n    " + code.substring(insertPos);
         }
@@ -110,27 +88,23 @@ public class CoreMain {
         return code;
     }
 
-    // Fix common AI mistakes based on language
+    // 言語に応じたコード修正
     private static String fixCommonMistakes(String code, String lang) {
         if (lang.equalsIgnoreCase("Java")) {
             return fixJavaMistakes(code);
         }
-        // TypeScript: no special fixes needed
         return code;
     }
 
-    // Remove lines marked with >>> and replace with placeholder
+    // >>>マーク行を消してプレースホルダに置換
     private static String removeMarkedLines(String code) {
         String[] lines = code.split("\n");
         StringBuilder result = new StringBuilder();
         boolean addedPlaceholder = false;
 
         for (String line : lines) {
-            // Check if line contains >>> anywhere
             if (line.contains(">>>")) {
-                // This is a solution line - skip it
                 if (!addedPlaceholder) {
-                    // Add placeholder only once
                     result.append("        // YOUR CODE HERE\n");
                     result.append("        \n");
                     result.append("        \n");
@@ -138,7 +112,6 @@ public class CoreMain {
                 }
             } else {
                 result.append(line).append("\n");
-                // Reset flag when we hit non-empty, non-solution code
                 String trimmed = line.trim();
                 if (!trimmed.isEmpty() && !trimmed.equals("}")) {
                     addedPlaceholder = false;
@@ -146,13 +119,10 @@ public class CoreMain {
             }
         }
 
-
-
         return result.toString();
     }
 
     public static void main(String[] args) throws Exception {
-        // args: <Language> <Topic>
         if (args.length < 2) {
             System.out.println("{\"error\":\"Usage: <Language> <Topic>\"}");
             return;
@@ -161,7 +131,6 @@ public class CoreMain {
         String lang = args[0];
         String topic = args[1];
 
-        // Get level and history from environment
         int level = 1;
         try {
             level = Integer.parseInt(System.getenv().getOrDefault("CODETEACHER_LEVEL", "1"));
@@ -172,7 +141,7 @@ public class CoreMain {
         String historyRaw = System.getenv().getOrDefault("CODETEACHER_HISTORY", "");
         String[] previousPractices = historyRaw.isEmpty() ? new String[0] : historyRaw.split("\\|\\|\\|");
 
-        // Build difficulty description based on level
+        // レベル別の難易度ルール
         String difficulty;
         String levelRules;
         if (level == 1) {
@@ -195,13 +164,12 @@ public class CoreMain {
             levelRules = "Level 5+ rules: Complex algorithm or data structure manipulation. Student implements significant logic with multiple methods or nested loops.";
         }
 
-        // Build history avoidance string
+        // 過去の問題と被らないようにする
         StringBuilder historyNote = new StringBuilder();
         boolean isSimilarRequest = false;
         String similarTask = "";
 
         if (previousPractices.length > 0) {
-            // Check if this is a SIMILAR practice request
             if (previousPractices[0].startsWith("SIMILAR REQUEST:")) {
                 isSimilarRequest = true;
                 similarTask = previousPractices[0].replace("SIMILAR REQUEST:", "").trim();
@@ -216,7 +184,7 @@ public class CoreMain {
             }
         }
 
-        // Exercise variety lists by topic
+        // トピック別の問題バリエーション
         String[] arrayExercises = {
             "Find the second largest element",
             "Count elements greater than average",
@@ -325,8 +293,7 @@ public class CoreMain {
             "Create method swap two variables"
         };
 
-        // SQL exercise varieties per topic
-        // TypeScript exercise varieties per topic
+        // TypeScript
         String[] tsTypeBasicsExercises = {
             "Annotate variables with correct types",
             "Fix type errors in variable declarations",
@@ -400,6 +367,7 @@ public class CoreMain {
             "Convert callback to async/await"
         };
 
+        // SQL
         String[] sqlSelectExercises = {
             "Select all users from a specific city",
             "Select users older than a threshold",
@@ -473,7 +441,7 @@ public class CoreMain {
             "Delete products with zero stock"
         };
 
-        // Pick random exercise type for variety
+        // ランダムに問題タイプを選ぶ
         java.util.Random rand = new java.util.Random();
         String exerciseType = "";
         String[] exerciseList = null;
@@ -484,14 +452,12 @@ public class CoreMain {
         else if (topic.equalsIgnoreCase("HashSet")) exerciseList = hashSetExercises;
         else if (topic.equalsIgnoreCase("String")) exerciseList = stringExercises;
         else if (topic.equalsIgnoreCase("Methods")) exerciseList = methodsExercises;
-        // TypeScript topics
         else if (topic.equalsIgnoreCase("Type Basics")) exerciseList = tsTypeBasicsExercises;
         else if (topic.equalsIgnoreCase("Union Types")) exerciseList = tsUnionTypesExercises;
         else if (topic.equalsIgnoreCase("Functions")) exerciseList = tsFunctionsExercises;
         else if (topic.equalsIgnoreCase("Arrays")) exerciseList = tsArraysExercises;
         else if (topic.equalsIgnoreCase("Objects")) exerciseList = tsObjectsExercises;
         else if (topic.equalsIgnoreCase("Async/Await")) exerciseList = tsAsyncExercises;
-        // SQL topics
         else if (topic.equalsIgnoreCase("SELECT Basics")) exerciseList = sqlSelectExercises;
         else if (topic.equalsIgnoreCase("WHERE")) exerciseList = sqlWhereExercises;
         else if (topic.equalsIgnoreCase("JOIN Basics")) exerciseList = sqlJoinExercises;
@@ -503,12 +469,11 @@ public class CoreMain {
             exerciseType = exerciseList[rand.nextInt(exerciseList.length)];
         }
 
-        // Always use AI generation
         String prompt;
         String text;
         String code;
 
-        // SQL schema for prompts
+        // SQLのスキーマ定義
         String sqlSchema =
             "DATABASE SCHEMA (SQLite) — use ONLY these exact column names:\n\n" +
             "TABLE users — columns: id, name, email, age, city\n" +
@@ -528,6 +493,8 @@ public class CoreMain {
             "        (3,'Keyboard',75,'Electronics',150), (4,'Monitor',300,'Electronics',80),\n" +
             "        (5,'Headphones',150,'Electronics',120)\n\n" +
             "CRITICAL: Do NOT invent column names. Use ONLY the exact column names listed above.\n";
+
+        // ── プロンプト組み立て（言語・SIMILARモードごとに分岐）──
 
         if (isSimilarRequest && lang.equalsIgnoreCase("SQL")) {
             prompt =
@@ -556,7 +523,7 @@ public class CoreMain {
                 "TEST_CASES: Format: - declaration1; declaration2 -> expected_output (use SAME var names, DIFFERENT values)\n" +
                 Ai.getLangInstruction();
         } else if (isSimilarRequest) {
-            // Similar practice - same type, different values (Java)
+            // Java SIMILAR
             prompt =
                 Ai.getLangPrefix() +
                 "Create a SIMILAR exercise to: " + similarTask + "\n" +
@@ -688,7 +655,7 @@ public class CoreMain {
                 Ai.getLangInstruction() + "\n" +
                 historyNote.toString();
         } else {
-            // Java prompt
+            // Java
             String exerciseInstruction = exerciseType.isEmpty() ? "" :
                 "\n\nSPECIFIC EXERCISE: " + exerciseType + "\n" +
                 "(Create an exercise based on this concept. Be creative with the data values!)\n";
@@ -762,7 +729,7 @@ public class CoreMain {
                 historyNote.toString();
         }
 
-        // File extension based on language
+        // 言語に合わせた拡張子
         String filename;
         if (lang.equalsIgnoreCase("TypeScript")) {
             filename = "Practice.ts";
@@ -772,32 +739,27 @@ public class CoreMain {
             filename = "Practice.java";
         }
 
-        // Get AI response
+        // AIにリクエスト→レスポンス処理
         String raw = Ai.ask(prompt);
         text = Ai.extractContent(raw);
-        // Strip markdown bold from labels: **TITLE:** → TITLE:
         text = text.replaceAll("\\*\\*([A-Z_]+):\\*\\*", "$1:");
         text = text.replaceAll("\\*\\*([A-Z_]+):", "$1:");
         code = Extract.firstCodeBlock(text);
         if (code == null) code = "// NO_CODE_BLOCK_FOUND\n";
 
-        // Get solution code (before removing >>> markers) for verification
+        // ソリューションコードで実際に実行して検証（Javaのみ）
         String solutionCode = code.replace(">>>", "").replace(">>> ", "");
         solutionCode = fixCommonMistakes(solutionCode, lang);
 
-        // Verify expected output by actually running the solution (Java only)
         String actualOutput = "";
         if (lang.equalsIgnoreCase("Java") && !solutionCode.contains("NO_CODE_BLOCK_FOUND")) {
             actualOutput = runAndCaptureOutput(solutionCode);
         }
 
-        // Remove >>> marked lines and replace with placeholder
         code = removeMarkedLines(code);
-
-        // Post-process: fix common AI mistakes
         code = fixCommonMistakes(code, lang);
 
-        // JSON output - include actualOutput and solutionCode for verification
+        // JSON出力
         String json =
             "{"
           + "\"filename\":" + Json.quote(filename) + ","
@@ -810,38 +772,30 @@ public class CoreMain {
         System.out.println(json);
     }
 
-    // Compile and run Java code, return the output
+    // Javaコードをコンパイル＆実行して出力をキャプチャ
     private static String runAndCaptureOutput(String javaCode) {
         try {
-            // Create temp directory
             java.nio.file.Path tempDir = java.nio.file.Files.createTempDirectory("codeteacher");
             java.nio.file.Path javaFile = tempDir.resolve("Practice.java");
-
-            // Write code to file
             java.nio.file.Files.writeString(javaFile, javaCode);
 
-            // Compile
             ProcessBuilder compileBuilder = new ProcessBuilder("javac", "-encoding", "UTF-8", "Practice.java");
             compileBuilder.directory(tempDir.toFile());
             compileBuilder.redirectErrorStream(true);
             Process compileProcess = compileBuilder.start();
-
             compileProcess.getInputStream().readAllBytes();
             int compileExit = compileProcess.waitFor();
 
             if (compileExit != 0) {
-                // Cleanup
                 deleteDirectory(tempDir.toFile());
                 return "";
             }
 
-            // Run
             ProcessBuilder runBuilder = new ProcessBuilder("java", "Practice");
             runBuilder.directory(tempDir.toFile());
             runBuilder.redirectErrorStream(true);
             Process runProcess = runBuilder.start();
 
-            // Timeout after 5 seconds
             boolean finished = runProcess.waitFor(5, java.util.concurrent.TimeUnit.SECONDS);
             if (!finished) {
                 runProcess.destroyForcibly();
@@ -850,10 +804,7 @@ public class CoreMain {
             }
 
             String output = new String(runProcess.getInputStream().readAllBytes()).trim();
-
-            // Cleanup
             deleteDirectory(tempDir.toFile());
-
             return output;
         } catch (Exception e) {
             return "";
@@ -864,29 +815,22 @@ public class CoreMain {
         java.io.File[] files = dir.listFiles();
         if (files != null) {
             for (java.io.File f : files) {
-                if (f.isDirectory()) {
-                    deleteDirectory(f);
-                } else {
-                    f.delete();
-                }
+                if (f.isDirectory()) deleteDirectory(f);
+                else f.delete();
             }
         }
         dir.delete();
     }
 
-    // ── Per-language per-topic prompt rules ─────────────────────────────
+    // ── 言語×トピック別のプロンプトルール ──
+
     private static String getTopicRules(String lang, String topic) {
-        if (lang.equalsIgnoreCase("Java")) {
-            return getJavaTopicRules(topic);
-        } else if (lang.equalsIgnoreCase("TypeScript")) {
-            return getTsTopicRules(topic);
-        } else if (lang.equalsIgnoreCase("SQL")) {
-            return getSqlTopicRules(topic);
-        }
+        if (lang.equalsIgnoreCase("Java")) return getJavaTopicRules(topic);
+        else if (lang.equalsIgnoreCase("TypeScript")) return getTsTopicRules(topic);
+        else if (lang.equalsIgnoreCase("SQL")) return getSqlTopicRules(topic);
         return "";
     }
 
-    // ── Java topic rules ────────────────────────────────────────────────
     private static String getJavaTopicRules(String topic) {
         switch (topic) {
             case "Array":
@@ -995,7 +939,6 @@ public class CoreMain {
         }
     }
 
-    // ── TypeScript topic rules ──────────────────────────────────────────
     private static String getTsTopicRules(String topic) {
         switch (topic) {
             case "Type Basics":
@@ -1111,7 +1054,6 @@ public class CoreMain {
         }
     }
 
-    // ── SQL topic rules ─────────────────────────────────────────────────
     private static String getSqlTopicRules(String topic) {
         switch (topic) {
             case "SELECT Basics":

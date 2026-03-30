@@ -50,6 +50,7 @@ export type ExtToWebviewMsg =
   | { type: "loadingProgress"; text?: string; percent?: number }
   | { type: "testGenStatus"; status: "pending" | "ready" | "failed" }
   | { type: "switchTab"; tab: string }
+  | { type: "quickSolveApplied" }
   | { type: "skipped" }
   | { type: "alternativeMethodsResult"; methods: AltMethod[] }
   | { type: "crossLanguageResult"; code: string; highlights: HighlightEntry[]; targetLang: string }

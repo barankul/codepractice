@@ -3024,7 +3024,7 @@ export function getWebviewHtml(nonce: string): string {
         var del = document.createElement("button");
         del.className = "custom-history-item-delete";
         del.textContent = "\u00d7";
-        del.title = "Delete";
+        del.title = t("common.delete");
         del.onclick = function(e) {
           e.stopPropagation();
           vscode.postMessage({ type: "deleteCustomPractice", id: cp.id });
@@ -3050,7 +3050,7 @@ export function getWebviewHtml(nonce: string): string {
       customGenBtn.addEventListener("click", function() {
         var prompt = (customPromptInput ? customPromptInput.value : "").trim();
         if (!prompt) {
-          showToast("error", "Please describe what you want to practice");
+          showToast("error", t("msg.describePrompt"));
           return;
         }
         currentLoadingAction = "generate";
@@ -3101,7 +3101,7 @@ export function getWebviewHtml(nonce: string): string {
         var cpEdit = document.getElementById("customPromptEdit");
         var newPrompt = cpEdit ? cpEdit.value.trim() : "";
         if (!newPrompt) {
-          showToast("error", "Please describe what you want to practice");
+          showToast("error", t("msg.describePrompt"));
           return;
         }
         _customPrompt = newPrompt;
@@ -3224,7 +3224,7 @@ export function getWebviewHtml(nonce: string): string {
       var chatBtn = document.getElementById("openChatBtn");
       if (chatBtn) {
         chatBtn.disabled = offline;
-        chatBtn.title = offline ? "AI Chat (requires AI provider)" : "AI Chat";
+        chatBtn.title = offline ? t("settings.aiChatRequiresProvider") : t("practice.aiChat");
         chatBtn.style.opacity = offline ? "0.4" : "";
         chatBtn.style.cursor = offline ? "not-allowed" : "";
       }
@@ -3235,8 +3235,8 @@ export function getWebviewHtml(nonce: string): string {
       var bm = document.getElementById("bannerModelName");
       var offline = isCurrentlyOffline();
       if (offline) {
-        if (bn) bn.textContent = "Offline Mode";
-        if (bm) bm.textContent = "140+ built-in practices";
+        if (bn) bn.textContent = t("settings.offlineMode");
+        if (bm) bm.textContent = t("settings.builtInPractices");
       } else {
         if (bn) bn.textContent = providerDisplayNames[provider] || provider;
         if (bm) bm.textContent = getSelectedModelLabel(provider);
@@ -3447,7 +3447,7 @@ export function getWebviewHtml(nonce: string): string {
     function renderTopicProgress(topics) {
       if (!topicProgressList) return;
       if (!topics || topics.length === 0) {
-        topicProgressList.innerHTML = '<div class="topic-progress-item"><span class="topic-progress-name">No data yet</span><div class="topic-progress-bar"><div class="topic-progress-fill" style="width: 0%"></div></div><span class="topic-progress-pct">0%</span></div>';
+        topicProgressList.innerHTML = '<div class="topic-progress-item"><span class="topic-progress-name">' + t("progress.noDataInline") + '</span><div class="topic-progress-bar"><div class="topic-progress-fill" style="width: 0%"></div></div><span class="topic-progress-pct">0%</span></div>';
         return;
       }
       topicStats = topics;
@@ -4020,14 +4020,14 @@ export function getWebviewHtml(nonce: string): string {
 
       if (msg.type === "settingsSaved") {
         if (settingsSavedMsg) {
-          settingsSavedMsg.textContent = "Saved! Using " + (providerDisplayNames[currentProvider] || currentProvider) + " · " + getSelectedModelLabel(currentProvider);
+          settingsSavedMsg.textContent = t("settings.savedUsing") + " " + (providerDisplayNames[currentProvider] || currentProvider) + " · " + getSelectedModelLabel(currentProvider);
           settingsSavedMsg.classList.add("show");
           saveSettingsBtn.classList.add("saved");
-          saveSettingsBtn.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Saved!';
+          saveSettingsBtn.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' + t("settings.savedShort");
           setTimeout(() => {
             settingsSavedMsg.classList.remove("show");
             saveSettingsBtn.classList.remove("saved");
-            saveSettingsBtn.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Save Settings';
+            saveSettingsBtn.innerHTML = '<svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' + t("settings.save");
           }, 2500);
         }
       }
@@ -4302,7 +4302,7 @@ export function getWebviewHtml(nonce: string): string {
               var speedEl = document.createElement("span");
               var sp = m.speedPercent || 100;
               speedEl.className = "alt-method-speed " + (sp > 110 ? "faster" : sp < 90 ? "slower" : "same");
-              speedEl.textContent = sp > 100 ? "+" + (sp - 100) + "% faster" : sp < 100 ? (100 - sp) + "% slower" : "";
+              speedEl.textContent = sp > 100 ? "+" + (sp - 100) + "% " + t("alt.faster") : sp < 100 ? (100 - sp) + "% " + t("alt.slower") : "";
               if (speedEl.textContent) header.appendChild(speedEl);
             }
 
@@ -4445,7 +4445,7 @@ export function getWebviewHtml(nonce: string): string {
 
           var celeb = document.createElement("div");
           celeb.className = "celebrate";
-          celeb.innerHTML = '<div class="celebrate-text">Passed</div>';
+          celeb.innerHTML = '<div class="celebrate-text">' + t("judge.passed") + '</div>';
           outputWrap.insertBefore(celeb, outputWrap.querySelector(".pass-buttons"));
 
           // XP earned animation

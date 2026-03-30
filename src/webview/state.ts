@@ -21,7 +21,10 @@ export const state = {
   // UI flags
   hintVisible: false,
   _isBugFixMode: false,
+  practiceView: "form" as "form" | "detail" | "judge",
+  currentPracticeLang: "Java",
   practiceSkipped: false,
+  quickSolveApplied: false,
   availableCrossLangs: null as string[] | null,
 
   // Progress
@@ -52,4 +55,5 @@ export const state = {
   // Last test results (for repair feature)
   lastTestResults: null as TestResultEntry[] | null,
   lastJudgeMsg: null as any,
+  pendingJudgeRecoverySolution: false,
 };

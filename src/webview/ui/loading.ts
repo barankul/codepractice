@@ -60,11 +60,11 @@ export function showPerfCard(ms: number | undefined | null): void {
   if (dom.perfTime) dom.perfTime.textContent = ms < 1000 ? ms + " ms" : (ms / 1000).toFixed(2) + " s";
 
   let grade: string, cls: string, color: string;
-  if (ms < 200) { grade = "Excellent"; cls = "excellent"; color = "var(--good)"; }
-  else if (ms < 800) { grade = "Good"; cls = "good"; color = "#22d3ee"; }
-  else if (ms < 2000) { grade = "Sufficient"; cls = "sufficient"; color = "var(--accent)"; }
-  else if (ms < 5000) { grade = "Slow"; cls = "slow"; color = "#f59e0b"; }
-  else { grade = "Very Slow"; cls = "very-slow"; color = "var(--bad, #ef4444)"; }
+  if (ms < 200) { grade = t("perf.excellent"); cls = "excellent"; color = "var(--good)"; }
+  else if (ms < 800) { grade = t("perf.good"); cls = "good"; color = "#22d3ee"; }
+  else if (ms < 2000) { grade = t("perf.sufficient"); cls = "sufficient"; color = "var(--accent)"; }
+  else if (ms < 5000) { grade = t("perf.slow"); cls = "slow"; color = "#f59e0b"; }
+  else { grade = t("perf.verySlow"); cls = "very-slow"; color = "var(--bad, #ef4444)"; }
 
   if (dom.perfLabel) { dom.perfLabel.textContent = grade; dom.perfLabel.className = "perf-label " + cls; }
   const ratio = Math.min(1, Math.max(0, 1 - ms / 5000));
