@@ -28,16 +28,30 @@
 
 ---
 
+## 画面イメージ
+
+### メイン画面
+
+![CodePractice Main Screen](image3.png)
+
+### 演習・判定画面
+
+![CodePractice Additional Screen](image1.png)
+
+![CodePractice Practice and Judge Screen](image2.png)
+
+---
+
 ## なぜ CodePractice？
 
-多くのコーディング練習サービスはブラウザ上で動きます。CodePractice は **VS Code の中** に練習環境を持ち込みます。ブラウザとの行き来は不要です。問題を生成し、そのままエディタで解き、自動採点で即座にフィードバックを受け、間隔反復で進捗を管理できます。
+多くのコーディング練習サービスはブラウザ上で動きます。CodePractice は **VS Code の中** に練習環境を持ち込みます。ブラウザとの行き来は不要です。問題を生成し、そのままエディタで解き、自動採点で即座にフィードバックを受け、同じ画面の流れの中で進捗を管理できます。
 
 **主な特徴:**
 - APIキー不要で **完全オフライン** 動作。138個の組み込み問題、ローカライズ済みの問題文、検証済みのオフライン bug-fix 問題を利用可能
 - **8つのAIプロバイダー** に対応し、毎回異なる練習問題を生成可能
 - **コードランナー内蔵**。Java、TypeScript、SQL を追加セットアップなしで実行可能
 - **マルチテスト検証**。複数テスト入力を持つ問題では、ケースごとの結果を確認可能
-- **FSRS間隔反復** による最適な復習スケジューリング
+- **復習スケジューリング** により、後から見直したい内容を管理
 
 ---
 
@@ -82,7 +96,7 @@
 | **トピック習熟度** | 言語・トピックごとの定着状況を追跡 |
 | **デイリーゴール** | 日ごとの練習目標を管理 |
 | **週間トレンド** | 7日分の履歴と合格率を表示 |
-| **FSRSスケジューリング** | 最適な復習間隔を計算 |
+| **復習スケジューリング** | 後から見直したい内容を管理 |
 
 ### 多言語対応
 - UI言語: English、日本語、Türkçe
@@ -203,7 +217,7 @@ src/
   multiTestRunner.ts      マルチテストハーネス生成
   outputChecker.ts        出力の正規化と比較
   parsers.ts              AIレスポンス解析とエラーパターン
-  progressTracker.ts      XP、レベル、FSRS間隔反復
+  progressTracker.ts      XP、レベル、復習スケジューリング
   practiceRandomizer.ts   オフライン問題の値ランダム化
   demoData.ts             オフラインモード判定、選択、ローカライズ接続
   offlineBugFix.ts        検証済みオフライン bug-fix 変異生成
@@ -227,7 +241,7 @@ core-java/src/
   DebugMain.java          bug-fix 問題ジェネレーター
 ```
 
-**技術スタック:** TypeScript × esbuild × VS Code Webview API × sql.js (WASM) × FSRS アルゴリズム
+**技術スタック:** TypeScript × esbuild × VS Code Webview API × sql.js (WASM)
 
 ---
 

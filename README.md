@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="README.ja.md">Japanese</a> | English
+  <a href="README.ja.md">日本語</a> | English
 </p>
 
 <p align="center">
@@ -26,18 +26,30 @@
   <img src="https://img.shields.io/badge/license-MIT-brightgreen" alt="MIT License" />
 </p>
 
+## Screenshots
+
+### Main Screen
+
+![CodePractice Main Screen](image3.png)
+
+### Practice & Judge Screens
+
+![CodePractice Additional Screen](image1.png)
+
+![CodePractice Practice and Judge Screen](image2.png)
+
 ---
 
 ## Why CodePractice?
 
-Most coding practice platforms run in a browser. CodePractice brings the entire experience **inside VS Code** — where you already write code. No context switching, no browser tabs. Generate a problem, solve it in the editor, get instant feedback with auto-judging, and track your progress with spaced repetition.
+Most coding practice platforms run in a browser. CodePractice brings the entire experience **inside VS Code** — where you already write code. No context switching, no browser tabs. Generate a problem, solve it in the editor, get instant feedback with auto-judging, and track your progress in the same workflow.
 
 **Key highlights:**
 - Works **100% offline** with 138 built-in exercises, localized offline practice text, and verified offline bug-fix variants
 - Supports **8 AI providers** (free tiers available) for unlimited unique exercises
 - Built-in **code runners** — no external setup for Java, TypeScript, or SQL
 - **Multi-test validation** with detailed pass/fail feedback per test case when the practice includes multiple test inputs
-- **FSRS spaced repetition** to schedule reviews at optimal intervals
+- **Review scheduling** to help you revisit practice topics over time
 
 ---
 
@@ -82,7 +94,7 @@ Most coding practice platforms run in a browser. CodePractice brings the entire 
 | **Topic Mastery** | Per-language, per-topic retention tracking |
 | **Daily Goals** | Track daily practice targets |
 | **Weekly Trends** | 7-day practice history with pass rates |
-| **FSRS Scheduling** | Spaced repetition for optimal review timing |
+| **Review Scheduling** | Helps surface practice topics again over time |
 
 ### Internationalization
 - UI languages: English, Japanese, Turkish
@@ -203,7 +215,7 @@ src/
   multiTestRunner.ts      Multi-test harness generation
   outputChecker.ts        Output normalization & comparison
   parsers.ts              AI response parsing & error patterns
-  progressTracker.ts      XP, levels, FSRS spaced repetition
+  progressTracker.ts      XP, levels, and review scheduling
   practiceRandomizer.ts   Offline practice value randomization
   demoData.ts             Offline mode detection, selection, and localization hookup
   offlineBugFix.ts        Verified offline bug-fix mutation generation
@@ -227,7 +239,7 @@ core-java/src/
   DebugMain.java          Bug fix practice generator
 ```
 
-**Tech stack:** TypeScript × esbuild × VS Code Webview API × sql.js (WASM) × FSRS algorithm
+**Tech stack:** TypeScript × esbuild × VS Code Webview API × sql.js (WASM)
 
 ---
 
