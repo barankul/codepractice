@@ -283,7 +283,7 @@ Rules:
       "chat.placeholder", "chat.send", "chat.hint", "chat.explain", "chat.generatePractice",
       "chat.thinking", "chat.generating", "chat.running", "chat.judging", "chat.thinkingGeneric",
       "chat.output", "chat.pass", "chat.fail", "chat.run", "chat.judge",
-      "chat.copy", "chat.copied", "chat.noMessages", "chat.msgs",
+      "chat.copy", "chat.copied", "chat.noMessages", "chat.msgs", "chat.toggleHistory",
       "chat.hintPrompt", "chat.explainPrompt", "chat.generatePrompt"
     ]) { chatT[k] = t(k); }
     this.chatPanel.webview.html = getChatPanelHtml(title, task, lang, nonce, chatT);

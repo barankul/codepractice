@@ -422,8 +422,8 @@ export function isValidCodeBlock(code: string, lang: string): boolean {
 }
 
 /** HTMLエスケープ — escape HTML entities */
-export function escapeHtml(text: string): string {
-  return text
+export function escapeHtml(text: string | null | undefined): string {
+  return String(text ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
